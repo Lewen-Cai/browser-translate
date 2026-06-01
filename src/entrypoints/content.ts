@@ -5,6 +5,7 @@ import { createHotkeyWatcher, type HotkeyWatcher } from './content/hotkeyWatcher
 import { TriggerIcon } from './content/TriggerIcon';
 import { TranslationCard } from './content/TranslationCard';
 import { createPageTranslator, type PageTranslator } from './content/pageTranslate';
+import { createYouTubeSubTranslator, type YouTubeSubTranslator } from './content/youtubeSubs';
 import { StorageClient } from '~/storage/client';
 import { resolveEffectiveTheme } from '~/ui/themeResolver';
 import { isLikelyPassage } from '~/core/selection/isLikelyPassage';
@@ -35,6 +36,8 @@ export default defineContentScript({
     let pageTranslator: PageTranslator | null = null;
     let targetLanguage = 'zh-CN';
     let fullPageHotkey: HotkeyWatcher | null = null;
+    let ytSubs: YouTubeSubTranslator | null = null;
+    let ytNavHandler: (() => void) | null = null;
 
     const showIcon = (info: SelectionInfo) => {
       state = 'icon';
@@ -119,6 +122,32 @@ export default defineContentScript({
         strings: { translateFailed: t('translateFailed', locale), retry: t('retry', locale) },
       });
       if (wasOn) pageTranslator.enable();
+
+      // YouTube subtitle translator — only on watch pages.
+      ytSubs?.disable();
+      ytSubs = null;
+      if (isYouTubeWatch()) {
+        ytSubs = createYouTubeSubTranslator({
+          getTargetLang: () => targetLanguage,
+          // Cloud fans out across its fleet (4). Local uses 2 as a 1-deep pipeline:
+          // one batch processing while the next is queued, so the model never idles
+          // between batches. (A local MLX server queues rather than splitting, so
+          // this doesn't slow individual batches.)
+          concurrency: data.api.providerType === 'cloud' ? 4 : 2,
+          strings: {
+            titleOff: t('ytSubsButtonTitle', locale),
+            titleOn: t('ytSubsButtonTitleOn', locale),
+            noCaptions: t('ytSubsNoCaptions', locale),
+            enableCc: t('ytSubsEnableCc', locale),
+            noTranslationNeeded: t('ytSubsNoTranslationNeeded', locale),
+            live: t('ytSubsLive', locale),
+            failed: t('ytSubsFailed', locale),
+            translating: t('ytSubsTranslating', locale),
+          },
+          notify: (msg) => console.info('[BrowserTranslate]', msg),
+        });
+        attachYtButtonSoon(ytSubs);
+      }
     }
 
     function togglePageTranslation() {
@@ -128,6 +157,11 @@ export default defineContentScript({
     }
 
     await reattach();
+
+    if (!ytNavHandler) {
+      ytNavHandler = () => { void reattach(); };
+      window.addEventListener('yt-navigate-finish', ytNavHandler);
+    }
 
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
@@ -157,6 +191,22 @@ export default defineContentScript({
     }, true);
   },
 });
+
+function isYouTubeWatch(): boolean {
+  return location.hostname.endsWith('youtube.com') && location.pathname === '/watch';
+}
+
+function attachYtButtonSoon(subs: YouTubeSubTranslator, tries = 10): void {
+  const attempt = (n: number) => {
+    if (document.querySelector('.ytp-right-controls')) {
+      subs.attachButton();
+      return;
+    }
+    if (n <= 0) return;
+    setTimeout(() => attempt(n - 1), 400);
+  };
+  attempt(tries);
+}
 
 function getSelectionInfo(): SelectionInfo | null {
   const sel = window.getSelection();
