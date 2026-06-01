@@ -30,6 +30,7 @@ Existing translation extensions either lock LLM access behind paywalls, route yo
 - Auto status check on popup open (pings endpoint and model availability)
 - Dictionary mode — the model automatically decides whether a selection is a word/term to define or text to translate, in one streaming pass; dictionary results show the term's formal translation, pronunciation, part of speech, senses, and an example
 - Settings export / import (Settings → Data) — save your config as JSON, import it on another device; API keys excluded by default (opt-in to include them)
+- **YouTube subtitle translation** — On YouTube watch pages, click the "译" button in the player controls to translate the video's existing captions. The translation appears as a second line beneath YouTube's native subtitles (bilingual: original on top, translation below). Requires the video to have captions (manual or auto-generated) with captions (CC) turned on. Translations are produced by your configured model in batches. (YouTube only; no audio speech-recognition.)
 - Translation cache (configurable TTL)
 - Light / dark theme (follows system)
 - UI available in 8 languages (Simplified/Traditional Chinese, English, Japanese, Korean, Spanish, French, German); auto-detects browser locale
