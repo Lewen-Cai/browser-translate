@@ -96,4 +96,13 @@ export const ja: Record<StringKey, string> = {
   cardRefreshNeeded: '拡張機能が更新されました。続行するにはこのページを再読み込みしてください。',
   // Errors
   noProfileError: 'API が未設定です。設定を開いてキーを追加してください。',
+  // YouTube subtitles
+  ytSubsButtonTitle: '字幕を翻訳',
+  ytSubsButtonTitleOn: '字幕翻訳をオフにする',
+  ytSubsNoCaptions: 'この動画には字幕がありません',
+  ytSubsEnableCc: '先に字幕（CC）をオンにしてください',
+  ytSubsNoTranslationNeeded: '字幕はすでに対象言語です',
+  ytSubsLive: 'ライブ配信は非対応です',
+  ytSubsFailed: '字幕の翻訳に失敗しました',
+  ytSubsTranslating: '翻訳中…',
 };

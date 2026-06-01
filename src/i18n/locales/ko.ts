@@ -96,4 +96,13 @@ export const ko: Record<StringKey, string> = {
   cardRefreshNeeded: '확장 프로그램이 업데이트되었습니다. 계속하려면 이 페이지를 새로고침하세요.',
   // Errors
   noProfileError: 'API가 설정되지 않았습니다. 설정을 열어 키를 추가하세요.',
+  // YouTube subtitles
+  ytSubsButtonTitle: '자막 번역',
+  ytSubsButtonTitleOn: '자막 번역 끄기',
+  ytSubsNoCaptions: '이 동영상에는 자막이 없습니다',
+  ytSubsEnableCc: '먼저 자막(CC)을 켜세요',
+  ytSubsNoTranslationNeeded: '자막이 이미 대상 언어입니다',
+  ytSubsLive: '라이브 스트림은 지원되지 않습니다',
+  ytSubsFailed: '자막 번역 실패',
+  ytSubsTranslating: '번역 중…',
 };

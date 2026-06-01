@@ -96,4 +96,13 @@ export const fr: Record<StringKey, string> = {
   cardRefreshNeeded: 'L’extension a été mise à jour. Veuillez actualiser cette page pour continuer.',
   // Errors
   noProfileError: 'API non configurée. Ouvrez les paramètres pour ajouter votre clé.',
+  // YouTube subtitles
+  ytSubsButtonTitle: 'Traduire les sous-titres',
+  ytSubsButtonTitleOn: 'Désactiver la traduction des sous-titres',
+  ytSubsNoCaptions: 'Cette vidéo n’a pas de sous-titres',
+  ytSubsEnableCc: 'Activez d’abord les sous-titres (CC)',
+  ytSubsNoTranslationNeeded: 'Les sous-titres sont déjà dans la langue cible',
+  ytSubsLive: 'Les directs ne sont pas pris en charge',
+  ytSubsFailed: 'Échec de la traduction des sous-titres',
+  ytSubsTranslating: 'Traduction…',
 };

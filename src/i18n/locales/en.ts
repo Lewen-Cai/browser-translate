@@ -96,6 +96,15 @@ export const en = {
   cardRefreshNeeded: 'Extension was updated. Please refresh this page to continue.',
   // Errors
   noProfileError: 'API not configured. Open settings to add your key.',
+  // YouTube subtitles
+  ytSubsButtonTitle: 'Translate subtitles',
+  ytSubsButtonTitleOn: 'Turn off subtitle translation',
+  ytSubsNoCaptions: 'This video has no captions',
+  ytSubsEnableCc: 'Turn on captions (CC) first',
+  ytSubsNoTranslationNeeded: 'Captions already in target language',
+  ytSubsLive: 'Live streams are not supported',
+  ytSubsFailed: 'Subtitle translation failed',
+  ytSubsTranslating: 'Translating…',
 } as const;
 
 export type StringKey = keyof typeof en;

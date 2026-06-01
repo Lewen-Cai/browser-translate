@@ -96,4 +96,13 @@ export const zhTW: Record<StringKey, string> = {
   cardRefreshNeeded: '擴充功能已更新，請重新整理此頁面以繼續。',
   // Errors
   noProfileError: '尚未設定 API，請到設定中填入 Key。',
+  // YouTube subtitles
+  ytSubsButtonTitle: '翻譯字幕',
+  ytSubsButtonTitleOn: '關閉字幕翻譯',
+  ytSubsNoCaptions: '此影片沒有字幕',
+  ytSubsEnableCc: '請先開啟字幕（CC）',
+  ytSubsNoTranslationNeeded: '字幕已是目標語言',
+  ytSubsLive: '不支援直播',
+  ytSubsFailed: '字幕翻譯失敗',
+  ytSubsTranslating: '翻譯中…',
 };

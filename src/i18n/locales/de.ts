@@ -96,4 +96,13 @@ export const de: Record<StringKey, string> = {
   cardRefreshNeeded: 'Die Erweiterung wurde aktualisiert. Bitte lade diese Seite neu, um fortzufahren.',
   // Errors
   noProfileError: 'API nicht konfiguriert. Öffne die Einstellungen, um deinen Schlüssel hinzuzufügen.',
+  // YouTube subtitles
+  ytSubsButtonTitle: 'Untertitel übersetzen',
+  ytSubsButtonTitleOn: 'Untertitelübersetzung ausschalten',
+  ytSubsNoCaptions: 'Dieses Video hat keine Untertitel',
+  ytSubsEnableCc: 'Aktiviere zuerst die Untertitel (CC)',
+  ytSubsNoTranslationNeeded: 'Untertitel sind bereits in der Zielsprache',
+  ytSubsLive: 'Livestreams werden nicht unterstützt',
+  ytSubsFailed: 'Untertitelübersetzung fehlgeschlagen',
+  ytSubsTranslating: 'Übersetzen…',
 };

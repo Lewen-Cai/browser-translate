@@ -96,4 +96,13 @@ export const es: Record<StringKey, string> = {
   cardRefreshNeeded: 'La extensión se actualizó. Actualiza esta página para continuar.',
   // Errors
   noProfileError: 'API no configurada. Abre los ajustes para añadir tu clave.',
+  // YouTube subtitles
+  ytSubsButtonTitle: 'Traducir subtítulos',
+  ytSubsButtonTitleOn: 'Desactivar traducción de subtítulos',
+  ytSubsNoCaptions: 'Este vídeo no tiene subtítulos',
+  ytSubsEnableCc: 'Activa primero los subtítulos (CC)',
+  ytSubsNoTranslationNeeded: 'Los subtítulos ya están en el idioma de destino',
+  ytSubsLive: 'Las transmisiones en directo no son compatibles',
+  ytSubsFailed: 'Error al traducir los subtítulos',
+  ytSubsTranslating: 'Traduciendo…',
 };

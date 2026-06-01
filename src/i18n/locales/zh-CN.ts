@@ -96,4 +96,13 @@ export const zhCN: Record<StringKey, string> = {
   cardRefreshNeeded: '扩展已更新，请刷新此页面以继续。',
   // Errors
   noProfileError: '尚未配置 API，请到设置中填入 Key。',
+  // YouTube subtitles
+  ytSubsButtonTitle: '翻译字幕',
+  ytSubsButtonTitleOn: '关闭字幕翻译',
+  ytSubsNoCaptions: '该视频没有字幕',
+  ytSubsEnableCc: '请先打开字幕（CC）',
+  ytSubsNoTranslationNeeded: '字幕已是目标语言',
+  ytSubsLive: '不支持直播',
+  ytSubsFailed: '字幕翻译失败',
+  ytSubsTranslating: '翻译中…',
 };
