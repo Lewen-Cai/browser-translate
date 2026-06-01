@@ -2,6 +2,19 @@
 
 All notable changes will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.6] — 2026-06-01
+
+### Added
+- YouTube subtitle translation: on a YouTube video, click the "译" button in the
+  player controls to translate the video's existing captions. The translation
+  appears as a second line beneath YouTube's native subtitle (bilingual), matching
+  the caption font, with a "translating…" placeholder while it works. The line you
+  are currently watching is translated first, and it keeps up when you seek.
+  Requires the video to have captions (manual or auto-generated) with captions (CC)
+  turned on. Works with your configured model — translation concurrency is
+  provider-aware (cloud fans out across batches; local runs a shallow pipeline).
+  YouTube only; it does not transcribe audio (no speech-recognition).
+
 ## [0.1.5] — 2026-05-31
 
 ### Added
