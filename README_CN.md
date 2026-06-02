@@ -11,7 +11,7 @@
 
 市面上的翻译扩展要么把 LLM 锁在付费墙后、要么把你的文本经它们的服务器中转、要么把决定翻译质量的 prompt 藏起来。BrowserTranslate 反对以上三点。
 
-- **自带 Key**：兼容所有 OpenAI 协议的服务——OpenAI、DeepSeek、Moonshot、Groq、SiliconFlow、OpenRouter、本地 Ollama / LM Studio / vLLM
+- **自带 Key**：兼容所有 OpenAI 协议的服务。内置预设：OpenAI、DeepSeek、Moonshot、Zhipu、Qwen、SiliconFlow、OpenRouter、Mistral；本地运行时：LM Studio、Ollama、llama.cpp、vLLM
   - 想用 Anthropic 或 Gemini？通过任何 OpenAI 兼容代理（LiteLLM、OpenRouter 等）转一层，把 Base URL 指向代理即可。
 - **零中转**：翻译请求由你的浏览器直接打到你配置的服务方，我们没有服务器
 - **零遥测**：不接入任何统计、错误上报、远程日志
@@ -29,7 +29,7 @@
 - 打开 popup 自动检测连接（ping 端点 + 模型有效性）
 - 词典模式——由模型在一次流式请求中自动判定选区是"查词"还是"翻译"，词典结果展示该词条的正式译名、音标、词性、释义和例句
 - 设置导出 / 导入（设置 → 数据）——将配置导出为 JSON 文件，在其他设备导入；API Key 默认不导出（勾选后可包含，附明文提示）
-- **YouTube 字幕翻译** — 在 YouTube 观看页，点击播放器控制栏的"译"按钮即可翻译视频已有的字幕。译文以第二行的形式显示在 YouTube 原生字幕下方（双语：原文在上、译文在下）。需要视频本身带字幕（UP 主上传或自动生成）并已打开字幕（CC）。译文由你配置的模型批量生成。（仅支持 YouTube；不做语音识别。）
+- **YouTube 字幕翻译** — 在 YouTube 观看页，点击播放器控制栏里的翻译按钮（语言图标，悬停显示"翻译字幕"）即可翻译视频已有的字幕。译文以第二行的形式显示在 YouTube 原生字幕下方（双语：原文在上、译文在下）。仅支持 UP 主上传的人工字幕轨道——该按钮只在有这类轨道的视频上出现（自动生成的字幕不支持，因为 YouTube 的渲染方式会盖住译文）。请打开字幕（CC）以显示原生字幕行。译文由你配置的模型批量生成。（仅支持 YouTube；不做语音识别。）
 - 翻译缓存（可配 TTL）
 - 浅色 / 深色主题（跟随系统）
 - 界面支持 8 种语言（简体/繁体中文、English、日本語、한국어、Español、Français、Deutsch），自动跟随浏览器语言

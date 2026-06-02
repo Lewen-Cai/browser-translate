@@ -12,7 +12,7 @@
 
 Existing translation extensions either lock LLM access behind paywalls, route your text through their servers, or hide the prompts that drive translation quality. BrowserTranslate is the opposite of all three.
 
-- **Bring your own key** — works with any OpenAI-compatible API: OpenAI, DeepSeek, Moonshot, Groq, SiliconFlow, OpenRouter, local Ollama, LM Studio, vLLM
+- **Bring your own key** — works with any OpenAI-compatible API. Built-in presets: OpenAI, DeepSeek, Moonshot, Zhipu, Qwen, SiliconFlow, OpenRouter, Mistral. Local runtimes: LM Studio, Ollama, llama.cpp, vLLM
   - Need Anthropic or Gemini? Run any OpenAI-compatible proxy (LiteLLM, OpenRouter, etc.) and point Base URL at it.
 - **Zero relay** — your text goes directly from your browser to the provider you configured. We have no server.
 - **Zero telemetry** — no analytics, no error reporting, no remote logging
@@ -30,7 +30,7 @@ Existing translation extensions either lock LLM access behind paywalls, route yo
 - Auto status check on popup open (pings endpoint and model availability)
 - Dictionary mode — the model automatically decides whether a selection is a word/term to define or text to translate, in one streaming pass; dictionary results show the term's formal translation, pronunciation, part of speech, senses, and an example
 - Settings export / import (Settings → Data) — save your config as JSON, import it on another device; API keys excluded by default (opt-in to include them)
-- **YouTube subtitle translation** — On YouTube watch pages, click the "译" button in the player controls to translate the video's existing captions. The translation appears as a second line beneath YouTube's native subtitles (bilingual: original on top, translation below). Requires the video to have captions (manual or auto-generated) with captions (CC) turned on. Translations are produced by your configured model in batches. (YouTube only; no audio speech-recognition.)
+- **YouTube subtitle translation** — On YouTube watch pages, click the translate button (the languages icon, tooltip "Translate subtitles") in the player controls to translate the video's existing captions. The translation appears as a second line beneath YouTube's native subtitles (bilingual: original on top, translation below). Works with manual / creator-provided caption tracks — the button only appears on videos that have one (auto-generated ASR captions aren't supported, since YouTube renders them in a way that covers the translation). Turn captions (CC) on so the native line is visible. Translations are produced by your configured model in batches. (YouTube only; no audio speech-recognition.)
 - Translation cache (configurable TTL)
 - Light / dark theme (follows system)
 - UI available in 8 languages (Simplified/Traditional Chinese, English, Japanese, Korean, Spanish, French, German); auto-detects browser locale
