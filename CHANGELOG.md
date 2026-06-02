@@ -2,6 +2,19 @@
 
 All notable changes will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.7] — 2026-06-02
+
+### Changed
+- YouTube subtitle translation now works with manual / creator-provided caption
+  tracks only. The translate button no longer appears on videos that have just
+  auto-generated (ASR) captions — YouTube renders those in a rolling style that
+  covered the translation line, so bilingual could not show. Manual-caption
+  videos are unaffected.
+- The Base URL hint in settings now matches the selected service type: cloud
+  providers in Cloud mode, and self-hosted runtimes (LM Studio, Ollama,
+  llama.cpp, vLLM) in Local mode (previously it always listed cloud providers,
+  including Ollama by mistake).
+
 ## [0.1.6] — 2026-06-01
 
 ### Added
