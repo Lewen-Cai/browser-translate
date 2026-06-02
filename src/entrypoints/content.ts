@@ -143,6 +143,7 @@ export default defineContentScript({
             live: t('ytSubsLive', locale),
             failed: t('ytSubsFailed', locale),
             translating: t('ytSubsTranslating', locale),
+            autoOnly: t('ytSubsAutoOnly', locale),
           },
           notify: (msg) => console.info('[BrowserTranslate]', msg),
         });
@@ -199,7 +200,7 @@ function isYouTubeWatch(): boolean {
 function attachYtButtonSoon(subs: YouTubeSubTranslator, tries = 10): void {
   const attempt = (n: number) => {
     if (document.querySelector('.ytp-right-controls')) {
-      subs.attachButton();
+      void subs.attachButton();
       return;
     }
     if (n <= 0) return;

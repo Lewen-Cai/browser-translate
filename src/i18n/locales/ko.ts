@@ -105,4 +105,5 @@ export const ko: Record<StringKey, string> = {
   ytSubsLive: '라이브 스트림은 지원되지 않습니다',
   ytSubsFailed: '자막 번역 실패',
   ytSubsTranslating: '번역 중…',
+  ytSubsAutoOnly: '자동 생성된 자막은 지원되지 않습니다',
 };

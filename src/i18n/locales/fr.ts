@@ -105,4 +105,5 @@ export const fr: Record<StringKey, string> = {
   ytSubsLive: 'Les directs ne sont pas pris en charge',
   ytSubsFailed: 'Échec de la traduction des sous-titres',
   ytSubsTranslating: 'Traduction…',
+  ytSubsAutoOnly: 'Les sous-titres générés automatiquement ne sont pas pris en charge',
 };

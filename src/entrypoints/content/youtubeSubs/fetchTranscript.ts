@@ -8,34 +8,36 @@ export interface TrackPreference {
 }
 
 /**
- * Choose the source caption track to translate. Priority:
+ * Choose the source caption track to translate. We only ever translate MANUAL
+ * (creator-uploaded) tracks — auto-generated (`asr`) tracks are excluded because
+ * YouTube renders them in a rolling style that covers our injected translation line
+ * (so bilingual can't show). Priority, among manual tracks only:
  *  1. The track the user currently has displayed (matched by vssId, then language).
- *  2. The original spoken language — inferred from the `asr` (auto) track's language,
- *     preferring a manual track in that language over the asr one.
- *  3. The first track as a last resort.
- * This avoids blindly grabbing tracks[0] (which on multi-language videos can be an
- * unrelated / auto-translated language that returns no cues).
+ *  2. The original spoken language — inferred from the `asr` track's languageCode
+ *     (used purely as a hint; the asr track itself is never returned).
+ *  3. The first manual track as a last resort.
+ * Returns null when there is no manual track (e.g. an ASR-only video) — the caller
+ * then hides the button / skips translation.
  */
 export function pickTrack(tracks: CaptionTrack[], pref: TrackPreference = {}): CaptionTrack | null {
-  if (tracks.length === 0) return null;
+  const manual = tracks.filter((t) => t.kind !== 'asr');
+  if (manual.length === 0) return null;
   const { activeVssId, activeLanguageCode } = pref;
 
   if (activeVssId) {
-    const byVss = tracks.find((t) => t.vssId === activeVssId);
+    const byVss = manual.find((t) => t.vssId === activeVssId);
     if (byVss) return byVss;
   }
   if (activeLanguageCode) {
-    const inLang = tracks.filter((t) => t.languageCode === activeLanguageCode);
-    const manual = inLang.find((t) => t.kind !== 'asr');
-    if (manual) return manual;
-    if (inLang[0]) return inLang[0];
+    const inLang = manual.find((t) => t.languageCode === activeLanguageCode);
+    if (inLang) return inLang;
   }
   const asr = tracks.find((t) => t.kind === 'asr');
   if (asr) {
-    const manualOrig = tracks.find((t) => t.kind !== 'asr' && t.languageCode === asr.languageCode);
-    return manualOrig ?? asr;
+    const orig = manual.find((t) => t.languageCode === asr.languageCode);
+    if (orig) return orig;
   }
-  return tracks[0]!;
+  return manual[0]!;
 }
 
 /**

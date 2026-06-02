@@ -3,7 +3,8 @@ import { fetchTranscript, pickTrack } from './fetchTranscript';
 import { fetchTranscriptText } from './transcriptBridge';
 import { createCueTranslator } from './translateCues';
 import { createCaptionInjector } from './injectTranslation';
-import { mountSubsButton, type SubsButtonHandle } from './button';
+import { mountSubsButton, removeSubsButton, type SubsButtonHandle } from './button';
+import type { CaptionsResponse } from './bridgeProtocol';
 import { activeCue } from '~/core/subtitles/activeCue';
 import type { Cue } from '~/core/subtitles/types';
 import { translateBatch, abortTranslate } from '~/messaging/client';
@@ -13,6 +14,8 @@ export interface YouTubeSubsStrings {
   titleOff: string; titleOn: string; noCaptions: string;
   enableCc: string; noTranslationNeeded: string; live: string; failed: string;
   translating: string;
+  /** Video has only auto-generated (asr) captions, which we don't translate. */
+  autoOnly: string;
 }
 
 /** Normalize caption text for matching the on-screen line to a cue. */
@@ -28,7 +31,7 @@ export interface YouTubeSubTranslatorDeps {
 }
 
 export interface YouTubeSubTranslator {
-  attachButton: () => void;
+  attachButton: () => Promise<void>;
   disable: () => void;
   isOn: () => boolean;
 }
@@ -50,6 +53,13 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
   let textToId = new Map<string, number>();
   let rafId = 0;
   let enabledVideoId = '';
+  // Caption tracks probed up front in attachButton(); reused by enable() so we don't
+  // round-trip the MAIN-world bridge twice. Null if the probe hasn't run / failed.
+  let probed: CaptionsResponse | null = null;
+
+  function trackPref(captions: CaptionsResponse) {
+    return { activeVssId: captions.activeVssId, activeLanguageCode: captions.activeLanguageCode };
+  }
 
   function currentTimeMs(): number {
     return Math.round((videoEl()?.currentTime ?? 0) * 1000);
@@ -90,22 +100,26 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     injector.start();
     rafId = requestAnimationFrame(tick);
 
-    let captions;
-    try {
-      captions = await requestCaptionTracks();
-    } catch {
-      deps.notify(deps.strings.enableCc);
+    let captions = probed;
+    if (!captions) {
+      try {
+        captions = await requestCaptionTracks();
+      } catch {
+        deps.notify(deps.strings.enableCc);
+        disable();
+        return;
+      }
+      if (!on) return; // user toggled off during the await
+    }
+
+    if (captions.isLive) { deps.notify(deps.strings.live); disable(); return; }
+    const track = pickTrack(captions.tracks, trackPref(captions));
+    if (!track) {
+      // tracks present but all asr → distinct message; no tracks at all → enable CC.
+      deps.notify(captions.tracks.length > 0 ? deps.strings.autoOnly : deps.strings.noCaptions);
       disable();
       return;
     }
-    if (!on) return; // user toggled off during the await
-
-    if (captions.isLive) { deps.notify(deps.strings.live); disable(); return; }
-    const track = pickTrack(captions.tracks, {
-      activeVssId: captions.activeVssId,
-      activeLanguageCode: captions.activeLanguageCode,
-    });
-    if (!track) { deps.notify(deps.strings.noCaptions); disable(); return; }
     const target = deps.getTargetLang();
     if (track.languageCode && target.startsWith(track.languageCode)) {
       deps.notify(deps.strings.noTranslationNeeded); disable(); return;
@@ -148,7 +162,23 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     textToId = new Map();
   }
 
-  function attachButton(): void {
+  async function attachButton(): Promise<void> {
+    // Probe the caption tracks up front so we can hide the button on videos that have
+    // no translatable (manual) track — auto-generated (asr) captions render in a way
+    // that covers our injected line, so we don't translate them.
+    try {
+      probed = await requestCaptionTracks();
+    } catch {
+      probed = null; // bridge not ready / timed out
+    }
+    // Positively know there's no manual track → don't mount, and clear any button left
+    // over from a previous video (the control bar persists across SPA navigation).
+    if (probed && pickTrack(probed.tracks) === null) {
+      removeSubsButton();
+      return;
+    }
+    // Manual track present, or probe failed (mount anyway as a graceful fallback —
+    // enable() re-probes and notifies if it turns out to be unsupported).
     button = mountSubsButton({
       titleOff: deps.strings.titleOff,
       titleOn: deps.strings.titleOn,

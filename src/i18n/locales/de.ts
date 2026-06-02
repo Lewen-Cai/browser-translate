@@ -105,4 +105,5 @@ export const de: Record<StringKey, string> = {
   ytSubsLive: 'Livestreams werden nicht unterstützt',
   ytSubsFailed: 'Untertitelübersetzung fehlgeschlagen',
   ytSubsTranslating: 'Übersetzen…',
+  ytSubsAutoOnly: 'Automatisch generierte Untertitel werden nicht unterstützt',
 };

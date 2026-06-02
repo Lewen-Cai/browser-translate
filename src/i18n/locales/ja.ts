@@ -105,4 +105,5 @@ export const ja: Record<StringKey, string> = {
   ytSubsLive: 'ライブ配信は非対応です',
   ytSubsFailed: '字幕の翻訳に失敗しました',
   ytSubsTranslating: '翻訳中…',
+  ytSubsAutoOnly: '自動生成の字幕は非対応です',
 };

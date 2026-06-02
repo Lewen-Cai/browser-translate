@@ -17,6 +17,15 @@ export interface SubsButtonHandle {
   remove: () => void;
 }
 
+/**
+ * Remove the subtitle button from the control bar. Used when a SPA navigation lands
+ * on a video with no translatable (manual) caption track — the control bar persists
+ * across navigations, so a button from the previous video would otherwise linger.
+ */
+export function removeSubsButton(): void {
+  document.querySelector(`.${BTN_CLASS}`)?.remove();
+}
+
 export function mountSubsButton(deps: SubsButtonDeps): SubsButtonHandle {
   const controls = document.querySelector(CONTROLS_SEL);
   if (!controls) return { mounted: false, setActive: () => {}, remove: () => {} };

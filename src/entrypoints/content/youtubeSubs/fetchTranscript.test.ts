@@ -10,9 +10,16 @@ describe('pickTrack', () => {
     ];
     expect(pickTrack(tracks)?.baseUrl).toBe('b');
   });
-  it('falls back to the first track', () => {
+  it('returns null when the only track is asr', () => {
     const tracks: CaptionTrack[] = [{ baseUrl: 'a', languageCode: 'fr', kind: 'asr' }];
-    expect(pickTrack(tracks)?.baseUrl).toBe('a');
+    expect(pickTrack(tracks)).toBeNull();
+  });
+  it('returns null when every track is asr', () => {
+    const tracks: CaptionTrack[] = [
+      { baseUrl: 'en-asr', languageCode: 'en', kind: 'asr' },
+      { baseUrl: 'ja-asr', languageCode: 'ja', kind: 'asr' },
+    ];
+    expect(pickTrack(tracks)).toBeNull();
   });
   it('returns null for no tracks', () => {
     expect(pickTrack([])).toBeNull();
@@ -27,7 +34,16 @@ describe('pickTrack', () => {
     expect(pickTrack(tracks, { activeVssId: '.en' })?.baseUrl).toBe('en');
   });
 
-  it('picks the active language (manual over asr) when no vssId match', () => {
+  it('never returns an asr track even when it is the active one', () => {
+    // User has the asr track displayed, but a manual track exists in the same language.
+    const tracks: CaptionTrack[] = [
+      { baseUrl: 'en-asr', languageCode: 'en', kind: 'asr', vssId: 'a.en' },
+      { baseUrl: 'en', languageCode: 'en', vssId: '.en' },
+    ];
+    expect(pickTrack(tracks, { activeVssId: 'a.en' })?.baseUrl).toBe('en');
+  });
+
+  it('picks the active language (manual only) when no vssId match', () => {
     const tracks: CaptionTrack[] = [
       { baseUrl: 'ar', languageCode: 'ar' },
       { baseUrl: 'en-asr', languageCode: 'en', kind: 'asr' },
@@ -36,8 +52,9 @@ describe('pickTrack', () => {
     expect(pickTrack(tracks, { activeLanguageCode: 'en' })?.baseUrl).toBe('en');
   });
 
-  it('infers original language from the asr track when no active preference', () => {
+  it('uses the asr language only as a hint to pick the original-language manual track', () => {
     // First track is an unrelated language (Arabic); original spoken language is English (asr).
+    // The asr track itself is never returned — only the manual English track.
     const tracks: CaptionTrack[] = [
       { baseUrl: 'ar', languageCode: 'ar' },
       { baseUrl: 'en-asr', languageCode: 'en', kind: 'asr' },
@@ -46,13 +63,14 @@ describe('pickTrack', () => {
     expect(pickTrack(tracks)?.baseUrl).toBe('en');
   });
 
-  it('does not blindly pick the first track on a multi-language video', () => {
+  it('falls back to the first manual track when the asr hint has no manual match', () => {
     const tracks: CaptionTrack[] = [
-      { baseUrl: 'ar', languageCode: 'ar' },
+      { baseUrl: 'ja', languageCode: 'ja' },
       { baseUrl: 'en-asr', languageCode: 'en', kind: 'asr' },
     ];
-    // asr language (en) is the original → pick the en asr, not Arabic.
-    expect(pickTrack(tracks)?.baseUrl).toBe('en-asr');
+    // asr is English but the only manual track is Japanese → translate the manual one,
+    // never the asr track.
+    expect(pickTrack(tracks)?.baseUrl).toBe('ja');
   });
 });
 

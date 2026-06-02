@@ -105,4 +105,5 @@ export const es: Record<StringKey, string> = {
   ytSubsLive: 'Las transmisiones en directo no son compatibles',
   ytSubsFailed: 'Error al traducir los subtítulos',
   ytSubsTranslating: 'Traduciendo…',
+  ytSubsAutoOnly: 'Los subtítulos generados automáticamente no son compatibles',
 };
