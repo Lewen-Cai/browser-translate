@@ -7,7 +7,7 @@ import { SegmentedControl } from '~/ui/components/SegmentedControl';
 import { ApiStatusIndicator } from '~/ui/components/ApiStatusIndicator';
 import { Eye, EyeOff } from '~/ui/icons';
 import { useT } from '~/i18n';
-import { CLOUD_PRESETS, type CloudProvider } from '~/core/providers/presets';
+import { CLOUD_PRESETS, baseUrlHint, type CloudProvider } from '~/core/providers/presets';
 import { applySlot, rememberActive } from '~/core/providers/providerSlots';
 
 export function ApiSettingsPage() {
@@ -79,7 +79,7 @@ export function ApiSettingsPage() {
           value={api.baseUrl}
           disabled={baseUrlLocked}
           mono
-          hint="OpenAI · DeepSeek · Moonshot · Zhipu · Qwen · SiliconFlow · OpenRouter · Mistral · Ollama"
+          hint={baseUrlHint(api.providerType)}
           onInput={(e) => updateApi(rememberActive({ ...api, baseUrl: (e.target as HTMLInputElement).value }))}
         />
 

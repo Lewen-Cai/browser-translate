@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { CLOUD_PRESETS, inferCloudProvider, isCloudProvider, type CloudProvider } from './presets';
+import {
+  CLOUD_PRESETS,
+  inferCloudProvider,
+  isCloudProvider,
+  baseUrlHint,
+  type CloudProvider,
+} from './presets';
 
 describe('CLOUD_PRESETS', () => {
   it('custom has no endpoints; every other provider has at least one', () => {
@@ -39,6 +45,24 @@ describe('inferCloudProvider', () => {
   });
   it('falls back to custom for an unknown URL', () => {
     expect(inferCloudProvider('https://example.invalid/v1')).toBe('custom');
+  });
+});
+
+describe('baseUrlHint', () => {
+  it('lists cloud providers for the cloud type', () => {
+    const hint = baseUrlHint('cloud');
+    expect(hint).toContain('OpenAI');
+    expect(hint).toContain('DeepSeek');
+    // Ollama is a local runtime — it must NOT appear in the cloud hint.
+    expect(hint).not.toContain('Ollama');
+  });
+  it('lists local runtimes for the local type', () => {
+    const hint = baseUrlHint('local');
+    expect(hint).toContain('LM Studio');
+    expect(hint).toContain('Ollama');
+    // Cloud-only brands must NOT appear in the local hint.
+    expect(hint).not.toContain('DeepSeek');
+    expect(hint).not.toContain('OpenAI');
   });
 });
 

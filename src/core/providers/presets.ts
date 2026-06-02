@@ -52,6 +52,16 @@ export const CLOUD_PRESETS: Record<CloudProvider, CloudPreset> = {
   custom: { label: 'Custom', endpoints: [] },
 };
 
+/** Short brand list shown under the Base URL field, by service type. Cloud lists the
+ *  supported cloud providers; local lists common self-hosted runtimes (Ollama belongs
+ *  here, not in the cloud list). Brand names — locale-invariant, so not i18n strings. */
+const CLOUD_PROVIDER_HINT = 'OpenAI · DeepSeek · Moonshot · Zhipu · Qwen · SiliconFlow · OpenRouter · Mistral';
+const LOCAL_RUNTIME_HINT = 'LM Studio · Ollama · llama.cpp · vLLM';
+
+export function baseUrlHint(providerType: 'cloud' | 'local'): string {
+  return providerType === 'local' ? LOCAL_RUNTIME_HINT : CLOUD_PROVIDER_HINT;
+}
+
 /** True when `value` is a known cloud provider key (used by UI + migration validation). */
 export function isCloudProvider(value: string): value is CloudProvider {
   return Object.prototype.hasOwnProperty.call(CLOUD_PRESETS, value);
