@@ -1,5 +1,9 @@
 # BrowserTranslate
 
+<p align="center">
+  <img src="./assets/banner.png" alt="BrowserTranslate — 隐私优先、自带 Key 的浏览器翻译扩展" width="800">
+</p>
+
 [![Release](https://img.shields.io/github/v/release/Lewen-Cai/BrowserTranslate?color=2563eb&label=release)](https://github.com/Lewen-Cai/BrowserTranslate/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 
@@ -33,6 +37,14 @@
 - 翻译缓存（可配 TTL）
 - 浅色 / 深色主题（跟随系统）
 - 界面支持 8 种语言（简体/繁体中文、English、日本語、한국어、Español、Français、Deutsch），自动跟随浏览器语言
+
+## 架构
+
+<p align="center">
+  <img src="./assets/framework.png" alt="BrowserTranslate 架构图：后台 Service Worker 是唯一发起网络请求的地方，文本从浏览器直达你配置的服务方，API Key 不进入页面" width="760">
+</p>
+
+后台 Service Worker 是**唯一**发起网络请求的地方——你的文本从浏览器直达你配置的服务方，API Key 绝不进入页面。没有中转服务器。
 
 ## 安装
 

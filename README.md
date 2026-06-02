@@ -1,5 +1,9 @@
 # BrowserTranslate
 
+<p align="center">
+  <img src="./assets/banner.png" alt="BrowserTranslate — privacy-first, bring-your-own-key browser translation" width="800">
+</p>
+
 [![Release](https://img.shields.io/github/v/release/Lewen-Cai/BrowserTranslate?color=2563eb&label=release)](https://github.com/Lewen-Cai/BrowserTranslate/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 [![CI](https://github.com/Lewen-Cai/BrowserTranslate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lewen-Cai/BrowserTranslate/actions/workflows/ci.yml)
@@ -34,6 +38,14 @@ Existing translation extensions either lock LLM access behind paywalls, route yo
 - Translation cache (configurable TTL)
 - Light / dark theme (follows system)
 - UI available in 8 languages (Simplified/Traditional Chinese, English, Japanese, Korean, Spanish, French, German); auto-detects browser locale
+
+## Architecture
+
+<p align="center">
+  <img src="./assets/framework.png" alt="BrowserTranslate architecture: the background service worker is the only network call site; your text goes directly to your configured endpoint and your API key never reaches the page" width="760">
+</p>
+
+The background service worker is the **only** place that makes network calls — your text goes straight from your browser to the endpoint you configured, and your API key never touches the page. No relay server, ever.
 
 ## Install
 
