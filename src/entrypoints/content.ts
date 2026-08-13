@@ -12,6 +12,7 @@ import { resolveThemeDefinition } from '~/core/theme/themes';
 import type { ThemeDefinition } from '~/storage/schema';
 import { isLikelyPassage } from '~/core/selection/isLikelyPassage';
 import { isSameLanguageAsTarget } from '~/core/language/sameLanguage';
+import { reportSystemDark } from '~/messaging/client';
 import { resolveLocale, t } from '~/i18n';
 import type { Locale } from '~/i18n/strings';
 import type { GlobalSettings } from '~/storage/schema';
@@ -29,6 +30,8 @@ export default defineContentScript({
 
     const applyTheme = () => {
       mount.setTheme(themeDefinition, resolveEffectiveTheme(themeSetting, mql.matches));
+      // Keep the toolbar icon on the same variant the page resolves.
+      reportSystemDark(mql.matches);
     };
 
     mql.addEventListener('change', applyTheme);

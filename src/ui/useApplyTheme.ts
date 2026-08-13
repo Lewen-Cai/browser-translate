@@ -3,6 +3,7 @@ import { useAppStore } from '~/storage/store';
 import { resolveEffectiveTheme } from './themeResolver';
 import { resolveThemeDefinition } from '~/core/theme/themes';
 import { applyThemeTokens } from './applyThemeTokens';
+import { reportSystemDark } from '~/messaging/client';
 
 /**
  * Watches settings.theme/themeId/customThemes: toggles the `dark` class on
@@ -26,10 +27,14 @@ export function useApplyTheme(): void {
 
     const mql = window.matchMedia('(prefers-color-scheme: dark)');
     apply(resolveEffectiveTheme(theme, mql.matches));
+    reportSystemDark(mql.matches); // toolbar icon follows the same variant
 
     if (theme !== 'auto') return;
 
-    const onChange = (e: MediaQueryListEvent) => apply(resolveEffectiveTheme('auto', e.matches));
+    const onChange = (e: MediaQueryListEvent) => {
+      apply(resolveEffectiveTheme('auto', e.matches));
+      reportSystemDark(e.matches);
+    };
     mql.addEventListener('change', onChange);
     return () => {
       mql.removeEventListener('change', onChange);

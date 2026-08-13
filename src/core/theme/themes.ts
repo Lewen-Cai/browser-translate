@@ -251,6 +251,20 @@ export function parseCustomTheme(parsed: unknown): ThemeDefinition {
   };
 }
 
+/**
+ * Brand background + glyph colors ('R G B') for the variant in effect — the
+ * exact pair the in-page trigger icon renders with (--ap-brand background,
+ * --ap-brand-fg glyph). The toolbar action icon tint MUST consume this same
+ * accessor so the two icons can never diverge.
+ */
+export function themeBrandColors(
+  theme: ThemeDefinition,
+  dark: boolean,
+): { brand: string; brandFg: string } {
+  const palette = dark ? theme.colors.dark : theme.colors.light;
+  return { brand: palette.brand, brandFg: palette['brand-fg'] };
+}
+
 /** Keys a theme injects, resolved for one variant — consumed by applyThemeTokens. */
 export function themeCssVars(theme: ThemeDefinition, dark: boolean): Record<string, string> {
   const palette = dark ? theme.colors.dark : theme.colors.light;

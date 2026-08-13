@@ -77,6 +77,11 @@ export function abortTranslate(requestId: string): void {
   sendRequest({ type: 'translate:abort', requestId });
 }
 
+/** Report the system prefers-color-scheme state to the background (toolbar icon tint). */
+export function reportSystemDark(systemDark: boolean): void {
+  sendRequest({ type: 'theme:dark', systemDark });
+}
+
 /**
  * Tests connectivity to the configured OpenAI-compatible endpoint
  * by calling GET {baseUrl}/models. Returns success or error info.

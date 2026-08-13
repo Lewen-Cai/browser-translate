@@ -20,6 +20,17 @@ export interface PingRequest {
   requestId: string;
 }
 
+/**
+ * UI contexts (content script, popup, options) report the system
+ * prefers-color-scheme state to the background — a service worker has no
+ * matchMedia, but needs it to tint the toolbar icon with the same
+ * light/dark-variant brand the in-page UI resolves.
+ */
+export interface SystemDarkReport {
+  type: 'theme:dark';
+  systemDark: boolean;
+}
+
 export type PingResponse =
   | {
       type: 'ping:ok';
@@ -56,4 +67,5 @@ export type Request =
   | TranslateRequest
   | TranslateBatchRequest
   | AbortRequest
-  | PingRequest;
+  | PingRequest
+  | SystemDarkReport;
