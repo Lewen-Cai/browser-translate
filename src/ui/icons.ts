@@ -20,4 +20,8 @@ export {
   Download,
   Upload,
   ArrowUpRight,
+  Server,
+  SlidersHorizontal,
+  Sparkles,
+  Zap,
 } from 'lucide-preact';

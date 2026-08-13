@@ -23,6 +23,12 @@ export const ja: Record<StringKey, string> = {
   // Options nav
   navApi: 'API',
   navGeneral: '一般',
+  // Translation engine
+  engine: '翻訳エンジン',
+  engineKindService: '翻訳サービス',
+  engineKindLlm: 'LLM',
+  engineHint: '無料エンジンはキー不要ですが、訳文のみを返します。自分の API なら単語の辞書引きも使えます。',
+  engineFreeDisclaimer: 'Microsoft と Google の翻訳は公開エンドポイントを利用しており、公式 API ではなく、両社の承認も受けていません。予告なく変更・停止される可能性があり、現状のまま無保証で提供されます。',
   // Provider type + presets
   providerType: 'プロバイダー種別',
   providerTypeCloud: 'クラウド',

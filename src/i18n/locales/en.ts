@@ -23,6 +23,12 @@ export const en = {
   // Options nav
   navApi: 'API',
   navGeneral: 'GENERAL',
+  // Translation engine
+  engine: 'Translation engine',
+  engineKindService: 'Translation service',
+  engineKindLlm: 'LLM',
+  engineHint: 'Free engines need no key, but only produce plain translations. Your own API also gives dictionary lookups for single words.',
+  engineFreeDisclaimer: 'Microsoft and Google translation go through public endpoints that are not official APIs, and are not affiliated with or endorsed by either company. They may change or stop working at any time, and are provided as-is without warranty.',
   // Provider type + presets
   providerType: 'Provider type',
   providerTypeCloud: 'Cloud',

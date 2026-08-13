@@ -28,8 +28,10 @@ export type MtTranslateFn = (req: MtRequest) => Promise<string[]>;
 
 export interface MtEngine {
   readonly id: MtEngineId;
-  /** Brand label — locale-invariant, so not an i18n string. */
+  /** Brand labels — locale-invariant, so not i18n strings. `shortLabel` is the
+   *  one that has to fit a narrow picker card. */
   readonly label: string;
+  readonly shortLabel: string;
   /** Upper bounds per request, chosen to stay well inside each service's limits. */
   readonly maxBatchSize: number;
   readonly maxBatchChars: number;

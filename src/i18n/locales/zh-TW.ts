@@ -23,6 +23,12 @@ export const zhTW: Record<StringKey, string> = {
   // Options nav
   navApi: 'API',
   navGeneral: '一般',
+  // Translation engine
+  engine: '翻譯引擎',
+  engineKindService: '翻譯服務',
+  engineKindLlm: '大模型',
+  engineHint: '免費引擎無需金鑰，但只提供純翻譯；使用自有 API 還能對單字進行辭典查詢。',
+  engineFreeDisclaimer: '微軟與 Google 翻譯使用的是公開端點，並非官方 API，也未獲得兩家公司的授權或背書。它們可能隨時變更或失效，按現狀提供，不作任何擔保。',
   // Provider type + presets
   providerType: '服務類型',
   providerTypeCloud: '雲端',

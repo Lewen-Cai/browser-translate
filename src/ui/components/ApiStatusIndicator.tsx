@@ -21,6 +21,7 @@ interface Props {
 
 export function ApiStatusIndicator({ pingNonce, skip = false }: Props): JSX.Element {
   const api = useAppStore((s) => s.data.api);
+  const engine = useAppStore((s) => s.data.settings.engine);
   const t = useT();
   const [ping, setPing] = useState<PingValue>(null);
   const seq = useRef(0);
@@ -36,9 +37,9 @@ export function ApiStatusIndicator({ pingNonce, skip = false }: Props): JSX.Elem
       if (mine !== seq.current) return;
       setPing(r);
     });
-  }, [pingNonce, skip]);
+  }, [pingNonce, skip, engine]);
 
-  const state = deriveStatus(api, ping);
+  const state = deriveStatus(api, ping, engine);
   const { dotClass, label } = render(state, t);
 
   return (

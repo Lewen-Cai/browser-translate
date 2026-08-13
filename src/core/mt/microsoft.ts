@@ -60,6 +60,7 @@ async function translate(req: MtRequest): Promise<string[]> {
 export const microsoftEngine: MtEngine = {
   id: 'microsoft',
   label: 'Microsoft Translator',
+  shortLabel: 'Microsoft',
   maxBatchSize: 20,
   maxBatchChars: 4000,
   translate,

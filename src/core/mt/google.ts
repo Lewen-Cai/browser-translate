@@ -61,6 +61,7 @@ async function translate(req: MtRequest): Promise<string[]> {
 export const googleEngine: MtEngine = {
   id: 'google',
   label: 'Google Translate',
+  shortLabel: 'Google',
   maxBatchSize: 20,
   maxBatchChars: 4000,
   translate,

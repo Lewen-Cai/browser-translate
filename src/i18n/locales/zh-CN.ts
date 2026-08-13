@@ -23,6 +23,12 @@ export const zhCN: Record<StringKey, string> = {
   // Options nav
   navApi: 'API',
   navGeneral: '通用',
+  // Translation engine
+  engine: '翻译引擎',
+  engineKindService: '翻译服务',
+  engineKindLlm: '大模型',
+  engineHint: '免费引擎无需密钥，但只提供纯翻译；使用自有 API 还能对单词进行词典查询。',
+  engineFreeDisclaimer: '微软和谷歌翻译使用的是公开端点，并非官方 API，也未获得两家公司的授权或背书。它们可能随时变更或失效，按现状提供，不作任何担保。',
   // Provider type + presets
   providerType: '服务类型',
   providerTypeCloud: '云服务',

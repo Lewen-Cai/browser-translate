@@ -9,9 +9,17 @@ import { Button } from '~/ui/components/Button';
 import { Settings, Eye, EyeOff } from '~/ui/icons';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
-import { CLOUD_PRESETS, supportsThinkingToggle, type CloudProvider } from '~/core/providers/presets';
+import {
+  CLOUD_PRESETS,
+  supportsThinkingToggle,
+  type CloudProvider,
+} from '~/core/providers/presets';
 import { activeSlot, applySlot, rememberActive } from '~/core/providers/providerSlots';
 import { thinkingOptions } from '~/ui/thinkingOptions';
+import { EnginePicker } from '~/ui/components/EnginePicker';
+import { ProviderIcon } from '~/ui/ProviderIcon';
+import { MT_ENGINES } from '~/core/mt';
+import type { MtEngineId } from '~/core/mt/types';
 import type { ApiSettings, ThinkingSetting } from '~/storage/schema';
 
 const LANGUAGES = [
@@ -53,7 +61,9 @@ export function App() {
   const [pageOn, setPageOn] = useState(false);
 
   // Initial load
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   // Query the active tab's current page-translation state to label the toggle.
   useEffect(() => {
@@ -72,7 +82,10 @@ export function App() {
     setDraft(api);
   }, [api]);
 
-  function openOptions() { chrome.runtime.openOptionsPage(); window.close(); }
+  function openOptions() {
+    chrome.runtime.openOptionsPage();
+    window.close();
+  }
 
   function togglePage() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -92,6 +105,7 @@ export function App() {
   const dirty = !apiEqual(draft, api);
   const cloudProvider = draft.cloudProvider;
   const isCloud = draft.providerType === 'cloud';
+  const usesApi = settings.engine === 'llm';
   const baseUrlLocked = isCloud && cloudProvider !== 'custom';
 
   function setDraftField<K extends keyof ApiSettings>(key: K, value: ApiSettings[K]) {
@@ -115,7 +129,11 @@ export function App() {
   // The status indicator should not waste a ping during initial load — only
   // ping once the saved api state has the required fields. The indicator
   // itself handles further triggering via pingNonce.
-  const initiallySkip = useMemo(() => pingNonce === 0 && !apiHasRequired(api), [pingNonce, api]);
+  // A free engine has nothing to fill in, so its probe should run right away.
+  const initiallySkip = useMemo(
+    () => pingNonce === 0 && settings.engine === 'llm' && !apiHasRequired(api),
+    [pingNonce, api, settings.engine],
+  );
 
   return (
     <div class="bg-ap-bg text-ap-fg">
@@ -144,9 +162,10 @@ export function App() {
       {/* Status strip */}
       <div class="px-4 py-2 flex items-center gap-2 border-b border-ap-border bg-ap-surface">
         <ApiStatusIndicator pingNonce={pingNonce} skip={initiallySkip} />
-        {api.model && (
+        {/* What is actually translating right now — the model only when one is in use. */}
+        {(usesApi ? api.model : MT_ENGINES[settings.engine as MtEngineId].shortLabel) && (
           <span class="ml-auto text-2xs font-mono text-ap-subtle truncate max-w-[160px]">
-            {api.model}
+            {usesApi ? api.model : MT_ENGINES[settings.engine as MtEngineId].shortLabel}
           </span>
         )}
       </div>
@@ -159,7 +178,9 @@ export function App() {
             label={t('targetLanguage')}
             value={settings.targetLanguage}
             options={LANGUAGES}
-            onChange={(e) => updateSettings({ targetLanguage: (e.target as HTMLSelectElement).value })}
+            onChange={(e) =>
+              updateSettings({ targetLanguage: (e.target as HTMLSelectElement).value })
+            }
           />
           <Select
             label={t('triggerMode')}
@@ -168,7 +189,11 @@ export function App() {
               { value: 'icon', label: t('iconAfterSelection') },
               { value: 'hotkey', label: t('hotkeyOnly') },
             ]}
-            onChange={(e) => updateSettings({ triggerMode: (e.target as HTMLSelectElement).value as 'icon' | 'hotkey' })}
+            onChange={(e) =>
+              updateSettings({
+                triggerMode: (e.target as HTMLSelectElement).value as 'icon' | 'hotkey',
+              })
+            }
           />
           <div class="pt-1">
             <Button variant="primary" size="sm" onClick={togglePage}>
@@ -182,93 +207,109 @@ export function App() {
       <section class="px-4 pt-3 pb-4">
         <SectionHeader number="02" label={t('sectionApi').toUpperCase()} />
         <div class="space-y-2.5">
-          <SegmentedControl<'cloud' | 'local'>
-            label={t('providerType')}
-            value={draft.providerType}
-            fullWidth
-            options={[
-              { value: 'cloud', label: t('providerTypeCloud') },
-              { value: 'local', label: t('providerTypeLocal') },
-            ]}
-            onChange={onProviderTypeChange}
+          <EnginePicker
+            value={settings.engine}
+            onChange={(next) => updateSettings({ engine: next })}
+            compact
           />
 
-          {isCloud && (
-            <Select
-              label={t('cloudProvider')}
-              value={draft.cloudProvider}
-              options={(Object.keys(CLOUD_PRESETS) as CloudProvider[]).map((k) => ({
-                value: k,
-                label: k === 'custom' ? t('cloudProviderCustom') : CLOUD_PRESETS[k].label,
-              }))}
-              onChange={(e) => onCloudProviderChange((e.target as HTMLSelectElement).value as CloudProvider)}
-            />
-          )}
+          {usesApi && (
+            <>
+              <SegmentedControl<'cloud' | 'local'>
+                label={t('providerType')}
+                value={draft.providerType}
+                fullWidth
+                options={[
+                  { value: 'cloud', label: t('providerTypeCloud') },
+                  { value: 'local', label: t('providerTypeLocal') },
+                ]}
+                onChange={onProviderTypeChange}
+              />
 
-          {isCloud && CLOUD_PRESETS[cloudProvider].endpoints.length > 1 && (
-            <Select
-              label={t('cloudEndpoint')}
-              value={draft.baseUrl}
-              options={CLOUD_PRESETS[cloudProvider].endpoints.map((ep) => ({
-                value: ep.baseUrl,
-                label: ep.label,
-              }))}
-              onChange={(e) => setDraftField('baseUrl', (e.target as HTMLSelectElement).value)}
-            />
-          )}
-
-          <Input
-            label={t('baseUrl')}
-            value={draft.baseUrl}
-            disabled={baseUrlLocked}
-            mono
-            onInput={(e) => setDraftField('baseUrl', (e.target as HTMLInputElement).value)}
-          />
-
-          {isCloud && (
-            <div class="flex gap-2 items-end">
-              <div class="flex-1">
-                <Input
-                  label={t('apiKey')}
-                  type={showKey ? 'text' : 'password'}
-                  value={draft.apiKey}
-                  mono
-                  onInput={(e) => setDraftField('apiKey', (e.target as HTMLInputElement).value)}
+              {isCloud && (
+                <Select
+                  label={t('cloudProvider')}
+                  value={draft.cloudProvider}
+                  leading={<ProviderIcon id={draft.cloudProvider} size={16} />}
+                  options={(Object.keys(CLOUD_PRESETS) as CloudProvider[]).map((k) => ({
+                    value: k,
+                    label: k === 'custom' ? t('cloudProviderCustom') : CLOUD_PRESETS[k].label,
+                  }))}
+                  onChange={(e) =>
+                    onCloudProviderChange((e.target as HTMLSelectElement).value as CloudProvider)
+                  }
                 />
+              )}
+
+              {isCloud && CLOUD_PRESETS[cloudProvider].endpoints.length > 1 && (
+                <Select
+                  label={t('cloudEndpoint')}
+                  value={draft.baseUrl}
+                  options={CLOUD_PRESETS[cloudProvider].endpoints.map((ep) => ({
+                    value: ep.baseUrl,
+                    label: ep.label,
+                  }))}
+                  onChange={(e) => setDraftField('baseUrl', (e.target as HTMLSelectElement).value)}
+                />
+              )}
+
+              <Input
+                label={t('baseUrl')}
+                value={draft.baseUrl}
+                disabled={baseUrlLocked}
+                mono
+                onInput={(e) => setDraftField('baseUrl', (e.target as HTMLInputElement).value)}
+              />
+
+              {isCloud && (
+                <div class="flex gap-2 items-end">
+                  <div class="flex-1">
+                    <Input
+                      label={t('apiKey')}
+                      type={showKey ? 'text' : 'password'}
+                      value={draft.apiKey}
+                      mono
+                      onInput={(e) => setDraftField('apiKey', (e.target as HTMLInputElement).value)}
+                    />
+                  </div>
+                  <button
+                    onClick={() => setShowKey((s) => !s)}
+                    class="h-8 w-8 flex items-center justify-center rounded-md border border-ap-border bg-ap-surface text-ap-muted hover:text-ap-fg hover:border-ap-border-strong transition-colors"
+                    aria-label={showKey ? 'Hide key' : 'Show key'}
+                  >
+                    {showKey ? <EyeOff size={12} /> : <Eye size={12} />}
+                  </button>
+                </div>
+              )}
+
+              <Input
+                label={t('model')}
+                value={draft.model}
+                mono
+                onInput={(e) => setDraftField('model', (e.target as HTMLInputElement).value)}
+              />
+
+              {supportsThinkingToggle(activeSlot(draft)) && (
+                <Select
+                  label={t('thinkingLabel')}
+                  value={draft.thinking ?? 'off'}
+                  options={thinkingOptions(t('thinkingOff'))}
+                  onChange={(e) =>
+                    setDraftField(
+                      'thinking',
+                      (e.target as HTMLSelectElement).value as ThinkingSetting,
+                    )
+                  }
+                />
+              )}
+
+              <div class="pt-1">
+                <Button variant="primary" size="sm" onClick={onApply} disabled={!dirty}>
+                  {t('applyConfig')}
+                </Button>
               </div>
-              <button
-                onClick={() => setShowKey((s) => !s)}
-                class="h-8 w-8 flex items-center justify-center rounded-md border border-ap-border bg-ap-surface text-ap-muted hover:text-ap-fg hover:border-ap-border-strong transition-colors"
-                aria-label={showKey ? 'Hide key' : 'Show key'}
-              >
-                {showKey ? <EyeOff size={12} /> : <Eye size={12} />}
-              </button>
-            </div>
+            </>
           )}
-
-          <Input
-            label={t('model')}
-            value={draft.model}
-            mono
-            onInput={(e) => setDraftField('model', (e.target as HTMLInputElement).value)}
-          />
-
-          {supportsThinkingToggle(activeSlot(draft)) && (
-            <Select
-              label={t('thinkingLabel')}
-              value={draft.thinking ?? 'off'}
-              options={thinkingOptions(t('thinkingOff'))}
-              onChange={(e) =>
-                setDraftField('thinking', (e.target as HTMLSelectElement).value as ThinkingSetting)
-              }
-            />
-          )}
-
-          <div class="pt-1">
-            <Button variant="primary" size="sm" onClick={onApply} disabled={!dirty}>
-              {t('applyConfig')}
-            </Button>
-          </div>
         </div>
       </section>
     </div>

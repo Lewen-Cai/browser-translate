@@ -23,6 +23,12 @@ export const fr: Record<StringKey, string> = {
   // Options nav
   navApi: 'API',
   navGeneral: 'GÉNÉRAL',
+  // Translation engine
+  engine: 'Moteur de traduction',
+  engineKindService: 'Service de traduction',
+  engineKindLlm: 'LLM',
+  engineHint: 'Les moteurs gratuits ne demandent pas de clé, mais ne font que traduire. Votre propre API ajoute la recherche de mots dans le dictionnaire.',
+  engineFreeDisclaimer: 'Les traductions Microsoft et Google passent par des endpoints publics qui ne sont pas des API officielles et ne sont ni affiliés ni approuvés par ces entreprises. Ils peuvent changer ou cesser de fonctionner à tout moment et sont fournis en l’état, sans garantie.',
   // Provider type + presets
   providerType: 'Type de fournisseur',
   providerTypeCloud: 'Cloud',

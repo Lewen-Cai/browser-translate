@@ -6,6 +6,7 @@ function fakeEngine(over: Partial<MtEngine> = {}): MtEngine {
   return {
     id: 'microsoft',
     label: 'Fake',
+    shortLabel: 'Fake',
     maxBatchSize: 2,
     maxBatchChars: 1000,
     translate: async ({ texts }) => texts.map((t) => `[${t}]`),
