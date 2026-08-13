@@ -90,6 +90,11 @@ export const en = {
   // Translation card (Shadow DOM)
   cardExample: 'EXAMPLE',
   cardRefreshNeeded: 'Extension was updated. Please refresh this page to continue.',
+  cardPin: 'Pin the card open',
+  cardUnpin: 'Unpin',
+  cardDrag: 'Drag to move',
+  cardExpandSource: 'Show full original',
+  cardCollapseSource: 'Collapse original',
   // Errors
   noProfileError: 'API not configured. Open settings to add your key.',
   // YouTube subtitles

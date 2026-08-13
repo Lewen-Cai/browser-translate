@@ -17,6 +17,7 @@ import {
   DEFAULT_SUBTITLE_FONT_SCALE,
   DEFAULT_SUBTITLE_OFFSET_PCT,
 } from '~/core/subtitles/layout';
+import { translationAttribution, type TranslationAttribution } from '~/ui/attribution';
 import type { SubtitleAppearance } from './content/youtubeSubs/subtitleOverlay';
 import { reportSystemDark } from '~/messaging/client';
 import { resolveLocale, t } from '~/i18n';
@@ -55,6 +56,11 @@ export default defineContentScript({
     };
     let fullPageHotkey: HotkeyWatcher | null = null;
     let ytSubs: YouTubeSubTranslator | null = null;
+    let attribution: TranslationAttribution = { iconId: 'custom', label: '' };
+    // A pinned card survives clicks elsewhere on the page, and keeps the spot
+    // the reader dragged it to when they translate something else.
+    let cardPinned = false;
+    let pinnedRect: DOMRect | null = null;
     let ytNavHandler: (() => void) | null = null;
 
     const showIcon = (info: SelectionInfo) => {
@@ -70,14 +76,24 @@ export default defineContentScript({
     const showCard = (info: SelectionInfo) => {
       state = 'card';
       const skip = isLikelyPassage(info.text) && isSameLanguageAsTarget(info.text, targetLanguage);
+      // While pinned the card must not jump back to the new selection.
+      const rect = cardPinned && pinnedRect ? pinnedRect : info.rect;
+      if (!cardPinned) pinnedRect = info.rect;
       mount.render(
         h(TranslationCard, {
           text: info.text,
-          rect: info.rect,
+          rect,
           locale,
+          attribution,
           notice: skip ? t('noTranslationNeeded', locale) : undefined,
+          onPinChange: (next: boolean) => {
+            cardPinned = next;
+            if (next) pinnedRect = rect;
+          },
           onClose: () => {
             state = 'idle';
+            cardPinned = false;
+            pinnedRect = null;
             mount.unmount();
           },
         }),
@@ -110,6 +126,7 @@ export default defineContentScript({
         backgroundOpacity: data.settings.subtitleBackgroundOpacity,
         translationOnly: data.settings.subtitleTranslationOnly,
       };
+      attribution = translationAttribution(data.settings.engine, data.api);
       applyTheme();
 
       if (data.settings.triggerMode === 'icon') {
@@ -223,6 +240,7 @@ export default defineContentScript({
       const target = e.target as Node;
       if (mount.root.contains(target)) return;
       if (state === 'icon') return;
+      if (cardPinned) return; // pinning exists precisely to survive this
       hide();
     }, true);
   },

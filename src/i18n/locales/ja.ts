@@ -90,6 +90,11 @@ export const ja: Record<StringKey, string> = {
   // Translation card (Shadow DOM)
   cardExample: '例文',
   cardRefreshNeeded: '拡張機能が更新されました。続行するにはこのページを再読み込みしてください。',
+  cardPin: 'カードを固定',
+  cardUnpin: '固定を解除',
+  cardDrag: 'ドラッグで移動',
+  cardExpandSource: '原文をすべて表示',
+  cardCollapseSource: '原文を折りたたむ',
   // Errors
   noProfileError: 'API が未設定です。設定を開いてキーを追加してください。',
   // YouTube subtitles

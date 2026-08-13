@@ -22,6 +22,8 @@ export {
   ArrowUpRight,
   Server,
   SlidersHorizontal,
+  Pin,
+  ChevronUp,
   Sparkles,
   Zap,
 } from 'lucide-preact';

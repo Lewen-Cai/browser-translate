@@ -90,6 +90,11 @@ export const zhCN: Record<StringKey, string> = {
   // Translation card (Shadow DOM)
   cardExample: '例句',
   cardRefreshNeeded: '扩展已更新，请刷新此页面以继续。',
+  cardPin: '固定卡片',
+  cardUnpin: '取消固定',
+  cardDrag: '拖动可移动',
+  cardExpandSource: '展开原文',
+  cardCollapseSource: '收起原文',
   // Errors
   noProfileError: '尚未配置 API，请到设置中填入 Key。',
   // YouTube subtitles

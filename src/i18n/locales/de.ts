@@ -90,6 +90,11 @@ export const de: Record<StringKey, string> = {
   // Translation card (Shadow DOM)
   cardExample: 'BEISPIEL',
   cardRefreshNeeded: 'Die Erweiterung wurde aktualisiert. Bitte lade diese Seite neu, um fortzufahren.',
+  cardPin: 'Karte anheften',
+  cardUnpin: 'Lösen',
+  cardDrag: 'Zum Verschieben ziehen',
+  cardExpandSource: 'Original ganz anzeigen',
+  cardCollapseSource: 'Original einklappen',
   // Errors
   noProfileError: 'API nicht konfiguriert. Öffne die Einstellungen, um deinen Schlüssel hinzuzufügen.',
   // YouTube subtitles

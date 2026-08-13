@@ -90,6 +90,11 @@ export const zhTW: Record<StringKey, string> = {
   // Translation card (Shadow DOM)
   cardExample: '例句',
   cardRefreshNeeded: '擴充功能已更新，請重新整理此頁面以繼續。',
+  cardPin: '釘選卡片',
+  cardUnpin: '取消釘選',
+  cardDrag: '拖曳可移動',
+  cardExpandSource: '展開原文',
+  cardCollapseSource: '收合原文',
   // Errors
   noProfileError: '尚未設定 API，請到設定中填入 Key。',
   // YouTube subtitles

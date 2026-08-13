@@ -36,3 +36,27 @@ export function computeCardVerticalLayout(rect: DOMRect): CardVerticalLayout {
   const maxHeight = innerHeight - topVp - MARGIN;
   return { top: topVp + scrollY, maxHeight };
 }
+
+/** Enough of a dragged card must stay on screen to grab it again. */
+const KEEP_VISIBLE = 48;
+
+/**
+ * Constrain a dragged card to the viewport. Positions are document-space, and
+ * the clamps collapse to the minimum when the viewport is narrower than the
+ * card, so a small window pins it to the left edge rather than off-screen.
+ */
+export function clampCardPosition(
+  left: number,
+  top: number,
+  width: number,
+): { left: number; top: number } {
+  const { innerWidth, innerHeight, scrollX, scrollY } = window;
+  const minLeft = scrollX + MARGIN / 2;
+  const maxLeft = scrollX + innerWidth - width - MARGIN / 2;
+  const minTop = scrollY + MARGIN / 2;
+  const maxTop = scrollY + innerHeight - KEEP_VISIBLE;
+  return {
+    left: Math.min(Math.max(left, minLeft), Math.max(minLeft, maxLeft)),
+    top: Math.min(Math.max(top, minTop), Math.max(minTop, maxTop)),
+  };
+}

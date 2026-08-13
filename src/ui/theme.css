@@ -154,6 +154,9 @@ html, body {
   align-items: stretch;
   border-bottom: 1px solid rgb(var(--ap-border));
   flex-shrink: 0;
+  /* The header doubles as the drag handle, so text in it must not select. */
+  user-select: none;
+  -webkit-user-select: none;
 }
 .bt-card-strip {
   width: 3px;
@@ -182,15 +185,94 @@ html, body {
   font-size: 11px;
   color: rgb(var(--ap-fg-muted));
 }
+.bt-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
 .bt-card-close {
   background: transparent;
   border: none;
   color: rgb(var(--ap-fg-muted));
   cursor: pointer;
-  padding: 0;
+  padding: 3px;
+  border-radius: 4px;
   display: flex;
 }
-.bt-card-close:hover { color: rgb(var(--ap-fg)); }
+.bt-card-close:hover { color: rgb(var(--ap-fg)); background: rgb(var(--ap-fg) / 0.06); }
+.bt-card-close[aria-pressed='true'] { color: rgb(var(--ap-brand)); }
+
+/* Drag handle. Its own control rather than the whole header, so text in the
+   header stays selectable and a stray press can't move the card. */
+.bt-card-grip {
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  cursor: grab;
+  color: rgb(var(--ap-fg-subtle));
+  touch-action: none;
+}
+.bt-card-grip:hover { color: rgb(var(--ap-fg-muted)); }
+.bt-card-grip[data-dragging='true'] { cursor: grabbing; color: rgb(var(--ap-fg-muted)); }
+.bt-card-grip-bar {
+  width: 22px;
+  height: 4px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+/* Source text shown above the translation, for comparison. Clamped to three
+   lines by default so a long selection doesn't push the translation off screen;
+   the chevron opens it into its own scroll area. */
+.bt-card-source-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed rgb(var(--ap-border));
+}
+.bt-card-source {
+  flex: 1;
+  min-width: 0;
+  color: rgb(var(--ap-fg-muted));
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.bt-card-source-open {
+  display: block;
+  max-height: 108px;
+  overflow-y: auto;
+}
+.bt-card-source-toggle {
+  flex: none;
+  margin-top: -2px;
+}
+
+/* Credit line: which model or service produced this translation. */
+.bt-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-top: 1px solid rgb(var(--ap-border));
+  color: rgb(var(--ap-fg-subtle));
+  font-family: var(--ap-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.bt-card-footer-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* Structured dictionary entry */
 .bt-card-dict {

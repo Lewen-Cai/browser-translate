@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { X, AlertCircle, Loader2 } from '~/ui/icons';
+import { X, AlertCircle, Loader2, Pin, ChevronDown, ChevronUp } from '~/ui/icons';
 import { streamTranslate, abortTranslate } from '~/messaging/client';
 import { computeIconPosition, ICON_SIZE } from './TriggerIcon';
-import { computeCardVerticalLayout } from './cardLayout';
+import { clampCardPosition, computeCardVerticalLayout } from './cardLayout';
 import { looksLikeDictionary } from '~/core/dictionary/discriminate';
 import { advanceReveal } from './reveal';
 import { parseDictionaryEntry } from '~/core/dictionary/parse';
 import { DictionaryView } from './DictionaryView';
+import { ProviderIcon } from '~/ui/ProviderIcon';
 import { t } from '~/i18n';
+import type { TranslationAttribution } from '~/ui/attribution';
 import type { Locale } from '~/i18n/strings';
 
 interface Props {
@@ -16,6 +18,11 @@ interface Props {
   locale: Locale;
   onClose: () => void;
   notice?: string;
+  /** Which model or service is doing the work, shown as a credit line. */
+  attribution: TranslationAttribution;
+  /** Pinning is enforced outside the card — the content script owns the
+   *  outside-click and new-selection handling that pinning suppresses. */
+  onPinChange?: (pinned: boolean) => void;
 }
 
 const CARD_WIDTH = 360;
@@ -28,12 +35,19 @@ function friendlyError(raw: string, locale: Locale): string {
   return raw;
 }
 
-export function TranslationCard({ text, rect, locale, onClose, notice }: Props) {
+export function TranslationCard({
+  text, rect, locale, onClose, notice, attribution, onPinChange,
+}: Props) {
+  const [pinned, setPinned] = useState(false);
   const [received, setReceived] = useState('');   // full text received so far
   const [displayed, setDisplayed] = useState(''); // progressively revealed slice
   const [streaming, setStreaming] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);   // drives open animation
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const [sourceExpanded, setSourceExpanded] = useState(false);
+  const dragStart = useRef<{ x: number; y: number; baseX: number; baseY: number } | null>(null);
   const currentReqId = useRef<string>('');
   const cancelled = useRef(false);
   const receivedRef = useRef('');
@@ -42,7 +56,16 @@ export function TranslationCard({ text, rect, locale, onClose, notice }: Props) 
 
   useEffect(() => {
     const animId = window.requestAnimationFrame(() => setVisible(true));
-    if (!notice) void run();
+    return () => window.cancelAnimationFrame(animId);
+  }, []);
+
+  // Keyed on the selection: a pinned card stays mounted while the reader picks
+  // new text, and must translate that text rather than keep showing the old
+  // result. Position, pin state and the reveal machinery survive the change.
+  useEffect(() => {
+    if (notice) return;
+    cancelled.current = false;
+    setSourceExpanded(false);
 
     // Typewriter reveal loop: advance `displayed` toward `received` each frame,
     // decoupled from how fast chunks arrive. Reveals all content uniformly; the
@@ -61,14 +84,14 @@ export function TranslationCard({ text, rect, locale, onClose, notice }: Props) 
       }
     };
     raf = window.requestAnimationFrame(tick);
+    void run();
 
     return () => {
       cancelled.current = true;
-      window.cancelAnimationFrame(animId);
       window.cancelAnimationFrame(raf);
       if (currentReqId.current) abortTranslate(currentReqId.current);
     };
-  }, []); // mount only
+  }, [text, notice]);
 
   async function run() {
     setReceived('');
@@ -113,6 +136,35 @@ export function TranslationCard({ text, rect, locale, onClose, notice }: Props) 
     }
   }
 
+  function togglePin(): void {
+    const next = !pinned;
+    setPinned(next);
+    onPinChange?.(next);
+  }
+
+  function onGripPointerDown(e: PointerEvent): void {
+    dragStart.current = { x: e.clientX, y: e.clientY, baseX: offset.x, baseY: offset.y };
+    setDragging(true);
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  }
+
+  function onGripPointerMove(e: PointerEvent): void {
+    const start = dragStart.current;
+    if (!start) return;
+    setOffset({
+      x: start.baseX + (e.clientX - start.x),
+      y: start.baseY + (e.clientY - start.y),
+    });
+  }
+
+  function endDrag(e: PointerEvent): void {
+    if (!dragStart.current) return;
+    dragStart.current = null;
+    setDragging(false);
+    (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+  }
+
   const iconPos = computeIconPosition(rect);
   const iconRight = iconPos.left + ICON_SIZE;
   let cardLeft = iconRight - CARD_WIDTH;
@@ -121,6 +173,11 @@ export function TranslationCard({ text, rect, locale, onClose, notice }: Props) 
   if (cardLeft < minLeft) cardLeft = minLeft;
   if (cardLeft > maxLeft) cardLeft = maxLeft;
   const { top: cardTop, maxHeight } = computeCardVerticalLayout(rect);
+
+  // The card is placed relative to the selection, which is often not where the
+  // reader wants it — it can land on the very text being translated. Dragging
+  // the grip nudges it, clamped so it can't be thrown off screen.
+  const { left, top } = clampCardPosition(cardLeft + offset.x, cardTop + offset.y, CARD_WIDTH);
 
   // Discriminate on the full received text. Dictionary (JSON, starts with '{')
   // renders only once complete; translations show the typewriter-revealed slice.
@@ -132,26 +189,52 @@ export function TranslationCard({ text, rect, locale, onClose, notice }: Props) 
       class="bt-card"
       style={{
         position: 'absolute',
-        top: `${cardTop}px`,
-        left: `${cardLeft}px`,
+        top: `${top}px`,
+        left: `${left}px`,
         width: `${CARD_WIDTH}px`,
         maxHeight: `${maxHeight}px`,
         transformOrigin: 'top right',
         transform: visible ? 'scale(1)' : 'scale(0.88)',
         opacity: visible ? 1 : 0,
-        transition: 'transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 140ms ease-out',
+        // The open animation must not apply to dragging, or the card trails the
+        // pointer instead of following it.
+        transition: dragging
+          ? 'none'
+          : 'transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 140ms ease-out',
         willChange: 'transform, opacity',
       }}
     >
       <div class="bt-card-header">
         <div class="bt-card-strip" />
+        <div
+          class="bt-card-grip"
+          data-dragging={dragging ? 'true' : 'false'}
+          title={t('cardDrag', locale)}
+          onPointerDown={onGripPointerDown}
+          onPointerMove={onGripPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+        >
+          <span class="bt-card-grip-bar" />
+        </div>
         <div class="bt-card-header-content">
           <div class="bt-card-title-row">
             <span class="bt-card-brand-mark">BrowserTranslate</span>
           </div>
-          <button onClick={onClose} class="bt-card-close" aria-label="Close">
-            <X size={12} />
-          </button>
+          <div class="bt-card-actions">
+            <button
+              onClick={togglePin}
+              class="bt-card-close"
+              aria-pressed={pinned}
+              title={t(pinned ? 'cardUnpin' : 'cardPin', locale)}
+              aria-label={t(pinned ? 'cardUnpin' : 'cardPin', locale)}
+            >
+              <Pin size={12} />
+            </button>
+            <button onClick={onClose} class="bt-card-close" aria-label="Close">
+              <X size={12} />
+            </button>
+          </div>
         </div>
       </div>
       <div class="bt-card-body">
@@ -159,6 +242,25 @@ export function TranslationCard({ text, rect, locale, onClose, notice }: Props) 
           <div class="bt-card-notice">{notice}</div>
         ) : (
           <>
+            {/* The source sits above the translation so the two can be read
+                against each other. A dictionary entry already leads with the
+                headword, so repeating it there would be noise. */}
+            {!error && !dictEntry && (
+              <div class="bt-card-source-row">
+                <div class={`bt-card-source${sourceExpanded ? ' bt-card-source-open' : ''}`}>
+                  {text}
+                </div>
+                <button
+                  class="bt-card-close bt-card-source-toggle"
+                  onClick={() => setSourceExpanded((v) => !v)}
+                  title={t(sourceExpanded ? 'cardCollapseSource' : 'cardExpandSource', locale)}
+                  aria-label={t(sourceExpanded ? 'cardCollapseSource' : 'cardExpandSource', locale)}
+                  aria-expanded={sourceExpanded}
+                >
+                  {sourceExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                </button>
+              </div>
+            )}
             {error ? (
               <div class="bt-card-error">
                 <AlertCircle size={12} class="bt-card-error-icon" />
@@ -177,11 +279,20 @@ export function TranslationCard({ text, rect, locale, onClose, notice }: Props) 
                     <Loader2 size={11} class="animate-spin" /> {t('loading', locale)}
                   </span>
                 ))}
+                {/* A cursor while more is still arriving, so a pause in the
+                    stream doesn't read as a finished translation. */}
+                {displayed && streaming && ' ●'}
               </div>
             )}
           </>
         )}
       </div>
+      {!notice && attribution.label && (
+        <div class="bt-card-footer">
+          <ProviderIcon id={attribution.iconId} size={12} />
+          <span class="bt-card-footer-label">{attribution.label}</span>
+        </div>
+      )}
     </div>
   );
 }

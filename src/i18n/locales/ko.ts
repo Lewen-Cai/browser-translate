@@ -90,6 +90,11 @@ export const ko: Record<StringKey, string> = {
   // Translation card (Shadow DOM)
   cardExample: '예문',
   cardRefreshNeeded: '확장 프로그램이 업데이트되었습니다. 계속하려면 이 페이지를 새로고침하세요.',
+  cardPin: '카드 고정',
+  cardUnpin: '고정 해제',
+  cardDrag: '드래그하여 이동',
+  cardExpandSource: '원문 전체 보기',
+  cardCollapseSource: '원문 접기',
   // Errors
   noProfileError: 'API가 설정되지 않았습니다. 설정을 열어 키를 추가하세요.',
   // YouTube subtitles
