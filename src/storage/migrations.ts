@@ -2,6 +2,7 @@ import { APP_DATA_VERSION, isThinkingSetting, type AppData } from './schema';
 import type { ProviderConfig, ProviderSlot } from './schema';
 import { inferCloudProvider, isCloudProvider } from '~/core/providers/presets';
 import { activeSlot } from '~/core/providers/providerSlots';
+import { DEFAULT_THEME_ID, isBuiltInThemeId, isValidThemeDefinition } from '~/core/theme/themes';
 
 /**
  * Integrity repairs applied to AppData on every load.
@@ -49,8 +50,24 @@ function stripLegacyTemplateFields(data: AppData): AppData {
 }
 
 function fillSettingsDefaults(data: AppData): AppData {
-  if (typeof data.settings.fullPageHotkey === 'string') return data;
-  return { ...data, settings: { ...data.settings, fullPageHotkey: 'Alt+A' } };
+  const s = data.settings;
+  const fullPageHotkey = typeof s.fullPageHotkey === 'string' ? s.fullPageHotkey : 'Alt+A';
+  const rawCustom = Array.isArray(s.customThemes) ? s.customThemes : [];
+  const customThemes = rawCustom.filter(isValidThemeDefinition);
+  const themeIdCandidate = typeof s.themeId === 'string' ? s.themeId : DEFAULT_THEME_ID;
+  const themeId =
+    isBuiltInThemeId(themeIdCandidate) || customThemes.some((t) => t.id === themeIdCandidate)
+      ? themeIdCandidate
+      : DEFAULT_THEME_ID;
+
+  const unchanged =
+    fullPageHotkey === s.fullPageHotkey &&
+    themeId === s.themeId &&
+    customThemes.length === rawCustom.length &&
+    s.customThemes === rawCustom;
+  if (unchanged) return data;
+
+  return { ...data, settings: { ...s, fullPageHotkey, themeId, customThemes } };
 }
 
 function fillApiProviderDefaults(data: AppData): AppData {

@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { exportAppData, importAppData, EXPORT_FORMAT, ImportError } from './transfer';
 import { createDefaultAppData } from './defaults';
-import type { AppData } from './schema';
+import { parseCustomTheme } from '~/core/theme/themes';
+import { THEME_TOKEN_KEYS, type AppData } from './schema';
 
 function sample(): AppData {
   const d = createDefaultAppData();
@@ -70,6 +71,20 @@ describe('importAppData', () => {
     const imported = importAppData({ format: EXPORT_FORMAT, version: 1, exportedAt: 0, data: { settings: { targetLanguage: 'fr' } } });
     expect(imported.settings.targetLanguage).toBe('fr');
     expect(imported.settings.theme).toBe('auto'); // default filled
+  });
+
+  it('round-trips a custom theme and its selected themeId', () => {
+    const custom = parseCustomTheme({
+      name: 'Round Trip',
+      colors: { light: Object.fromEntries(THEME_TOKEN_KEYS.map((k) => [k, '4 5 6'])) },
+    });
+    const data = sample();
+    data.settings.customThemes = [custom];
+    data.settings.themeId = custom.id;
+    const exported = exportAppData(data, { includeKeys: false }, 1);
+    const imported = importAppData(JSON.parse(JSON.stringify(exported)));
+    expect(imported.settings.customThemes).toEqual([custom]);
+    expect(imported.settings.themeId).toBe(custom.id);
   });
 
   it('imports a pre-v0.1.8 file and strips its template fields', () => {

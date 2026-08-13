@@ -18,6 +18,8 @@ export function createDefaultAppData(): AppData {
       cacheEnabled: true,
       cacheTTLDays: 7,
       theme: 'auto',
+      themeId: 'cobalt',
+      customThemes: [],
       uiLanguage: 'auto',
     },
   };

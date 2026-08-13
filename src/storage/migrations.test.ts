@@ -3,6 +3,8 @@ import { migrateAppData } from './migrations';
 import { APP_DATA_VERSION } from './schema';
 import type { AppData, ApiSettings, GlobalSettings } from './schema';
 import { createDefaultAppData } from './defaults';
+import { parseCustomTheme } from '~/core/theme/themes';
+import { THEME_TOKEN_KEYS } from './schema';
 
 const baseSettings = {
   targetLanguage: 'en',
@@ -12,6 +14,8 @@ const baseSettings = {
   cacheEnabled: true,
   cacheTTLDays: 30,
   theme: 'auto' as const,
+  themeId: 'cobalt',
+  customThemes: [],
   uiLanguage: 'auto' as const,
 };
 
@@ -185,6 +189,43 @@ describe('thinking normalization', () => {
       data.api.thinking = good;
       expect(migrateAppData(data).api.thinking).toBe(good);
     }
+  });
+});
+
+describe('theme settings integrity repair', () => {
+  it('fills missing themeId and customThemes with defaults', () => {
+    const data = createDefaultAppData();
+    delete (data.settings as Partial<GlobalSettings>).themeId;
+    delete (data.settings as Partial<GlobalSettings>).customThemes;
+    const out = migrateAppData(data);
+    expect(out.settings.themeId).toBe('cobalt');
+    expect(out.settings.customThemes).toEqual([]);
+  });
+
+  it('clamps a stale themeId back to cobalt', () => {
+    const data = createDefaultAppData();
+    data.settings.themeId = 'custom-deleted-theme';
+    const out = migrateAppData(data);
+    expect(out.settings.themeId).toBe('cobalt');
+  });
+
+  it('keeps a valid built-in themeId', () => {
+    const data = createDefaultAppData();
+    data.settings.themeId = 'sepia';
+    expect(migrateAppData(data).settings.themeId).toBe('sepia');
+  });
+
+  it('drops malformed customThemes entries and keeps a themeId that matches a valid one', () => {
+    const data = createDefaultAppData();
+    const valid = parseCustomTheme({
+      name: 'Mine',
+      colors: { light: Object.fromEntries(THEME_TOKEN_KEYS.map((k) => [k, '1 2 3'])) },
+    });
+    data.settings.customThemes = [valid, { id: 'broken' } as never];
+    data.settings.themeId = valid.id;
+    const out = migrateAppData(data);
+    expect(out.settings.customThemes).toEqual([valid]);
+    expect(out.settings.themeId).toBe(valid.id);
   });
 });
 
