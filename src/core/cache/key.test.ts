@@ -3,37 +3,44 @@ import { computeCacheKey } from './key';
 
 describe('computeCacheKey', () => {
   it('produces stable key for identical inputs', async () => {
-    const a = await computeCacheKey({ text: 'hello', model: 'gpt-4o', mode: 'selection', targetLang: 'zh-CN' });
-    const b = await computeCacheKey({ text: 'hello', model: 'gpt-4o', mode: 'selection', targetLang: 'zh-CN' });
+    const a = await computeCacheKey({ engine: 'llm', text: 'hello', model: 'gpt-4o', mode: 'selection', targetLang: 'zh-CN' });
+    const b = await computeCacheKey({ engine: 'llm', text: 'hello', model: 'gpt-4o', mode: 'selection', targetLang: 'zh-CN' });
     expect(a).toBe(b);
   });
 
   it('differs when text changes', async () => {
-    const a = await computeCacheKey({ text: 'a', model: 'm', mode: 'selection', targetLang: 'zh-CN' });
-    const b = await computeCacheKey({ text: 'b', model: 'm', mode: 'selection', targetLang: 'zh-CN' });
+    const a = await computeCacheKey({ engine: 'llm', text: 'a', model: 'm', mode: 'selection', targetLang: 'zh-CN' });
+    const b = await computeCacheKey({ engine: 'llm', text: 'b', model: 'm', mode: 'selection', targetLang: 'zh-CN' });
     expect(a).not.toBe(b);
   });
 
   it('differs when model changes', async () => {
-    const a = await computeCacheKey({ text: 't', model: 'm1', mode: 'selection', targetLang: 'zh-CN' });
-    const b = await computeCacheKey({ text: 't', model: 'm2', mode: 'selection', targetLang: 'zh-CN' });
+    const a = await computeCacheKey({ engine: 'llm', text: 't', model: 'm1', mode: 'selection', targetLang: 'zh-CN' });
+    const b = await computeCacheKey({ engine: 'llm', text: 't', model: 'm2', mode: 'selection', targetLang: 'zh-CN' });
     expect(a).not.toBe(b);
   });
 
   it('differs when mode changes (selection vs fullpage never share entries)', async () => {
-    const a = await computeCacheKey({ text: 'cat', model: 'm', mode: 'selection', targetLang: 'zh-CN' });
-    const b = await computeCacheKey({ text: 'cat', model: 'm', mode: 'fullpage', targetLang: 'zh-CN' });
+    const a = await computeCacheKey({ engine: 'llm', text: 'cat', model: 'm', mode: 'selection', targetLang: 'zh-CN' });
+    const b = await computeCacheKey({ engine: 'llm', text: 'cat', model: 'm', mode: 'fullpage', targetLang: 'zh-CN' });
     expect(a).not.toBe(b);
   });
 
   it('differs when target language changes', async () => {
-    const a = await computeCacheKey({ text: 't', model: 'm', mode: 'selection', targetLang: 'zh-CN' });
-    const b = await computeCacheKey({ text: 't', model: 'm', mode: 'selection', targetLang: 'en' });
+    const a = await computeCacheKey({ engine: 'llm', text: 't', model: 'm', mode: 'selection', targetLang: 'zh-CN' });
+    const b = await computeCacheKey({ engine: 'llm', text: 't', model: 'm', mode: 'selection', targetLang: 'en' });
     expect(a).not.toBe(b);
   });
 
+  it('differs when the engine changes (free engines share an empty model name)', async () => {
+    const a = await computeCacheKey({ engine: 'microsoft', text: 'cat', model: '', mode: 'selection', targetLang: 'zh-CN' });
+    const b = await computeCacheKey({ engine: 'google', text: 'cat', model: '', mode: 'selection', targetLang: 'zh-CN' });
+    const c = await computeCacheKey({ engine: 'llm', text: 'cat', model: '', mode: 'selection', targetLang: 'zh-CN' });
+    expect(new Set([a, b, c]).size).toBe(3);
+  });
+
   it('produces hex-only output', async () => {
-    const k = await computeCacheKey({ text: 't', model: 'm', mode: 'fullpage', targetLang: 'en' });
+    const k = await computeCacheKey({ engine: 'llm', text: 't', model: 'm', mode: 'fullpage', targetLang: 'en' });
     expect(k).toMatch(/^[0-9a-f]+$/);
   });
 });

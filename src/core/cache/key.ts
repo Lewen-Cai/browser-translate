@@ -1,5 +1,11 @@
 export interface CacheKeyInput {
   text: string;
+  /**
+   * Which backend produced the translation ('llm' or a free MT engine).
+   * Free engines have no model name, so without this every engine's results
+   * would collide under the same empty-model key.
+   */
+  engine: string;
   model: string;
   /**
    * Namespace discriminator: selection results may be dictionary JSON while
@@ -19,6 +25,7 @@ export interface CacheKeyInput {
 export async function computeCacheKey(input: CacheKeyInput): Promise<string> {
   const canonical = [
     input.text,
+    input.engine,
     input.model,
     input.mode,
     input.targetLang,

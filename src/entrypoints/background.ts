@@ -4,6 +4,7 @@ import { OpenAICompatibleProvider } from '~/core/providers/openai';
 import { providerConfigFromApi } from '~/core/providers/providerSlots';
 import { TranslationProviderError } from '~/core/providers/types';
 import { computeCacheKey } from '~/core/cache/key';
+import { getMtEngine, isMtEngineId, mtTranslateAll, type MtEngineId } from '~/core/mt';
 import { autoSystemPrompt } from '~/core/dictionary/prompt';
 import { selectionUserPrompt } from '~/core/prompt/style';
 import { batchSystemPrompt, batchUserPrompt } from '~/core/batch/prompt';
@@ -15,6 +16,10 @@ import { parseRgbTriple, recolorIconPixels } from '~/core/theme/iconRecolor';
 import { resolveEffectiveTheme } from '~/ui/themeResolver';
 import type { Request, TranslateRequest, TranslateBatchRequest } from '~/messaging/types';
 import type { AppData } from '~/storage/schema';
+
+/** Parallel requests the free engines get per batch — they are far cheaper and
+ *  faster per call than an LLM, so a page fills in noticeably sooner. */
+const MT_BATCH_CONCURRENCY = 4;
 
 export default defineBackground(() => {
   const client = new StorageClient();
@@ -146,8 +151,10 @@ async function handleTranslate(
 
   try {
     const api = data.api;
+    const engine = data.settings.engine;
+    const useMt = isMtEngineId(engine);
     const missingKey = api.providerType === 'cloud' && !api.apiKey;
-    if (!api.baseUrl || missingKey || !api.model) {
+    if (!useMt && (!api.baseUrl || missingKey || !api.model)) {
       const locale = resolveLocale(
         data.settings.uiLanguage,
         typeof navigator !== 'undefined' ? navigator.language : 'en',
@@ -165,7 +172,7 @@ async function handleTranslate(
     let cacheKey: string | undefined;
     if (data.settings.cacheEnabled) {
       cacheKey = await computeCacheKey({
-        text: msg.text, model: api.model,
+        text: msg.text, engine, model: api.model,
         mode: 'selection', targetLang,
       });
       const cached = await new CacheStore(client, data.settings.cacheTTLDays).get(cacheKey);
@@ -176,28 +183,41 @@ async function handleTranslate(
       }
     }
 
-    const provider = new OpenAICompatibleProvider(providerConfigFromApi(api));
-
     const abortCtl = new AbortController();
     activeAborts.set(msg.requestId, abortCtl);
 
     let full = '';
     try {
-      await withRetry(async () => {
-        full = '';
-        for await (const chunk of provider.translate({
-          systemPrompt: autoSystemPrompt(),
-          userPrompt: selectionUserPrompt(msg.text, targetLang),
-          maxTokens: api.maxTokens,
-          stream: true,
-          signal: abortCtl.signal,
-        })) {
-          if (chunk.delta) {
-            full += chunk.delta;
-            send({ type: 'translate:chunk', requestId: msg.requestId, delta: chunk.delta });
+      if (useMt) {
+        // No streaming to relay: deliver the finished text as a single chunk,
+        // the same shape the cache-hit path above already sends.
+        await withRetry(async () => {
+          const [translated] = await getMtEngine(engine).translate({
+            texts: [msg.text],
+            targetLang,
+            signal: abortCtl.signal,
+          });
+          full = translated ?? '';
+        });
+        if (full) send({ type: 'translate:chunk', requestId: msg.requestId, delta: full });
+      } else {
+        const provider = new OpenAICompatibleProvider(providerConfigFromApi(api));
+        await withRetry(async () => {
+          full = '';
+          for await (const chunk of provider.translate({
+            systemPrompt: autoSystemPrompt(),
+            userPrompt: selectionUserPrompt(msg.text, targetLang),
+            maxTokens: api.maxTokens,
+            stream: true,
+            signal: abortCtl.signal,
+          })) {
+            if (chunk.delta) {
+              full += chunk.delta;
+              send({ type: 'translate:chunk', requestId: msg.requestId, delta: chunk.delta });
+            }
           }
-        }
-      });
+        });
+      }
     } finally {
       activeAborts.delete(msg.requestId);
     }
@@ -229,8 +249,10 @@ async function handleTranslateBatch(
 
   try {
     const api = data.api;
+    const engine = data.settings.engine;
+    const useMt = isMtEngineId(engine);
     const missingKey = api.providerType === 'cloud' && !api.apiKey;
-    if (!api.baseUrl || missingKey || !api.model) {
+    if (!useMt && (!api.baseUrl || missingKey || !api.model)) {
       const locale = resolveLocale(
         data.settings.uiLanguage,
         typeof navigator !== 'undefined' ? navigator.language : 'en',
@@ -244,8 +266,6 @@ async function handleTranslateBatch(
       return;
     }
     const targetLang = msg.targetLang ?? data.settings.targetLanguage;
-    const systemPrompt = batchSystemPrompt();
-    const provider = new OpenAICompatibleProvider(providerConfigFromApi(api));
 
     // One AbortController for the whole batch request: runBatch may call
     // translateOnce many times (the batch call plus per-segment fallback), and
@@ -254,23 +274,40 @@ async function handleTranslateBatch(
     const abortCtl = new AbortController();
     activeAborts.set(msg.requestId, abortCtl);
 
-    // One provider call for a set of segments → { parsed, raw }.
-    const translateOnce = async (segments: string[]) => {
-      let raw = '';
-      await withRetry(async () => {
-        raw = '';
-        for await (const chunk of provider.translate({
-          systemPrompt,
-          userPrompt: batchUserPrompt(segments, targetLang),
-          maxTokens: api.maxTokens,
-          stream: false,
-          signal: abortCtl.signal,
-        })) {
-          raw += chunk.delta;
+    // One call for a set of segments → { parsed, raw }. The MT engines return an
+    // aligned array by construction, so they never need the raw fallback that
+    // exists for an LLM answering with something other than a JSON array.
+    const translateOnce = useMt
+      ? async (segments: string[]) => {
+          const parsed = await withRetry(() =>
+            mtTranslateAll(
+              getMtEngine(engine),
+              { texts: segments, targetLang, signal: abortCtl.signal },
+              MT_BATCH_CONCURRENCY,
+            ),
+          );
+          return { parsed, raw: '' };
         }
-      });
-      return { parsed: parseBatchArray(raw, segments.length), raw };
-    };
+      : (() => {
+          const systemPrompt = batchSystemPrompt();
+          const provider = new OpenAICompatibleProvider(providerConfigFromApi(api));
+          return async (segments: string[]) => {
+            let raw = '';
+            await withRetry(async () => {
+              raw = '';
+              for await (const chunk of provider.translate({
+                systemPrompt,
+                userPrompt: batchUserPrompt(segments, targetLang),
+                maxTokens: api.maxTokens,
+                stream: false,
+                signal: abortCtl.signal,
+              })) {
+                raw += chunk.delta;
+              }
+            });
+            return { parsed: parseBatchArray(raw, segments.length), raw };
+          };
+        })();
 
     const cacheStore = new CacheStore(client, data.settings.cacheTTLDays);
     const cacheEnabled = data.settings.cacheEnabled;
@@ -280,6 +317,7 @@ async function handleTranslateBatch(
         if (!cacheEnabled) return undefined;
         const key = await computeCacheKey({
           text: segment,
+          engine,
           model: api.model,
           mode: 'fullpage',
           targetLang,
@@ -290,6 +328,7 @@ async function handleTranslateBatch(
         if (!cacheEnabled || !translated) return;
         const key = await computeCacheKey({
           text: segment,
+          engine,
           model: api.model,
           mode: 'fullpage',
           targetLang,
@@ -320,6 +359,12 @@ async function handlePing(requestId: string, client: StorageClient): Promise<voi
   const send = (payload: object) => {
     chrome.runtime.sendMessage(payload).catch(() => {});
   };
+
+  const engine = data.settings.engine;
+  if (isMtEngineId(engine)) {
+    await pingMtEngine(engine, requestId, send);
+    return;
+  }
 
   if (!api.baseUrl) {
     send({ type: 'ping:error', requestId, message: 'Base URL is empty' });
@@ -390,6 +435,50 @@ async function handlePing(requestId: string, client: StorageClient): Promise<voi
     clearTimeout(timeout);
     const msg = (e as Error).name === 'AbortError' ? 'Timeout' : (e as Error).message || 'Network error';
     send({ type: 'ping:error', requestId, message: msg });
+  }
+}
+
+/**
+ * Reachability probe for a free engine: translate one short word and time it.
+ * These endpoints have no status page and no /models to ask, and one of them
+ * may be unreachable on a given network — an actual round trip is the only
+ * honest way to report ready vs offline.
+ */
+async function pingMtEngine(
+  engineId: MtEngineId,
+  requestId: string,
+  send: (payload: object) => void,
+): Promise<void> {
+  const engine = getMtEngine(engineId);
+  const ctl = new AbortController();
+  const timeout = setTimeout(() => ctl.abort(), 8000);
+  const startedAt = Date.now();
+  try {
+    const [translated] = await engine.translate({
+      texts: ['hello'],
+      targetLang: 'zh-CN',
+      sourceLang: 'en',
+      signal: ctl.signal,
+    });
+    clearTimeout(timeout);
+    if (!translated) {
+      send({ type: 'ping:error', requestId, message: `${engine.label}: empty response` });
+      return;
+    }
+    send({
+      type: 'ping:ok',
+      requestId,
+      latencyMs: Date.now() - startedAt,
+      availableModels: [],
+      modelInList: true,
+      configuredModel: engine.label,
+    });
+  } catch (e) {
+    clearTimeout(timeout);
+    const message = (e as Error).name === 'AbortError'
+      ? 'Timeout'
+      : (e as Error).message || 'Network error';
+    send({ type: 'ping:error', requestId, message });
   }
 }
 

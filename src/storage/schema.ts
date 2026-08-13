@@ -1,3 +1,5 @@
+import { MT_ENGINE_IDS, type MtEngineId } from '~/core/mt/types';
+
 export const APP_DATA_VERSION = 1 as const;
 
 export interface AppData {
@@ -52,7 +54,20 @@ export interface ProviderConfig {
   thinking?: ThinkingSetting;
 }
 
+/**
+ * Which backend performs a translation. 'llm' uses the user's configured
+ * OpenAI-compatible API; the rest are the free, key-less services in
+ * `~/core/mt` (derived from that list so the two can't drift apart).
+ */
+export const TRANSLATION_ENGINES = ['llm', ...MT_ENGINE_IDS] as const;
+export type TranslationEngine = 'llm' | MtEngineId;
+
+export function isTranslationEngine(value: unknown): value is TranslationEngine {
+  return typeof value === 'string' && (TRANSLATION_ENGINES as readonly string[]).includes(value);
+}
+
 export interface GlobalSettings {
+  engine: TranslationEngine;
   targetLanguage: string;
   triggerMode: 'icon' | 'hotkey';
   hotkey: string;

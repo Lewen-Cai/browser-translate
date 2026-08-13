@@ -136,11 +136,15 @@ export default defineContentScript({
       if (isYouTubeWatch()) {
         ytSubs = createYouTubeSubTranslator({
           getTargetLang: () => targetLanguage,
-          // Cloud fans out across its fleet (4). Local uses 2 as a 1-deep pipeline:
-          // one batch processing while the next is queued, so the model never idles
-          // between batches. (A local MLX server queues rather than splitting, so
-          // this doesn't slow individual batches.)
-          concurrency: data.api.providerType === 'cloud' ? 4 : 2,
+          // A free MT service answers in well under a second and has no per-token
+          // cost, so it takes the widest fan-out. Cloud LLMs fan out across their
+          // fleet (4). Local uses 2 as a 1-deep pipeline: one batch processing
+          // while the next is queued, so the model never idles between batches.
+          // (A local MLX server queues rather than splitting, so this doesn't
+          // slow individual batches.)
+          concurrency: data.settings.engine !== 'llm' ? 6
+            : data.api.providerType === 'cloud' ? 4
+            : 2,
           strings: {
             titleOff: t('ytSubsButtonTitle', locale),
             titleOn: t('ytSubsButtonTitleOn', locale),

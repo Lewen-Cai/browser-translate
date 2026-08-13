@@ -7,6 +7,7 @@ import { parseCustomTheme } from '~/core/theme/themes';
 import { THEME_TOKEN_KEYS } from './schema';
 
 const baseSettings = {
+  engine: 'llm' as const,
   targetLanguage: 'en',
   triggerMode: 'icon' as const,
   hotkey: 'Alt+T',
@@ -242,5 +243,37 @@ describe('fullPageHotkey integrity repair', () => {
     data.settings.fullPageHotkey = 'Ctrl+Shift+P';
     const out = migrateAppData(data);
     expect(out.settings.fullPageHotkey).toBe('Ctrl+Shift+P');
+  });
+});
+
+describe('engine integrity repair', () => {
+  it('keeps a store that already translates through an API on the LLM engine', () => {
+    const data = createDefaultAppData();
+    data.api = { ...data.api, baseUrl: 'https://api.deepseek.com/v1', apiKey: 'k', model: 'deepseek-chat' };
+    delete (data.settings as Partial<GlobalSettings>).engine;
+    expect(migrateAppData(data).settings.engine).toBe('llm');
+  });
+
+  it('falls back to a free engine when nothing was ever configured', () => {
+    const data = createDefaultAppData();
+    data.api = { ...data.api, baseUrl: '', apiKey: '', model: '' };
+    delete (data.settings as Partial<GlobalSettings>).engine;
+    expect(migrateAppData(data).settings.engine).toBe('microsoft');
+  });
+
+  it('replaces an unknown engine value', () => {
+    const data = createDefaultAppData();
+    (data.settings as { engine: unknown }).engine = 'yandex';
+    expect(migrateAppData(data).settings.engine).toBe('microsoft');
+  });
+
+  it('preserves a valid engine choice without rewriting storage', () => {
+    const seed = createDefaultAppData();
+    seed.settings.engine = 'google';
+    // Normalize first (a fresh default still needs savedConfigs seeded), then
+    // assert the second pass is a no-op — identity is what stops a write loop.
+    const normalized = migrateAppData(seed);
+    expect(migrateAppData(normalized)).toBe(normalized);
+    expect(normalized.settings.engine).toBe('google');
   });
 });

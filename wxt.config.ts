@@ -11,6 +11,13 @@ export default defineConfig({
     description: '__MSG_extDescription__',
     default_locale: 'en',
     permissions: ['storage', 'activeTab', 'contextMenus', 'alarms'],
+    // The free translation engines. Requests to a user's own LLM endpoint stay
+    // permission-free: those are chosen at runtime, so they rely on the base URL
+    // the user entered rather than a manifest grant.
+    host_permissions: [
+      'https://edge.microsoft.com/*',
+      'https://translate-pa.googleapis.com/*',
+    ],
     icons: {
       16: 'icon/16.png',
       32: 'icon/32.png',

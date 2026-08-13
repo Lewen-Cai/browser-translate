@@ -1,4 +1,4 @@
-import { APP_DATA_VERSION, isThinkingSetting, type AppData } from './schema';
+import { APP_DATA_VERSION, isThinkingSetting, isTranslationEngine, type AppData } from './schema';
 import type { ProviderConfig, ProviderSlot } from './schema';
 import { inferCloudProvider, isCloudProvider } from '~/core/providers/presets';
 import { activeSlot } from '~/core/providers/providerSlots';
@@ -52,6 +52,13 @@ function stripLegacyTemplateFields(data: AppData): AppData {
 function fillSettingsDefaults(data: AppData): AppData {
   const s = data.settings;
   const fullPageHotkey = typeof s.fullPageHotkey === 'string' ? s.fullPageHotkey : 'Alt+A';
+  // Stores written before engines existed keep translating through their API;
+  // only a store with nothing configured falls to the free default.
+  const engine = isTranslationEngine(s.engine)
+    ? s.engine
+    : data.api.baseUrl && data.api.model
+      ? 'llm'
+      : 'microsoft';
   const rawCustom = Array.isArray(s.customThemes) ? s.customThemes : [];
   const customThemes = rawCustom.filter(isValidThemeDefinition);
   const themeIdCandidate = typeof s.themeId === 'string' ? s.themeId : DEFAULT_THEME_ID;
@@ -63,11 +70,12 @@ function fillSettingsDefaults(data: AppData): AppData {
   const unchanged =
     fullPageHotkey === s.fullPageHotkey &&
     themeId === s.themeId &&
+    engine === s.engine &&
     customThemes.length === rawCustom.length &&
     s.customThemes === rawCustom;
   if (unchanged) return data;
 
-  return { ...data, settings: { ...s, fullPageHotkey, themeId, customThemes } };
+  return { ...data, settings: { ...s, engine, fullPageHotkey, themeId, customThemes } };
 }
 
 function fillApiProviderDefaults(data: AppData): AppData {

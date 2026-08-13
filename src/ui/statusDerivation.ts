@@ -1,4 +1,4 @@
-import type { ApiSettings } from '~/storage/schema';
+import type { ApiSettings, TranslationEngine } from '~/storage/schema';
 import type { PingResponse } from '~/messaging/types';
 
 export type StatusState =
@@ -21,8 +21,16 @@ function hasRequiredFields(api: ApiSettings): boolean {
   return true;
 }
 
-export function deriveStatus(api: ApiSettings, ping: PingValue): StatusState {
-  if (!hasRequiredFields(api)) return { kind: 'not-configured' };
+/**
+ * The free engines need no credentials, so they are never 'not-configured' —
+ * their probe still runs, because reachability is the thing worth reporting.
+ */
+export function deriveStatus(
+  api: ApiSettings,
+  ping: PingValue,
+  engine: TranslationEngine = 'llm',
+): StatusState {
+  if (engine === 'llm' && !hasRequiredFields(api)) return { kind: 'not-configured' };
   if (ping === null || ping === 'pending') return { kind: 'checking' };
   if (ping.type === 'ping:error') {
     return { kind: 'offline', message: ping.message, status: ping.status };

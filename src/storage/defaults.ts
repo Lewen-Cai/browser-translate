@@ -11,6 +11,9 @@ export function createDefaultAppData(): AppData {
       cloudProvider: 'custom',
     },
     settings: {
+      // A free engine by default so a fresh install translates immediately;
+      // choosing an LLM is an opt-in for dictionary lookups and better prose.
+      engine: 'microsoft',
       targetLanguage: 'zh-CN',
       triggerMode: 'icon',
       hotkey: 'Alt+T',
