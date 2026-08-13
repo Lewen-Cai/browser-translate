@@ -3,12 +3,7 @@ import type { StringKey } from './en';
 export const ko: Record<StringKey, string> = {
   // Common
   loading: '불러오는 중…',
-  save: '저장',
-  cancel: '취소',
   delete: '삭제',
-  edit: '편집',
-  close: '닫기',
-  clone: '복제',
   clearAll: '전체 지우기',
   // Popup / options shared
   settings: '설정',
@@ -24,11 +19,9 @@ export const ko: Record<StringKey, string> = {
   sectionCache: '캐시',
   sectionAppearance: '모양',
   sectionData: '데이터',
-  sectionPromptTemplates: '프롬프트 템플릿',
   openaiCompatible: 'OpenAI 호환',
   // Options nav
   navApi: 'API',
-  navPrompts: '프롬프트',
   navGeneral: '일반',
   // Provider type + presets
   providerType: '제공자 유형',
@@ -46,8 +39,6 @@ export const ko: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: '모델',
-  defaultPromptTemplate: '기본 프롬프트 템플릿',
-  prompt: '프롬프트',
   // Translation form
   targetLanguage: '대상 언어',
   triggerMode: '실행 방식',
@@ -76,14 +67,6 @@ export const ko: Record<StringKey, string> = {
   themeDark: '다크',
   uiLanguage: '인터페이스 언어',
   uiLangAuto: '시스템 설정 따름',
-  // Prompt templates
-  newTemplate: '새 템플릿',
-  builtin: '기본 제공',
-  systemPrompt: '시스템 프롬프트',
-  userPromptTemplate: '사용자 프롬프트 템플릿',
-  userPromptTemplateHint: '변수 · {{text}}(필수) · {{targetLang}} · {{sourceLang}} · {{url}} · {{title}}',
-  viewReadonly: '보기 · 읽기 전용',
-  editTemplate: '템플릿 편집',
   exportSettings: '설정 내보내기',
   importSettings: '설정 가져오기',
   dataSectionDesc: '설정을 JSON 파일로 백업하거나 이전할 수 있습니다. 캐시는 포함되지 않습니다.',

@@ -7,7 +7,6 @@ function baseApi(overrides: Partial<ApiSettings> = {}): ApiSettings {
     baseUrl: '',
     apiKey: '',
     model: '',
-    promptTemplateId: 'builtin-general',
     providerType: 'cloud',
     cloudProvider: 'custom',
     ...overrides,

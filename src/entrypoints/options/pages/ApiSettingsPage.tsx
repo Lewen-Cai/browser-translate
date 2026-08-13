@@ -12,7 +12,6 @@ import { applySlot, rememberActive } from '~/core/providers/providerSlots';
 
 export function ApiSettingsPage() {
   const api = useAppStore((s) => s.data.api);
-  const templates = useAppStore((s) => s.data.promptTemplates);
   const updateApi = useAppStore((s) => s.updateApi);
   const [showKey, setShowKey] = useState(false);
   const t = useT();
@@ -114,16 +113,6 @@ export function ApiSettingsPage() {
         <div class="pt-1">
           <ApiStatusIndicator pingNonce={pingNonce} />
         </div>
-      </div>
-
-      <SectionHeader number="02" label={t('defaultPromptTemplate').toUpperCase()} />
-      <div class="space-y-4">
-        <Select
-          label={t('prompt')}
-          value={api.promptTemplateId}
-          options={templates.map((tmpl) => ({ value: tmpl.id, label: tmpl.name }))}
-          onChange={(e) => updateApi({ promptTemplateId: (e.target as HTMLSelectElement).value })}
-        />
       </div>
     </div>
   );

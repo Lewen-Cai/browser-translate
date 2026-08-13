@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useAppStore } from '~/storage/store';
 import { ApiSettingsPage } from './pages/ApiSettingsPage';
-import { TemplatesPage } from './pages/TemplatesPage';
 import { GeneralPage } from './pages/GeneralPage';
-import { KeyRound, MessageSquare, Settings } from '~/ui/icons';
+import { KeyRound, Settings } from '~/ui/icons';
 import { cn } from '~/lib/cn';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
 
-type Tab = 'general' | 'api' | 'templates';
+type Tab = 'general' | 'api';
 
 export function App() {
   const load = useAppStore((s) => s.load);
@@ -24,7 +23,6 @@ export function App() {
   const TABS: Array<{ id: Tab; num: string; label: string; icon: typeof KeyRound }> = [
     { id: 'general',   num: '01', label: t('navGeneral'),  icon: Settings },
     { id: 'api',       num: '02', label: t('navApi'),      icon: KeyRound },
-    { id: 'templates', num: '03', label: t('navPrompts'),  icon: MessageSquare },
   ];
 
   return (
@@ -67,7 +65,6 @@ export function App() {
         </nav>
         <main class="flex-1 min-w-0 max-w-[640px]">
           {tab === 'api' && <ApiSettingsPage />}
-          {tab === 'templates' && <TemplatesPage />}
           {tab === 'general' && <GeneralPage />}
         </main>
       </div>

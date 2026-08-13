@@ -3,12 +3,7 @@ import type { StringKey } from './en';
 export const de: Record<StringKey, string> = {
   // Common
   loading: 'Wird geladen…',
-  save: 'Speichern',
-  cancel: 'Abbrechen',
   delete: 'Löschen',
-  edit: 'Bearbeiten',
-  close: 'Schließen',
-  clone: 'Klonen',
   clearAll: 'Alles löschen',
   // Popup / options shared
   settings: 'Einstellungen',
@@ -24,11 +19,9 @@ export const de: Record<StringKey, string> = {
   sectionCache: 'Cache',
   sectionAppearance: 'Darstellung',
   sectionData: 'Daten',
-  sectionPromptTemplates: 'Prompt-Vorlagen',
   openaiCompatible: 'OpenAI-kompatibel',
   // Options nav
   navApi: 'API',
-  navPrompts: 'PROMPTS',
   navGeneral: 'ALLGEMEIN',
   // Provider type + presets
   providerType: 'Anbietertyp',
@@ -46,8 +39,6 @@ export const de: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: 'Modell',
-  defaultPromptTemplate: 'Standard-Prompt-Vorlage',
-  prompt: 'Prompt',
   // Translation form
   targetLanguage: 'Zielsprache',
   triggerMode: 'Auslösemodus',
@@ -76,14 +67,6 @@ export const de: Record<StringKey, string> = {
   themeDark: 'Dunkel',
   uiLanguage: 'Sprache der Oberfläche',
   uiLangAuto: 'Systemeinstellung folgen',
-  // Prompt templates
-  newTemplate: 'Neue Vorlage',
-  builtin: 'INTEGRIERT',
-  systemPrompt: 'System-Prompt',
-  userPromptTemplate: 'Benutzer-Prompt-Vorlage',
-  userPromptTemplateHint: 'Variablen · {{text}} (erforderlich) · {{targetLang}} · {{sourceLang}} · {{url}} · {{title}}',
-  viewReadonly: 'Ansehen · Schreibgeschützt',
-  editTemplate: 'Vorlage bearbeiten',
   exportSettings: 'Einstellungen exportieren',
   importSettings: 'Einstellungen importieren',
   dataSectionDesc: 'Sichere oder übertrage deine Konfiguration als JSON-Datei. Der Cache ist nicht enthalten.',

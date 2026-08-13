@@ -5,22 +5,18 @@ import type { PingResponse } from '~/messaging/types';
 
 const cloudCustomFilled: ApiSettings = {
   baseUrl: 'https://x/v1', apiKey: 'k', model: 'm',
-  promptTemplateId: 'builtin-general',
   providerType: 'cloud', cloudProvider: 'custom',
 };
 const cloudCustomEmpty: ApiSettings = {
   baseUrl: '', apiKey: '', model: '',
-  promptTemplateId: 'builtin-general',
   providerType: 'cloud', cloudProvider: 'custom',
 };
 const localFilled: ApiSettings = {
   baseUrl: 'http://localhost:11434/v1', apiKey: '', model: 'qwen',
-  promptTemplateId: 'builtin-general',
   providerType: 'local', cloudProvider: 'custom',
 };
 const localMissingModel: ApiSettings = {
   baseUrl: 'http://localhost:11434/v1', apiKey: '', model: '',
-  promptTemplateId: 'builtin-general',
   providerType: 'local', cloudProvider: 'custom',
 };
 

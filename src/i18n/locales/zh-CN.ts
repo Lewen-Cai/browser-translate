@@ -3,12 +3,7 @@ import type { StringKey } from './en';
 export const zhCN: Record<StringKey, string> = {
   // Common
   loading: '加载中…',
-  save: '保存',
-  cancel: '取消',
   delete: '删除',
-  edit: '编辑',
-  close: '关闭',
-  clone: '克隆',
   clearAll: '清空全部',
   // Popup / options shared
   settings: '设置',
@@ -24,11 +19,9 @@ export const zhCN: Record<StringKey, string> = {
   sectionCache: '缓存',
   sectionAppearance: '外观',
   sectionData: '数据',
-  sectionPromptTemplates: '提示词模板',
   openaiCompatible: '兼容 OpenAI 协议',
   // Options nav
   navApi: 'API',
-  navPrompts: '提示词',
   navGeneral: '通用',
   // Provider type + presets
   providerType: '服务类型',
@@ -46,8 +39,6 @@ export const zhCN: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: '模型',
-  defaultPromptTemplate: '默认提示词模板',
-  prompt: '提示词',
   // Translation form
   targetLanguage: '目标语言',
   triggerMode: '触发方式',
@@ -76,14 +67,6 @@ export const zhCN: Record<StringKey, string> = {
   themeDark: '深色',
   uiLanguage: '界面语言',
   uiLangAuto: '跟随系统',
-  // Prompt templates
-  newTemplate: '新建模板',
-  builtin: '内置',
-  systemPrompt: '系统提示词',
-  userPromptTemplate: '用户提示词模板',
-  userPromptTemplateHint: '变量列表：{{text}}（必填）· {{targetLang}} · {{sourceLang}} · {{url}} · {{title}}',
-  viewReadonly: '查看 · 只读',
-  editTemplate: '编辑模板',
   exportSettings: '导出设置',
   importSettings: '导入设置',
   dataSectionDesc: '将配置备份或迁移为 JSON 文件。不含缓存。',

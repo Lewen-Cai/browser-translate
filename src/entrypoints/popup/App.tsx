@@ -31,7 +31,6 @@ function apiEqual(a: ApiSettings, b: ApiSettings): boolean {
     a.model === b.model &&
     a.providerType === b.providerType &&
     a.cloudProvider === b.cloudProvider &&
-    a.promptTemplateId === b.promptTemplateId &&
     JSON.stringify(a.savedConfigs ?? {}) === JSON.stringify(b.savedConfigs ?? {})
   );
 }
@@ -41,7 +40,6 @@ export function App() {
   const loaded = useAppStore((s) => s.loaded);
   const api = useAppStore((s) => s.data.api);
   const settings = useAppStore((s) => s.data.settings);
-  const templates = useAppStore((s) => s.data.promptTemplates);
   const updateApi = useAppStore((s) => s.updateApi);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const t = useT();
@@ -251,13 +249,6 @@ export function App() {
             value={draft.model}
             mono
             onInput={(e) => setDraftField('model', (e.target as HTMLInputElement).value)}
-          />
-
-          <Select
-            label={t('prompt')}
-            value={draft.promptTemplateId}
-            options={templates.map((tmpl) => ({ value: tmpl.id, label: tmpl.name }))}
-            onChange={(e) => setDraftField('promptTemplateId', (e.target as HTMLSelectElement).value)}
           />
 
           <div class="pt-1">

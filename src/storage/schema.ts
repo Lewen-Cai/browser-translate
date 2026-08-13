@@ -4,7 +4,6 @@ export interface AppData {
   version: typeof APP_DATA_VERSION;
   api: ApiSettings;
   settings: GlobalSettings;
-  promptTemplates: PromptTemplate[];
 }
 
 export interface ApiSettings {
@@ -12,7 +11,6 @@ export interface ApiSettings {
   apiKey: string;
   model: string;
   maxTokens?: number;
-  promptTemplateId: string;
   customHeaders?: Record<string, string>;
   providerType: 'cloud' | 'local';
   cloudProvider:
@@ -47,16 +45,6 @@ export interface GlobalSettings {
   cacheTTLDays: number;
   theme: 'light' | 'dark' | 'auto';
   uiLanguage: 'auto' | 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'ko' | 'es' | 'fr' | 'de';
-}
-
-export interface PromptTemplate {
-  id: string;
-  name: string;
-  isBuiltin: boolean;
-  systemPrompt: string;
-  userPromptTemplate: string;
-  createdAt: number;
-  updatedAt: number;
 }
 
 export interface CacheMeta {

@@ -1,4 +1,4 @@
-import type { AppData, ApiSettings, GlobalSettings, PromptTemplate, ProviderSlot } from './schema';
+import type { AppData, ApiSettings, GlobalSettings, ProviderSlot } from './schema';
 import { createDefaultAppData } from './defaults';
 import { migrateAppData } from './migrations';
 
@@ -12,7 +12,7 @@ export interface ExportFile {
   data: {
     api: ApiSettings;
     settings: GlobalSettings;
-    promptTemplates: PromptTemplate[]; // user-created only
+    // Pre-v0.1.8 exports also carried `promptTemplates` — ignored on import.
   };
 }
 
@@ -52,7 +52,6 @@ export function exportAppData(
     data: {
       api,
       settings: { ...data.settings },
-      promptTemplates: data.promptTemplates.filter((t) => !t.isBuiltin),
     },
   };
 }
@@ -78,19 +77,16 @@ export function importAppData(parsed: unknown): AppData {
   }
 
   const base = createDefaultAppData();
-  const importedTemplates = Array.isArray(file.data.promptTemplates)
-    ? file.data.promptTemplates.filter((t): t is PromptTemplate => !!t && t.isBuiltin === false)
-    : [];
-
   const candidate: AppData = {
     version: base.version,
+    // Legacy exports may smuggle api.promptTemplateId in via this spread;
+    // migrateAppData's stripLegacyTemplateFields pass removes it.
     api: { ...base.api, ...(file.data.api ?? {}) },
     settings: { ...base.settings, ...(file.data.settings ?? {}) },
-    promptTemplates: [...base.promptTemplates, ...importedTemplates],
   };
 
-  // Reuse the integrity-repair pass: re-seeds builtins, repairs orphaned refs,
-  // fills provider defaults, seeds savedConfigs.
+  // Reuse the integrity-repair pass: strips legacy fields, fills provider
+  // defaults, seeds savedConfigs.
   try {
     return migrateAppData(candidate);
   } catch (e) {

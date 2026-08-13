@@ -1,5 +1,4 @@
 import { APP_DATA_VERSION, type AppData } from './schema';
-import { BUILTIN_TEMPLATES } from '~/core/prompt/builtin';
 
 export function createDefaultAppData(): AppData {
   return {
@@ -8,7 +7,6 @@ export function createDefaultAppData(): AppData {
       baseUrl: '',
       apiKey: '',
       model: '',
-      promptTemplateId: 'builtin-general',
       providerType: 'cloud',
       cloudProvider: 'custom',
     },
@@ -22,6 +20,5 @@ export function createDefaultAppData(): AppData {
       theme: 'auto',
       uiLanguage: 'auto',
     },
-    promptTemplates: BUILTIN_TEMPLATES.map((t) => ({ ...t })),
   };
 }

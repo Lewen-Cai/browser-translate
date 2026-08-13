@@ -3,12 +3,7 @@
 export const en = {
   // Common
   loading: 'Loading…',
-  save: 'Save',
-  cancel: 'Cancel',
   delete: 'Delete',
-  edit: 'Edit',
-  close: 'Close',
-  clone: 'Clone',
   clearAll: 'Clear all',
   // Popup / options shared
   settings: 'Settings',
@@ -24,11 +19,9 @@ export const en = {
   sectionCache: 'Cache',
   sectionAppearance: 'Appearance',
   sectionData: 'Data',
-  sectionPromptTemplates: 'Prompt Templates',
   openaiCompatible: 'OpenAI-compatible',
   // Options nav
   navApi: 'API',
-  navPrompts: 'PROMPTS',
   navGeneral: 'GENERAL',
   // Provider type + presets
   providerType: 'Provider type',
@@ -46,8 +39,6 @@ export const en = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: 'Model',
-  defaultPromptTemplate: 'Default prompt template',
-  prompt: 'Prompt',
   // Translation form
   targetLanguage: 'Target language',
   triggerMode: 'Trigger mode',
@@ -76,14 +67,6 @@ export const en = {
   themeDark: 'Dark',
   uiLanguage: 'Interface language',
   uiLangAuto: 'Follow system',
-  // Prompt templates
-  newTemplate: 'New template',
-  builtin: 'BUILTIN',
-  systemPrompt: 'System prompt',
-  userPromptTemplate: 'User prompt template',
-  userPromptTemplateHint: 'Variables · {{text}} (required) · {{targetLang}} · {{sourceLang}} · {{url}} · {{title}}',
-  viewReadonly: 'View · Read-only',
-  editTemplate: 'Edit template',
   exportSettings: 'Export settings',
   importSettings: 'Import settings',
   dataSectionDesc: 'Back up or transfer your configuration as a JSON file. The cache is not included.',

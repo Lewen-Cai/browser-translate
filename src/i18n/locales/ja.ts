@@ -3,12 +3,7 @@ import type { StringKey } from './en';
 export const ja: Record<StringKey, string> = {
   // Common
   loading: '読み込み中…',
-  save: '保存',
-  cancel: 'キャンセル',
   delete: '削除',
-  edit: '編集',
-  close: '閉じる',
-  clone: '複製',
   clearAll: 'すべて消去',
   // Popup / options shared
   settings: '設定',
@@ -24,11 +19,9 @@ export const ja: Record<StringKey, string> = {
   sectionCache: 'キャッシュ',
   sectionAppearance: '外観',
   sectionData: 'データ',
-  sectionPromptTemplates: 'プロンプトテンプレート',
   openaiCompatible: 'OpenAI 互換',
   // Options nav
   navApi: 'API',
-  navPrompts: 'プロンプト',
   navGeneral: '一般',
   // Provider type + presets
   providerType: 'プロバイダー種別',
@@ -46,8 +39,6 @@ export const ja: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: 'モデル',
-  defaultPromptTemplate: 'デフォルトのプロンプトテンプレート',
-  prompt: 'プロンプト',
   // Translation form
   targetLanguage: '翻訳先の言語',
   triggerMode: 'トリガー方式',
@@ -76,14 +67,6 @@ export const ja: Record<StringKey, string> = {
   themeDark: 'ダーク',
   uiLanguage: '表示言語',
   uiLangAuto: 'システムに従う',
-  // Prompt templates
-  newTemplate: '新規テンプレート',
-  builtin: 'ビルトイン',
-  systemPrompt: 'システムプロンプト',
-  userPromptTemplate: 'ユーザープロンプトテンプレート',
-  userPromptTemplateHint: '変数 · {{text}}（必須）· {{targetLang}} · {{sourceLang}} · {{url}} · {{title}}',
-  viewReadonly: '表示 · 読み取り専用',
-  editTemplate: 'テンプレートを編集',
   exportSettings: '設定をエクスポート',
   importSettings: '設定をインポート',
   dataSectionDesc: '設定を JSON ファイルとしてバックアップ・移行できます。キャッシュは含まれません。',

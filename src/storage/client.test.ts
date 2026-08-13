@@ -42,7 +42,6 @@ describe('StorageClient', () => {
   it('initializes with default AppData when empty', async () => {
     const data = await client.loadAppData();
     expect(data.version).toBe(1);
-    expect(data.promptTemplates).toHaveLength(4);
     expect(data.api.baseUrl).toBe('');
     expect(data.api.apiKey).toBe('');
     expect(data.api.model).toBe('');

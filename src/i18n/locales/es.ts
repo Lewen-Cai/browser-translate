@@ -3,12 +3,7 @@ import type { StringKey } from './en';
 export const es: Record<StringKey, string> = {
   // Common
   loading: 'Cargando…',
-  save: 'Guardar',
-  cancel: 'Cancelar',
   delete: 'Eliminar',
-  edit: 'Editar',
-  close: 'Cerrar',
-  clone: 'Clonar',
   clearAll: 'Borrar todo',
   // Popup / options shared
   settings: 'Ajustes',
@@ -24,11 +19,9 @@ export const es: Record<StringKey, string> = {
   sectionCache: 'Caché',
   sectionAppearance: 'Apariencia',
   sectionData: 'Datos',
-  sectionPromptTemplates: 'Plantillas de prompt',
   openaiCompatible: 'Compatible con OpenAI',
   // Options nav
   navApi: 'API',
-  navPrompts: 'PROMPTS',
   navGeneral: 'GENERAL',
   // Provider type + presets
   providerType: 'Tipo de proveedor',
@@ -46,8 +39,6 @@ export const es: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: 'Modelo',
-  defaultPromptTemplate: 'Plantilla de prompt predeterminada',
-  prompt: 'Prompt',
   // Translation form
   targetLanguage: 'Idioma de destino',
   triggerMode: 'Modo de activación',
@@ -76,14 +67,6 @@ export const es: Record<StringKey, string> = {
   themeDark: 'Oscuro',
   uiLanguage: 'Idioma de la interfaz',
   uiLangAuto: 'Según el sistema',
-  // Prompt templates
-  newTemplate: 'Nueva plantilla',
-  builtin: 'INTEGRADA',
-  systemPrompt: 'Prompt del sistema',
-  userPromptTemplate: 'Plantilla de prompt de usuario',
-  userPromptTemplateHint: 'Variables · {{text}} (obligatorio) · {{targetLang}} · {{sourceLang}} · {{url}} · {{title}}',
-  viewReadonly: 'Ver · Solo lectura',
-  editTemplate: 'Editar plantilla',
   exportSettings: 'Exportar ajustes',
   importSettings: 'Importar ajustes',
   dataSectionDesc: 'Haz una copia de seguridad o transfiere tu configuración como archivo JSON. No incluye la caché.',

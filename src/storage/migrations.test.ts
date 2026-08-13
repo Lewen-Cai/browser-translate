@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { migrateAppData } from './migrations';
 import { APP_DATA_VERSION } from './schema';
 import type { AppData, ApiSettings, GlobalSettings } from './schema';
-import { BUILTIN_TEMPLATES } from '~/core/prompt/builtin';
 import { createDefaultAppData } from './defaults';
 
 const baseSettings = {
@@ -17,58 +16,23 @@ const baseSettings = {
 };
 
 describe('migrateAppData', () => {
-  it('returns data unchanged when shape is valid', () => {
+  it('returns data unchanged (same reference) when shape is valid', () => {
     const input: AppData = {
       version: APP_DATA_VERSION,
       api: {
         baseUrl: 'http://x', apiKey: 'k', model: 'm',
-        promptTemplateId: 'builtin-general',
         providerType: 'cloud',
         cloudProvider: 'custom',
         savedConfigs: { custom: { baseUrl: 'http://x', apiKey: 'k', model: 'm' } },
       },
       settings: baseSettings,
-      promptTemplates: BUILTIN_TEMPLATES.map((t) => ({ ...t })),
     };
-    expect(migrateAppData(input)).toEqual(input);
+    // Identity matters: loadAppData writes storage back when the reference changes.
+    expect(migrateAppData(input)).toBe(input);
   });
 
   it('throws on unknown future version', () => {
     expect(() => migrateAppData({ version: 99 } as never)).toThrow();
-  });
-
-  it('repairs api.promptTemplateId when it references a deleted template', () => {
-    const input: AppData = {
-      version: APP_DATA_VERSION,
-      api: {
-        baseUrl: 'http://x', apiKey: 'k', model: 'm',
-        promptTemplateId: 'deleted-template-id',
-        providerType: 'cloud',
-        cloudProvider: 'custom',
-      },
-      settings: baseSettings,
-      promptTemplates: BUILTIN_TEMPLATES.map((t) => ({ ...t })),
-    };
-    const out = migrateAppData(input);
-    expect(out.api.promptTemplateId).toBe('builtin-general');
-  });
-
-  it('ensures all built-in templates exist after migration', () => {
-    const input: AppData = {
-      version: APP_DATA_VERSION,
-      api: {
-        baseUrl: '', apiKey: '', model: '',
-        promptTemplateId: 'builtin-general',
-        providerType: 'cloud',
-        cloudProvider: 'custom',
-      },
-      settings: baseSettings,
-      promptTemplates: [],
-    };
-    const out = migrateAppData(input);
-    for (const builtin of BUILTIN_TEMPLATES) {
-      expect(out.promptTemplates.some((t) => t.id === builtin.id)).toBe(true);
-    }
   });
 
   it('fills providerType and cloudProvider defaults when missing', () => {
@@ -76,11 +40,9 @@ describe('migrateAppData', () => {
       version: APP_DATA_VERSION,
       api: {
         baseUrl: 'http://x', apiKey: 'k', model: 'm',
-        promptTemplateId: 'builtin-general',
         // providerType and cloudProvider absent (v0.1.0 data shape)
       } as unknown as AppData['api'],
       settings: baseSettings,
-      promptTemplates: BUILTIN_TEMPLATES.map((t) => ({ ...t })),
     } as AppData;
     const out = migrateAppData(input);
     expect(out.api.providerType).toBe('cloud');
@@ -92,11 +54,9 @@ describe('migrateAppData', () => {
       version: APP_DATA_VERSION,
       api: {
         baseUrl: 'https://api.openai.com/v1', apiKey: 'k', model: 'm',
-        promptTemplateId: 'builtin-general',
         // providerType + cloudProvider absent
       } as unknown as AppData['api'],
       settings: baseSettings,
-      promptTemplates: BUILTIN_TEMPLATES.map((t) => ({ ...t })),
     } as AppData;
     const out = migrateAppData(input);
     expect(out.api.providerType).toBe('cloud');
@@ -108,12 +68,10 @@ describe('migrateAppData', () => {
       version: APP_DATA_VERSION,
       api: {
         baseUrl: 'https://api.moonshot.cn/v1', apiKey: 'k', model: 'm',
-        promptTemplateId: 'builtin-general',
         providerType: 'cloud',
         cloudProvider: 'moonshot',
       },
       settings: baseSettings,
-      promptTemplates: BUILTIN_TEMPLATES.map((t) => ({ ...t })),
     };
     expect(migrateAppData(input).api.cloudProvider).toBe('moonshot');
   });
@@ -123,14 +81,47 @@ describe('migrateAppData', () => {
       version: APP_DATA_VERSION,
       api: {
         baseUrl: 'https://my-proxy.example/v1', apiKey: 'k', model: 'm',
-        promptTemplateId: 'builtin-general',
         providerType: 'cloud',
         cloudProvider: 'mistral',
       },
       settings: baseSettings,
-      promptTemplates: BUILTIN_TEMPLATES.map((t) => ({ ...t })),
     };
     expect(migrateAppData(input).api.cloudProvider).toBe('mistral');
+  });
+});
+
+describe('legacy template-field stripping', () => {
+  it('removes promptTemplates and api.promptTemplateId from pre-v0.1.8 data', () => {
+    const legacy = {
+      version: APP_DATA_VERSION,
+      api: {
+        baseUrl: 'http://x', apiKey: 'k', model: 'm',
+        providerType: 'cloud', cloudProvider: 'custom',
+        savedConfigs: { custom: { baseUrl: 'http://x', apiKey: 'k', model: 'm' } },
+        promptTemplateId: 'builtin-general',
+      },
+      settings: baseSettings,
+      promptTemplates: [{ id: 'builtin-general', name: 'General' }],
+    } as unknown as AppData;
+    const out = migrateAppData(legacy);
+    expect('promptTemplates' in out).toBe(false);
+    expect('promptTemplateId' in out.api).toBe(false);
+    // everything else survives
+    expect(out.api.baseUrl).toBe('http://x');
+    expect(out.settings.targetLanguage).toBe('en');
+  });
+
+  it('is identity on data that has no legacy fields', () => {
+    const clean: AppData = {
+      version: APP_DATA_VERSION,
+      api: {
+        baseUrl: 'http://x', apiKey: 'k', model: 'm',
+        providerType: 'cloud', cloudProvider: 'custom',
+        savedConfigs: { custom: { baseUrl: 'http://x', apiKey: 'k', model: 'm' } },
+      },
+      settings: baseSettings,
+    };
+    expect(migrateAppData(clean)).toBe(clean);
   });
 });
 

@@ -3,12 +3,7 @@ import type { StringKey } from './en';
 export const zhTW: Record<StringKey, string> = {
   // Common
   loading: '載入中…',
-  save: '儲存',
-  cancel: '取消',
   delete: '刪除',
-  edit: '編輯',
-  close: '關閉',
-  clone: '複製',
   clearAll: '全部清除',
   // Popup / options shared
   settings: '設定',
@@ -24,11 +19,9 @@ export const zhTW: Record<StringKey, string> = {
   sectionCache: '快取',
   sectionAppearance: '外觀',
   sectionData: '資料',
-  sectionPromptTemplates: '提示詞範本',
   openaiCompatible: '相容 OpenAI 協定',
   // Options nav
   navApi: 'API',
-  navPrompts: '提示詞',
   navGeneral: '一般',
   // Provider type + presets
   providerType: '服務類型',
@@ -46,8 +39,6 @@ export const zhTW: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: '模型',
-  defaultPromptTemplate: '預設提示詞範本',
-  prompt: '提示詞',
   // Translation form
   targetLanguage: '目標語言',
   triggerMode: '觸發方式',
@@ -76,14 +67,6 @@ export const zhTW: Record<StringKey, string> = {
   themeDark: '深色',
   uiLanguage: '介面語言',
   uiLangAuto: '跟隨系統',
-  // Prompt templates
-  newTemplate: '新增範本',
-  builtin: '內建',
-  systemPrompt: '系統提示詞',
-  userPromptTemplate: '使用者提示詞範本',
-  userPromptTemplateHint: '變數列表：{{text}}（必填）· {{targetLang}} · {{sourceLang}} · {{url}} · {{title}}',
-  viewReadonly: '檢視 · 唯讀',
-  editTemplate: '編輯範本',
   exportSettings: '匯出設定',
   importSettings: '匯入設定',
   dataSectionDesc: '將設定備份或轉移為 JSON 檔案。不含快取。',
