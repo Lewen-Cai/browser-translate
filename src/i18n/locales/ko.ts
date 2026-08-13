@@ -39,6 +39,10 @@ export const ko: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: '모델',
+  thinkingLabel: '모델 사고(추론)',
+  thinkingOff: '끄기',
+  thinkingDesc: '기본 꺼짐 — 응답이 더 빠르고 숨겨진 추론 토큰이 과금되지 않습니다.',
+  thinkingUnsupported: '이 제공업체에서는 제어할 수 없어 모델 기본값을 따릅니다.',
   // Translation form
   targetLanguage: '대상 언어',
   triggerMode: '실행 방식',

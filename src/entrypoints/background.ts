@@ -1,6 +1,7 @@
 import { StorageClient } from '~/storage/client';
 import { CacheStore } from '~/storage/cacheStore';
 import { OpenAICompatibleProvider } from '~/core/providers/openai';
+import { providerConfigFromApi } from '~/core/providers/providerSlots';
 import { TranslationProviderError } from '~/core/providers/types';
 import { computeCacheKey } from '~/core/cache/key';
 import { autoSystemPrompt } from '~/core/dictionary/prompt';
@@ -95,12 +96,7 @@ async function handleTranslate(
       }
     }
 
-    const provider = new OpenAICompatibleProvider({
-      baseUrl: api.baseUrl,
-      apiKey: api.apiKey,
-      model: api.model,
-      customHeaders: api.customHeaders,
-    });
+    const provider = new OpenAICompatibleProvider(providerConfigFromApi(api));
 
     const abortCtl = new AbortController();
     activeAborts.set(msg.requestId, abortCtl);
@@ -169,12 +165,7 @@ async function handleTranslateBatch(
     }
     const targetLang = msg.targetLang ?? data.settings.targetLanguage;
     const systemPrompt = batchSystemPrompt();
-    const provider = new OpenAICompatibleProvider({
-      baseUrl: api.baseUrl,
-      apiKey: api.apiKey,
-      model: api.model,
-      customHeaders: api.customHeaders,
-    });
+    const provider = new OpenAICompatibleProvider(providerConfigFromApi(api));
 
     // One AbortController for the whole batch request: runBatch may call
     // translateOnce many times (the batch call plus per-segment fallback), and

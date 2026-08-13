@@ -39,6 +39,10 @@ export const de: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: 'Modell',
+  thinkingLabel: 'Modell-Reasoning',
+  thinkingOff: 'Aus',
+  thinkingDesc: 'Standardmäßig aus – schnellere Antworten, keine Abrechnung versteckter Reasoning-Tokens.',
+  thinkingUnsupported: 'Für diesen Anbieter nicht steuerbar – es gilt der Modellstandard.',
   // Translation form
   targetLanguage: 'Zielsprache',
   triggerMode: 'Auslösemodus',

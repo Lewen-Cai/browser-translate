@@ -1,4 +1,4 @@
-import { APP_DATA_VERSION, type AppData } from './schema';
+import { APP_DATA_VERSION, isThinkingSetting, type AppData } from './schema';
 import type { ProviderConfig, ProviderSlot } from './schema';
 import { inferCloudProvider, isCloudProvider } from '~/core/providers/presets';
 import { activeSlot } from '~/core/providers/providerSlots';
@@ -17,9 +17,18 @@ export function migrateAppData(input: AppData): AppData {
   let data = input;
   data = stripLegacyTemplateFields(data);
   data = fillApiProviderDefaults(data);
+  data = normalizeThinking(data);
   data = seedSavedConfigs(data);
   data = fillSettingsDefaults(data);
   return data;
+}
+
+/** Drop an invalid api.thinking value (absent ≡ 'off'). Idempotent. */
+function normalizeThinking(data: AppData): AppData {
+  const value = (data.api as { thinking?: unknown }).thinking;
+  if (value === undefined || isThinkingSetting(value)) return data;
+  const { thinking: _invalid, ...api } = data.api as AppData['api'] & { thinking?: unknown };
+  return { ...data, api };
 }
 
 /**
@@ -67,7 +76,13 @@ function seedSavedConfigs(data: AppData): AppData {
   const clean: Partial<Record<ProviderSlot, ProviderConfig>> = {};
   for (const [slot, cfg] of Object.entries(raw)) {
     if (cfg && typeof cfg.baseUrl === 'string' && typeof cfg.apiKey === 'string' && typeof cfg.model === 'string') {
-      clean[slot as ProviderSlot] = { baseUrl: cfg.baseUrl, apiKey: cfg.apiKey, model: cfg.model };
+      clean[slot as ProviderSlot] = {
+        baseUrl: cfg.baseUrl,
+        apiKey: cfg.apiKey,
+        model: cfg.model,
+        // Preserve a valid thinking value; anything else is dropped (≡ 'off').
+        ...(isThinkingSetting(cfg.thinking) && { thinking: cfg.thinking }),
+      };
     }
   }
   const slot = activeSlot(api);

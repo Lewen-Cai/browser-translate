@@ -4,10 +4,11 @@ import { cn } from '~/lib/cn';
 
 interface Props extends JSX.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
+  hint?: string;
   options: Array<{ value: string; label: string }>;
 }
 
-export function Select({ label, options, class: cls, className, ...rest }: Props) {
+export function Select({ label, hint, options, class: cls, className, ...rest }: Props) {
   return (
     <label class="block">
       {label && (
@@ -18,6 +19,7 @@ export function Select({ label, options, class: cls, className, ...rest }: Props
           class={cn(
             'w-full h-8 rounded-md border border-ap-border bg-ap-surface pl-2.5 pr-8 text-sm text-ap-fg',
             'focus:border-ap-brand focus:outline-none transition-colors appearance-none cursor-pointer',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
             cls as string, className as string,
           )}
           {...rest}
@@ -31,6 +33,7 @@ export function Select({ label, options, class: cls, className, ...rest }: Props
           class="absolute right-2 top-1/2 -translate-y-1/2 text-ap-fg pointer-events-none"
         />
       </div>
+      {hint && <span class="block text-2xs text-ap-subtle mt-1">{hint}</span>}
     </label>
   );
 }

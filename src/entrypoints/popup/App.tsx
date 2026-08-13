@@ -9,9 +9,10 @@ import { Button } from '~/ui/components/Button';
 import { Settings, Eye, EyeOff } from '~/ui/icons';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
-import { CLOUD_PRESETS, type CloudProvider } from '~/core/providers/presets';
-import { applySlot, rememberActive } from '~/core/providers/providerSlots';
-import type { ApiSettings } from '~/storage/schema';
+import { CLOUD_PRESETS, supportsThinkingToggle, type CloudProvider } from '~/core/providers/presets';
+import { activeSlot, applySlot, rememberActive } from '~/core/providers/providerSlots';
+import { thinkingOptions } from '~/ui/thinkingOptions';
+import type { ApiSettings, ThinkingSetting } from '~/storage/schema';
 
 const LANGUAGES = [
   { value: 'zh-CN', label: '简体中文' },
@@ -31,6 +32,7 @@ function apiEqual(a: ApiSettings, b: ApiSettings): boolean {
     a.model === b.model &&
     a.providerType === b.providerType &&
     a.cloudProvider === b.cloudProvider &&
+    (a.thinking ?? 'off') === (b.thinking ?? 'off') &&
     JSON.stringify(a.savedConfigs ?? {}) === JSON.stringify(b.savedConfigs ?? {})
   );
 }
@@ -250,6 +252,17 @@ export function App() {
             mono
             onInput={(e) => setDraftField('model', (e.target as HTMLInputElement).value)}
           />
+
+          {supportsThinkingToggle(activeSlot(draft)) && (
+            <Select
+              label={t('thinkingLabel')}
+              value={draft.thinking ?? 'off'}
+              options={thinkingOptions(t('thinkingOff'))}
+              onChange={(e) =>
+                setDraftField('thinking', (e.target as HTMLSelectElement).value as ThinkingSetting)
+              }
+            />
+          )}
 
           <div class="pt-1">
             <Button variant="primary" size="sm" onClick={onApply} disabled={!dirty}>

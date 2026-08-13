@@ -39,6 +39,10 @@ export const es: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: 'Modelo',
+  thinkingLabel: 'Razonamiento del modelo',
+  thinkingOff: 'Desactivado',
+  thinkingDesc: 'Desactivado por defecto: respuestas más rápidas y sin facturar tokens de razonamiento ocultos.',
+  thinkingUnsupported: 'No controlable para este proveedor; se aplica el valor predeterminado del modelo.',
   // Translation form
   targetLanguage: 'Idioma de destino',
   triggerMode: 'Modo de activación',

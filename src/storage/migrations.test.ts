@@ -151,6 +151,41 @@ describe('savedConfigs seeding', () => {
     const out = migrateAppData(data);
     expect(out.api.savedConfigs).toEqual({ openai: { baseUrl: 'b', apiKey: 'k', model: 'm' } });
   });
+
+  it("preserves a slot's thinking value and drops an invalid one", () => {
+    const data = createDefaultAppData();
+    data.api = {
+      ...data.api,
+      providerType: 'cloud', cloudProvider: 'deepseek', baseUrl: 'b', apiKey: 'k', model: 'm', thinking: 'xhigh',
+      savedConfigs: {
+        deepseek: { baseUrl: 'b', apiKey: 'k', model: 'm', thinking: 'xhigh' },
+        openai: { baseUrl: 'o', apiKey: 'k2', model: 'm2', thinking: 'bogus' },
+      } as unknown as ApiSettings['savedConfigs'],
+    };
+    const out = migrateAppData(data);
+    expect(out.api.savedConfigs?.deepseek?.thinking).toBe('xhigh');
+    expect(out.api.savedConfigs?.openai?.thinking).toBeUndefined();
+    expect(out.api.savedConfigs?.openai?.model).toBe('m2');
+  });
+});
+
+describe('thinking normalization', () => {
+  it('drops an invalid api.thinking value (including the retired auto)', () => {
+    for (const bad of ['sometimes', 'auto']) {
+      const data = createDefaultAppData();
+      (data.api as { thinking?: unknown }).thinking = bad;
+      const out = migrateAppData(data);
+      expect('thinking' in out.api, bad).toBe(false);
+    }
+  });
+
+  it('keeps every valid api.thinking value', () => {
+    for (const good of ['off', 'low', 'medium', 'high', 'xhigh', 'max'] as const) {
+      const data = createDefaultAppData();
+      data.api.thinking = good;
+      expect(migrateAppData(data).api.thinking).toBe(good);
+    }
+  });
 });
 
 describe('fullPageHotkey integrity repair', () => {

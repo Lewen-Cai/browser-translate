@@ -1,4 +1,4 @@
-import type { ApiSettings } from '~/storage/schema';
+import type { ApiSettings, ProviderSlot, ThinkingLevel, ThinkingSetting } from '~/storage/schema';
 
 export type CloudProvider = ApiSettings['cloudProvider'];
 
@@ -60,6 +60,61 @@ const LOCAL_RUNTIME_HINT = 'LM Studio · Ollama · llama.cpp · vLLM';
 
 export function baseUrlHint(providerType: 'cloud' | 'local'): string {
   return providerType === 'local' ? LOCAL_RUNTIME_HINT : CLOUD_PROVIDER_HINT;
+}
+
+/** Token budgets for the tiered levels on budget-based providers (Qwen/SiliconFlow). */
+const THINKING_BUDGETS: Record<ThinkingLevel, number> = {
+  low: 2048,
+  medium: 4096,
+  high: 8192,
+  xhigh: 16384,
+  max: 32768,
+};
+
+/**
+ * Top-level request-body fields that control thinking/reasoning for `slot`
+ * at the given setting ('off' or an effort tier), or null when the provider
+ * has no safe param (nothing is sent: unknown fields can 400 on strict APIs,
+ * e.g. OpenAI rejects reasoning_effort on non-reasoning models).
+ *
+ * Verified against provider docs 2026-08:
+ * - DeepSeek: thinking.type to disable; reasoning_effort accepts all five
+ *   tiers (maps medium→high, xhigh→max internally).
+ * - Zhipu: thinking.type; reasoning_effort documented at the API level with
+ *   the same five tiers (effort applies on GLM-5.2+, ignored before).
+ * - DashScope/SiliconFlow: enable_thinking boolean + thinking_budget tokens.
+ * - OpenRouter: unified reasoning object; effort supports low/medium/high.
+ *
+ * (A switch, not a Record lookup: ProviderSlot includes 'local', which is not
+ * a CLOUD_PRESETS key, and noUncheckedIndexedAccess would flag the index.)
+ */
+export function thinkingPatch(slot: ProviderSlot, setting: ThinkingSetting): Record<string, unknown> | null {
+  switch (slot) {
+    case 'deepseek':
+      return setting === 'off'
+        ? { thinking: { type: 'disabled' } }
+        : { reasoning_effort: setting };
+    case 'zhipu':
+      return setting === 'off'
+        ? { thinking: { type: 'disabled' } }
+        : { thinking: { type: 'enabled' }, reasoning_effort: setting };
+    case 'dashscope':
+    case 'siliconflow':
+      return setting === 'off'
+        ? { enable_thinking: false }
+        : { enable_thinking: true, thinking_budget: THINKING_BUDGETS[setting] };
+    case 'openrouter':
+      return setting === 'off'
+        ? { reasoning: { enabled: false } }
+        : { reasoning: { effort: setting === 'low' || setting === 'medium' ? setting : 'high' } };
+    default:
+      return null; // openai, moonshot, mistral, custom, local
+  }
+}
+
+/** True when the slot has known thinking-control params (drives the UI control). */
+export function supportsThinkingToggle(slot: ProviderSlot): boolean {
+  return thinkingPatch(slot, 'off') !== null;
 }
 
 /** True when `value` is a known cloud provider key (used by UI + migration validation). */

@@ -39,6 +39,10 @@ export const en = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: 'Model',
+  thinkingLabel: 'Model thinking',
+  thinkingOff: 'Off',
+  thinkingDesc: 'Off by default — answers arrive faster and hidden reasoning tokens are not billed.',
+  thinkingUnsupported: 'Not controllable for this provider — the model default applies.',
   // Translation form
   targetLanguage: 'Target language',
   triggerMode: 'Trigger mode',

@@ -4,8 +4,11 @@ import {
   inferCloudProvider,
   isCloudProvider,
   baseUrlHint,
+  thinkingPatch,
+  supportsThinkingToggle,
   type CloudProvider,
 } from './presets';
+import type { ProviderSlot } from '~/storage/schema';
 
 describe('CLOUD_PRESETS', () => {
   it('custom has no endpoints; every other provider has at least one', () => {
@@ -63,6 +66,60 @@ describe('baseUrlHint', () => {
     // Cloud-only brands must NOT appear in the local hint.
     expect(hint).not.toContain('DeepSeek');
     expect(hint).not.toContain('OpenAI');
+  });
+});
+
+describe('thinkingPatch', () => {
+  it('returns the exact provider-specific disable patch for supported slots', () => {
+    expect(thinkingPatch('deepseek', 'off')).toEqual({ thinking: { type: 'disabled' } });
+    expect(thinkingPatch('zhipu', 'off')).toEqual({ thinking: { type: 'disabled' } });
+    expect(thinkingPatch('dashscope', 'off')).toEqual({ enable_thinking: false });
+    expect(thinkingPatch('siliconflow', 'off')).toEqual({ enable_thinking: false });
+    expect(thinkingPatch('openrouter', 'off')).toEqual({ reasoning: { enabled: false } });
+  });
+
+  it('maps effort tiers to reasoning_effort for deepseek (all five sent verbatim)', () => {
+    expect(thinkingPatch('deepseek', 'low')).toEqual({ reasoning_effort: 'low' });
+    expect(thinkingPatch('deepseek', 'medium')).toEqual({ reasoning_effort: 'medium' });
+    expect(thinkingPatch('deepseek', 'max')).toEqual({ reasoning_effort: 'max' });
+  });
+
+  it('enables thinking plus reasoning_effort for zhipu tiers', () => {
+    expect(thinkingPatch('zhipu', 'xhigh')).toEqual({
+      thinking: { type: 'enabled' },
+      reasoning_effort: 'xhigh',
+    });
+  });
+
+  it('maps tiers to enable_thinking + a growing thinking_budget for qwen/siliconflow', () => {
+    const low = thinkingPatch('dashscope', 'low') as { thinking_budget: number };
+    const max = thinkingPatch('siliconflow', 'max') as { thinking_budget: number };
+    expect(thinkingPatch('dashscope', 'medium')).toEqual({ enable_thinking: true, thinking_budget: 4096 });
+    expect(low.thinking_budget).toBeLessThan(max.thinking_budget);
+  });
+
+  it('clamps openrouter effort to its low/medium/high vocabulary', () => {
+    expect(thinkingPatch('openrouter', 'low')).toEqual({ reasoning: { effort: 'low' } });
+    expect(thinkingPatch('openrouter', 'medium')).toEqual({ reasoning: { effort: 'medium' } });
+    expect(thinkingPatch('openrouter', 'high')).toEqual({ reasoning: { effort: 'high' } });
+    expect(thinkingPatch('openrouter', 'xhigh')).toEqual({ reasoning: { effort: 'high' } });
+    expect(thinkingPatch('openrouter', 'max')).toEqual({ reasoning: { effort: 'high' } });
+  });
+
+  it('returns null at every setting for slots without safe params', () => {
+    for (const slot of ['openai', 'moonshot', 'mistral', 'custom', 'local'] as ProviderSlot[]) {
+      expect(thinkingPatch(slot, 'off')).toBeNull();
+      expect(thinkingPatch(slot, 'max')).toBeNull();
+    }
+  });
+});
+
+describe('supportsThinkingToggle', () => {
+  it('mirrors thinkingDisablePatch availability', () => {
+    expect(supportsThinkingToggle('deepseek')).toBe(true);
+    expect(supportsThinkingToggle('openrouter')).toBe(true);
+    expect(supportsThinkingToggle('openai')).toBe(false);
+    expect(supportsThinkingToggle('local')).toBe(false);
   });
 });
 

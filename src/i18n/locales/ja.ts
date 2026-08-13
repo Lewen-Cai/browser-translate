@@ -39,6 +39,10 @@ export const ja: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: 'モデル',
+  thinkingLabel: 'モデルの思考',
+  thinkingOff: 'オフ',
+  thinkingDesc: '既定でオフ——応答が速くなり、非表示の思考トークンは課金されません。',
+  thinkingUnsupported: 'このプロバイダーでは制御できず、モデルの既定に従います。',
   // Translation form
   targetLanguage: '翻訳先の言語',
   triggerMode: 'トリガー方式',

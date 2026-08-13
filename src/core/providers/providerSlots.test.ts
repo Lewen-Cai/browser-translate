@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { ApiSettings } from '~/storage/schema';
-import { activeSlot, defaultConfigForSlot, applySlot, rememberActive } from './providerSlots';
+import { activeSlot, defaultConfigForSlot, applySlot, rememberActive, providerConfigFromApi } from './providerSlots';
 
 function baseApi(overrides: Partial<ApiSettings> = {}): ApiSettings {
   return {
@@ -103,5 +103,49 @@ describe('rememberActive', () => {
     api = applySlot(api, 'openai');
     expect(api.apiKey).toBe('sk-openai');
     expect(api.model).toBe('gpt-4o');
+  });
+
+  it('remembers thinking per slot and restores it on switch-back', () => {
+    let api = baseApi({ providerType: 'cloud', cloudProvider: 'deepseek', baseUrl: 'b', apiKey: 'k', model: 'm', thinking: 'high' });
+    api = rememberActive(api);
+    api = applySlot(api, 'openai');
+    expect(api.thinking).toBeUndefined();     // openai slot never set it
+    api = applySlot(api, 'deepseek');
+    expect(api.thinking).toBe('high');
+  });
+});
+
+describe('providerConfigFromApi', () => {
+  it('injects the disable patch when thinking is off (default) on a supported slot', () => {
+    const api = baseApi({ providerType: 'cloud', cloudProvider: 'deepseek', baseUrl: 'b', apiKey: 'k', model: 'deepseek-v4-flash' });
+    const cfg = providerConfigFromApi(api);
+    expect(cfg.extraBody).toEqual({ thinking: { type: 'disabled' } });
+    expect(cfg.baseUrl).toBe('b');
+    expect(cfg.model).toBe('deepseek-v4-flash');
+  });
+
+  it('treats an explicit off the same as the undefined default', () => {
+    const api = baseApi({ providerType: 'cloud', cloudProvider: 'deepseek', thinking: 'off' });
+    expect(providerConfigFromApi(api).extraBody).toEqual({ thinking: { type: 'disabled' } });
+  });
+
+  it('sends the mapped effort param when a tier is chosen', () => {
+    const api = baseApi({ providerType: 'cloud', cloudProvider: 'deepseek', thinking: 'max' });
+    expect(providerConfigFromApi(api).extraBody).toEqual({ reasoning_effort: 'max' });
+  });
+
+  it('sends nothing for a slot without a safe param, at off and at a tier', () => {
+    expect(providerConfigFromApi(baseApi({ providerType: 'cloud', cloudProvider: 'openai', thinking: 'off' })).extraBody).toBeUndefined();
+    expect(providerConfigFromApi(baseApi({ providerType: 'cloud', cloudProvider: 'openai', thinking: 'max' })).extraBody).toBeUndefined();
+  });
+
+  it('sends nothing for the local slot', () => {
+    const api = baseApi({ providerType: 'local' });
+    expect(providerConfigFromApi(api).extraBody).toBeUndefined();
+  });
+
+  it('passes customHeaders through', () => {
+    const api = baseApi({ customHeaders: { 'X-Test': '1' } });
+    expect(providerConfigFromApi(api).customHeaders).toEqual({ 'X-Test': '1' });
   });
 });

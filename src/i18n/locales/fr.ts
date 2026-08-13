@@ -39,6 +39,10 @@ export const fr: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: 'Modèle',
+  thinkingLabel: 'Réflexion du modèle',
+  thinkingOff: 'Désactivé',
+  thinkingDesc: 'Désactivée par défaut : réponses plus rapides, sans facturer les jetons de raisonnement cachés.',
+  thinkingUnsupported: 'Non contrôlable pour ce fournisseur ; le comportement par défaut du modèle s\'applique.',
   // Translation form
   targetLanguage: 'Langue cible',
   triggerMode: 'Mode de déclenchement',

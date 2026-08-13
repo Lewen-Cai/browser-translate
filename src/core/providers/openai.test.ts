@@ -119,6 +119,36 @@ describe('OpenAICompatibleProvider (non-streaming)', () => {
     }
   });
 
+  it('spreads extraBody into the request body at the top level', async () => {
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+      new Response(JSON.stringify({ choices: [{ message: { content: 'x' } }] }), { status: 200 }),
+    );
+    const p = new OpenAICompatibleProvider({
+      baseUrl: 'https://api.example.com/v1',
+      apiKey: 'k', model: 'm',
+      extraBody: { thinking: { type: 'disabled' } },
+    });
+    await collect(p.translate({ ...prompts, stream: false }));
+    const body = JSON.parse((fetch as ReturnType<typeof vi.fn>).mock.calls[0]![1]!.body) as Record<string, unknown>;
+    expect(body.thinking).toEqual({ type: 'disabled' });
+  });
+
+  it('extraBody can never override model, stream, or messages', async () => {
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+      new Response(JSON.stringify({ choices: [{ message: { content: 'x' } }] }), { status: 200 }),
+    );
+    const p = new OpenAICompatibleProvider({
+      baseUrl: 'https://api.example.com/v1',
+      apiKey: 'k', model: 'real-model',
+      extraBody: { model: 'evil-model', stream: true, messages: [] },
+    });
+    await collect(p.translate({ ...prompts, stream: false }));
+    const body = JSON.parse((fetch as ReturnType<typeof vi.fn>).mock.calls[0]![1]!.body) as { model: string; stream: boolean; messages: unknown[] };
+    expect(body.model).toBe('real-model');
+    expect(body.stream).toBe(false);
+    expect(body.messages).toHaveLength(2);
+  });
+
   it('strips trailing slash from baseUrl', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
       new Response(JSON.stringify({ choices: [{ message: { content: 'x' } }] }), { status: 200 }),

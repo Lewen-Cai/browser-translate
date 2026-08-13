@@ -39,6 +39,10 @@ export const zhTW: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: '模型',
+  thinkingLabel: '模型思考',
+  thinkingOff: '關閉',
+  thinkingDesc: '預設關閉——出字更快，也不為隱藏的思考 token 計費。',
+  thinkingUnsupported: '該服務商沒有可控參數，遵循模型預設行為。',
   // Translation form
   targetLanguage: '目標語言',
   triggerMode: '觸發方式',

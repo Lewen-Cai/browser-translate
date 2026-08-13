@@ -39,6 +39,10 @@ export const zhCN: Record<StringKey, string> = {
   baseUrl: 'Base URL',
   apiKey: 'API Key',
   model: '模型',
+  thinkingLabel: '模型思考',
+  thinkingOff: '关闭',
+  thinkingDesc: '默认关闭——出字更快，也不为隐藏的思考 token 计费。',
+  thinkingUnsupported: '该服务商没有可控参数，遵循模型默认行为。',
   // Translation form
   targetLanguage: '目标语言',
   triggerMode: '触发方式',

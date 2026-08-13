@@ -10,6 +10,8 @@ export interface OpenAIProviderConfig {
   apiKey: string;
   model: string;
   customHeaders?: Record<string, string>;
+  /** Extra top-level request-body fields (e.g. provider-specific thinking control). */
+  extraBody?: Record<string, unknown>;
 }
 
 export class OpenAICompatibleProvider implements TranslationProvider {
@@ -21,7 +23,9 @@ export class OpenAICompatibleProvider implements TranslationProvider {
   }
 
   async *translate(opts: TranslateOptions): AsyncIterable<TranslationChunk> {
+    // extraBody is spread FIRST so it can never override model/stream/messages.
     const body = {
+      ...this.cfg.extraBody,
       model: this.cfg.model,
       stream: opts.stream,
       ...(opts.temperature !== undefined && { temperature: opts.temperature }),

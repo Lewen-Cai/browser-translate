@@ -7,8 +7,10 @@ import { SegmentedControl } from '~/ui/components/SegmentedControl';
 import { ApiStatusIndicator } from '~/ui/components/ApiStatusIndicator';
 import { Eye, EyeOff } from '~/ui/icons';
 import { useT } from '~/i18n';
-import { CLOUD_PRESETS, baseUrlHint, type CloudProvider } from '~/core/providers/presets';
-import { applySlot, rememberActive } from '~/core/providers/providerSlots';
+import { CLOUD_PRESETS, baseUrlHint, supportsThinkingToggle, type CloudProvider } from '~/core/providers/presets';
+import { activeSlot, applySlot, rememberActive } from '~/core/providers/providerSlots';
+import { thinkingOptions } from '~/ui/thinkingOptions';
+import type { ThinkingSetting } from '~/storage/schema';
 
 export function ApiSettingsPage() {
   const api = useAppStore((s) => s.data.api);
@@ -108,6 +110,17 @@ export function ApiSettingsPage() {
           value={api.model}
           mono
           onInput={(e) => updateApi(rememberActive({ ...api, model: (e.target as HTMLInputElement).value }))}
+        />
+
+        <Select
+          label={t('thinkingLabel')}
+          value={api.thinking ?? 'off'}
+          disabled={!supportsThinkingToggle(activeSlot(api))}
+          hint={supportsThinkingToggle(activeSlot(api)) ? t('thinkingDesc') : t('thinkingUnsupported')}
+          options={thinkingOptions(t('thinkingOff'))}
+          onChange={(e) =>
+            updateApi(rememberActive({ ...api, thinking: (e.target as HTMLSelectElement).value as ThinkingSetting }))
+          }
         />
 
         <div class="pt-1">
