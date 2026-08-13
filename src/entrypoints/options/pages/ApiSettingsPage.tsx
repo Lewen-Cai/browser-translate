@@ -39,7 +39,7 @@ export function ApiSettingsPage() {
   return (
     <div class="max-w-lg">
       <SectionHeader number="01" label={t('sectionApiEndpoint').toUpperCase()} description={t('openaiCompatible')} />
-      <div class="space-y-4 mb-8">
+      <div class="space-y-4">
         <SegmentedControl<'cloud' | 'local'>
           label={t('providerType')}
           value={api.providerType}

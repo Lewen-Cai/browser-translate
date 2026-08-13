@@ -11,7 +11,9 @@ export function Button({ variant = 'primary', size = 'md', class: cls, className
   const base = 'inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
   const variants = {
     primary:   'bg-ap-brand text-ap-brand-fg hover:opacity-90',
-    secondary: 'bg-ap-surface border border-ap-border text-ap-fg hover:border-ap-border-strong',
+    // A subtle fg-tinted fill so the button reads as a control even when
+    // surface ≈ bg (light mode was white-on-white with only a hairline).
+    secondary: 'bg-ap-fg/5 border border-ap-border-strong text-ap-fg hover:bg-ap-fg/10',
     ghost:     'text-ap-muted hover:text-ap-fg hover:bg-ap-bg',
     danger:    'bg-ap-danger text-white hover:opacity-90',
   };

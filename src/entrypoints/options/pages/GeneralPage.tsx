@@ -6,6 +6,7 @@ import { Select } from '~/ui/components/Select';
 import { Switch } from '~/ui/components/Switch';
 import { Button } from '~/ui/components/Button';
 import { SectionHeader } from '~/ui/components/SectionHeader';
+import { ResultBanner } from '~/ui/components/ResultBanner';
 import { useT } from '~/i18n';
 import { exportAppData, importAppData } from '~/storage/transfer';
 import { ThemePicker } from './ThemePicker';
@@ -178,11 +179,7 @@ export function GeneralPage() {
             class="hidden"
             onChange={handleImportFile}
           />
-          {importMsg && (
-            <p class={importMsg.ok ? 'text-xs text-ap-success' : 'text-xs text-ap-danger'}>
-              {importMsg.text}
-            </p>
-          )}
+          {importMsg && <ResultBanner ok={importMsg.ok} text={importMsg.text} />}
         </div>
       </div>
     </div>

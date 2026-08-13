@@ -152,7 +152,7 @@ export function App() {
       </div>
 
       {/* 01 Translation */}
-      <section class="px-4 pt-3 pb-3 border-b border-ap-border">
+      <section class="px-4 pt-3 pb-4 border-b border-ap-border">
         <SectionHeader number="01" label={t('sectionTranslation').toUpperCase()} />
         <div class="space-y-2.5">
           <Select

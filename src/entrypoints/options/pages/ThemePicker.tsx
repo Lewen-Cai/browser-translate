@@ -4,6 +4,7 @@ import { useT } from '~/i18n';
 import { BUILT_IN_THEMES, parseCustomTheme } from '~/core/theme/themes';
 import { Trash2, Upload } from '~/ui/icons';
 import { Button } from '~/ui/components/Button';
+import { ResultBanner } from '~/ui/components/ResultBanner';
 import { cn } from '~/lib/cn';
 import type { ThemeDefinition, ThemePalette } from '~/storage/schema';
 
@@ -111,7 +112,11 @@ export function ThemePicker() {
         </Button>
         <input ref={fileRef} type="file" accept="application/json" class="hidden" onChange={handleUpload} />
       </div>
-      {errorMsg && <p class="mt-2 text-xs text-ap-danger">{errorMsg}</p>}
+      {errorMsg && (
+        <div class="mt-2">
+          <ResultBanner ok={false} text={errorMsg} />
+        </div>
+      )}
     </div>
   );
 }
