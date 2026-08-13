@@ -3,7 +3,6 @@ import type { StringKey } from './en';
 export const zhTW: Record<StringKey, string> = {
   // Common
   loading: '載入中…',
-  delete: '刪除',
   clearAll: '全部清除',
   // Popup / options shared
   settings: '設定',
@@ -26,9 +25,9 @@ export const zhTW: Record<StringKey, string> = {
   // Translation engine
   engine: '翻譯引擎',
   engineKindService: '翻譯服務',
-  engineKindLlm: '大模型',
+  engineKindLlm: '模型提供商',
   engineHint: '免費引擎無需金鑰，但只提供純翻譯；使用自有 API 還能對單字進行辭典查詢。',
-  engineFreeDisclaimer: '微軟與 Google 翻譯使用的是公開端點，並非官方 API，也未獲得兩家公司的授權或背書。它們可能隨時變更或失效，按現狀提供，不作任何擔保。',
+  engineFreeDisclaimer: '微軟與 Google 翻譯使用的是公開端點，並非官方 API，也未獲得兩家公司的授權或背書。它們可能隨時變更或失效，按現狀提供，不作任何擔保。為防免費服務失效後無法使用，建議自備模型 API：設定好自己的金鑰，服務出問題時切過去即可。',
   // Provider type + presets
   providerType: '服務類型',
   providerTypeCloud: '雲端',
@@ -71,10 +70,7 @@ export const zhTW: Record<StringKey, string> = {
   cacheTtl: '快取有效期（天）',
   cacheShort: '快取',
   // Appearance
-  colorTheme: '配色主題',
   themeMode: '明暗模式',
-  uploadTheme: '上傳主題',
-  invalidThemeFile: '不是有效的主題檔案',
   themeAuto: '跟隨系統',
   themeLight: '淺色',
   themeDark: '深色',

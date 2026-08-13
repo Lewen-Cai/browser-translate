@@ -3,7 +3,6 @@
 export const en = {
   // Common
   loading: 'Loading…',
-  delete: 'Delete',
   clearAll: 'Clear all',
   // Popup / options shared
   settings: 'Settings',
@@ -26,9 +25,9 @@ export const en = {
   // Translation engine
   engine: 'Translation engine',
   engineKindService: 'Translation service',
-  engineKindLlm: 'LLM',
+  engineKindLlm: 'LLM providers',
   engineHint: 'Free engines need no key, but only produce plain translations. Your own API also gives dictionary lookups for single words.',
-  engineFreeDisclaimer: 'Microsoft and Google translation go through public endpoints that are not official APIs, and are not affiliated with or endorsed by either company. They may change or stop working at any time, and are provided as-is without warranty.',
+  engineFreeDisclaimer: 'Microsoft and Google translation go through public endpoints that are not official APIs, and are not affiliated with or endorsed by either company. They may change or stop working at any time, and are provided as-is without warranty. If a free service stops working, switch to your own model — keeping an API key configured is the way to stay unaffected.',
   // Provider type + presets
   providerType: 'Provider type',
   providerTypeCloud: 'Cloud',
@@ -71,10 +70,7 @@ export const en = {
   cacheTtl: 'Cache TTL (days)',
   cacheShort: 'Cache',
   // Appearance
-  colorTheme: 'Color theme',
   themeMode: 'Light / dark mode',
-  uploadTheme: 'Upload theme',
-  invalidThemeFile: 'Not a valid theme file',
   themeAuto: 'Follow system',
   themeLight: 'Light',
   themeDark: 'Dark',

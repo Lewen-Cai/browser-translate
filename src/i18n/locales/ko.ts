@@ -3,7 +3,6 @@ import type { StringKey } from './en';
 export const ko: Record<StringKey, string> = {
   // Common
   loading: '불러오는 중…',
-  delete: '삭제',
   clearAll: '전체 지우기',
   // Popup / options shared
   settings: '설정',
@@ -26,9 +25,9 @@ export const ko: Record<StringKey, string> = {
   // Translation engine
   engine: '번역 엔진',
   engineKindService: '번역 서비스',
-  engineKindLlm: 'LLM',
+  engineKindLlm: '모델 제공자',
   engineHint: '무료 엔진은 키가 필요 없지만 번역문만 제공합니다. 내 API를 쓰면 단어 사전 조회도 가능합니다.',
-  engineFreeDisclaimer: 'Microsoft와 Google 번역은 공개 엔드포인트를 사용하며 공식 API가 아니고 두 회사의 승인을 받지도 않았습니다. 언제든 변경되거나 중단될 수 있으며 보증 없이 있는 그대로 제공됩니다.',
+  engineFreeDisclaimer: 'Microsoft와 Google 번역은 공개 엔드포인트를 사용하며 공식 API가 아니고 두 회사의 승인을 받지도 않았습니다. 언제든 변경되거나 중단될 수 있으며 보증 없이 있는 그대로 제공됩니다. 무료 서비스가 중단될 때를 대비해 자신의 모델 API를 준비해 두는 것을 권합니다. 키를 설정해 두면 전환만 하면 됩니다.',
   // Provider type + presets
   providerType: '제공자 유형',
   providerTypeCloud: '클라우드',
@@ -71,10 +70,7 @@ export const ko: Record<StringKey, string> = {
   cacheTtl: '캐시 유지 기간(일)',
   cacheShort: '캐시',
   // Appearance
-  colorTheme: '색상 테마',
   themeMode: '라이트/다크 모드',
-  uploadTheme: '테마 업로드',
-  invalidThemeFile: '유효한 테마 파일이 아닙니다',
   themeAuto: '시스템 설정 따름',
   themeLight: '라이트',
   themeDark: '다크',

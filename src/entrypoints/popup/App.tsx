@@ -17,7 +17,7 @@ import {
 import { activeSlot, applySlot, rememberActive } from '~/core/providers/providerSlots';
 import { thinkingOptions } from '~/ui/thinkingOptions';
 import { EnginePicker } from '~/ui/components/EnginePicker';
-import { ProviderIcon } from '~/ui/ProviderIcon';
+import { ProviderSelect } from '~/ui/components/ProviderSelect';
 import { MT_ENGINES } from '~/core/mt';
 import type { MtEngineId } from '~/core/mt/types';
 import type { ApiSettings, ThinkingSetting } from '~/storage/schema';
@@ -227,17 +227,15 @@ export function App() {
               />
 
               {isCloud && (
-                <Select
+                <ProviderSelect
                   label={t('cloudProvider')}
                   value={draft.cloudProvider}
-                  leading={<ProviderIcon id={draft.cloudProvider} size={16} />}
                   options={(Object.keys(CLOUD_PRESETS) as CloudProvider[]).map((k) => ({
                     value: k,
                     label: k === 'custom' ? t('cloudProviderCustom') : CLOUD_PRESETS[k].label,
+                    iconId: k,
                   }))}
-                  onChange={(e) =>
-                    onCloudProviderChange((e.target as HTMLSelectElement).value as CloudProvider)
-                  }
+                  onChange={(next) => onCloudProviderChange(next as CloudProvider)}
                 />
               )}
 

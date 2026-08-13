@@ -8,8 +8,6 @@ import { createPageTranslator, type PageTranslator } from './content/pageTransla
 import { createYouTubeSubTranslator, type YouTubeSubTranslator } from './content/youtubeSubs';
 import { StorageClient } from '~/storage/client';
 import { resolveEffectiveTheme } from '~/ui/themeResolver';
-import { resolveThemeDefinition } from '~/core/theme/themes';
-import type { ThemeDefinition } from '~/storage/schema';
 import { isLikelyPassage } from '~/core/selection/isLikelyPassage';
 import { isSameLanguageAsTarget } from '~/core/language/sameLanguage';
 import {
@@ -19,7 +17,6 @@ import {
 } from '~/core/subtitles/layout';
 import { translationAttribution, type TranslationAttribution } from '~/ui/attribution';
 import type { SubtitleAppearance } from './content/youtubeSubs/subtitleOverlay';
-import { reportSystemDark } from '~/messaging/client';
 import { resolveLocale, t } from '~/i18n';
 import type { Locale } from '~/i18n/strings';
 import type { GlobalSettings } from '~/storage/schema';
@@ -32,13 +29,10 @@ export default defineContentScript({
     const client = new StorageClient();
     const mql = window.matchMedia('(prefers-color-scheme: dark)');
     let themeSetting: GlobalSettings['theme'] = 'auto';
-    let themeDefinition: ThemeDefinition = resolveThemeDefinition('cobalt', []);
     let locale: Locale = 'en';
 
     const applyTheme = () => {
-      mount.setTheme(themeDefinition, resolveEffectiveTheme(themeSetting, mql.matches));
-      // Keep the toolbar icon on the same variant the page resolves.
-      reportSystemDark(mql.matches);
+      mount.setDark(resolveEffectiveTheme(themeSetting, mql.matches));
     };
 
     mql.addEventListener('change', applyTheme);
@@ -117,7 +111,6 @@ export default defineContentScript({
 
       const data = await client.loadAppData();
       themeSetting = data.settings.theme;
-      themeDefinition = resolveThemeDefinition(data.settings.themeId, data.settings.customThemes ?? []);
       locale = resolveLocale(data.settings.uiLanguage, navigator.language);
       targetLanguage = data.settings.targetLanguage;
       subtitleOffsetPct = data.settings.subtitleOffsetPct;

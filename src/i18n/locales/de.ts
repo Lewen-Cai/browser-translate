@@ -3,7 +3,6 @@ import type { StringKey } from './en';
 export const de: Record<StringKey, string> = {
   // Common
   loading: 'Wird geladen…',
-  delete: 'Löschen',
   clearAll: 'Alles löschen',
   // Popup / options shared
   settings: 'Einstellungen',
@@ -26,9 +25,9 @@ export const de: Record<StringKey, string> = {
   // Translation engine
   engine: 'Übersetzungsdienst',
   engineKindService: 'Übersetzungsdienst',
-  engineKindLlm: 'LLM',
+  engineKindLlm: 'LLM-Anbieter',
   engineHint: 'Die kostenlosen Dienste brauchen keinen Schlüssel, liefern aber nur reine Übersetzungen. Mit eigener API kommen Wörterbucheinträge für einzelne Wörter hinzu.',
-  engineFreeDisclaimer: 'Die Übersetzungen von Microsoft und Google laufen über öffentliche Endpunkte, die keine offiziellen APIs sind und weder mit den Unternehmen verbunden noch von ihnen freigegeben wurden. Sie können sich jederzeit ändern oder ausfallen und werden ohne Gewähr bereitgestellt.',
+  engineFreeDisclaimer: 'Die Übersetzungen von Microsoft und Google laufen über öffentliche Endpunkte, die keine offiziellen APIs sind und weder mit den Unternehmen verbunden noch von ihnen freigegeben wurden. Sie können sich jederzeit ändern oder ausfallen und werden ohne Gewähr bereitgestellt. Falls ein kostenloser Dienst ausfällt, wechseln Sie zu Ihrem eigenen Modell — ein hinterlegter API-Schlüssel ist die Absicherung.',
   // Provider type + presets
   providerType: 'Anbietertyp',
   providerTypeCloud: 'Cloud',
@@ -71,10 +70,7 @@ export const de: Record<StringKey, string> = {
   cacheTtl: 'Cache-Dauer (Tage)',
   cacheShort: 'Cache',
   // Appearance
-  colorTheme: 'Farbthema',
   themeMode: 'Hell-/Dunkelmodus',
-  uploadTheme: 'Theme hochladen',
-  invalidThemeFile: 'Keine gültige Theme-Datei',
   themeAuto: 'Systemeinstellung folgen',
   themeLight: 'Hell',
   themeDark: 'Dunkel',

@@ -3,7 +3,6 @@ import type { StringKey } from './en';
 export const fr: Record<StringKey, string> = {
   // Common
   loading: 'Chargement…',
-  delete: 'Supprimer',
   clearAll: 'Tout effacer',
   // Popup / options shared
   settings: 'Paramètres',
@@ -26,9 +25,9 @@ export const fr: Record<StringKey, string> = {
   // Translation engine
   engine: 'Moteur de traduction',
   engineKindService: 'Service de traduction',
-  engineKindLlm: 'LLM',
+  engineKindLlm: 'Fournisseurs de LLM',
   engineHint: 'Les moteurs gratuits ne demandent pas de clé, mais ne font que traduire. Votre propre API ajoute la recherche de mots dans le dictionnaire.',
-  engineFreeDisclaimer: 'Les traductions Microsoft et Google passent par des endpoints publics qui ne sont pas des API officielles et ne sont ni affiliés ni approuvés par ces entreprises. Ils peuvent changer ou cesser de fonctionner à tout moment et sont fournis en l’état, sans garantie.',
+  engineFreeDisclaimer: 'Les traductions Microsoft et Google passent par des endpoints publics qui ne sont pas des API officielles et ne sont ni affiliés ni approuvés par ces entreprises. Ils peuvent changer ou cesser de fonctionner à tout moment et sont fournis en l’état, sans garantie. Si un service gratuit cesse de fonctionner, basculez sur votre propre modèle : garder une clé d’API configurée est ce qui vous met à l’abri.',
   // Provider type + presets
   providerType: 'Type de fournisseur',
   providerTypeCloud: 'Cloud',
@@ -71,10 +70,7 @@ export const fr: Record<StringKey, string> = {
   cacheTtl: 'Durée du cache (jours)',
   cacheShort: 'Cache',
   // Appearance
-  colorTheme: 'Thème de couleurs',
   themeMode: 'Mode clair/sombre',
-  uploadTheme: 'Importer un thème',
-  invalidThemeFile: 'Fichier de thème non valide',
   themeAuto: 'Selon le système',
   themeLight: 'Clair',
   themeDark: 'Sombre',

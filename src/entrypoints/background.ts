@@ -11,11 +11,7 @@ import { batchSystemPrompt, batchUserPrompt } from '~/core/batch/prompt';
 import { parseBatchArray } from '~/core/batch/parse';
 import { runBatch } from '~/core/batch/runBatch';
 import { t as i18nT, resolveLocale } from '~/i18n';
-import { resolveThemeDefinition, themeBrandColors } from '~/core/theme/themes';
-import { parseRgbTriple, recolorIconPixels } from '~/core/theme/iconRecolor';
-import { resolveEffectiveTheme } from '~/ui/themeResolver';
 import type { Request, TranslateRequest, TranslateBatchRequest } from '~/messaging/types';
-import type { AppData } from '~/storage/schema';
 
 /** Parallel requests the free engines get per batch — they are far cheaper and
  *  faster per call than an LLM, so a page fills in noticeably sooner. */
@@ -46,13 +42,6 @@ export default defineBackground(() => {
       sendResponse({ ok: true });
       return false;
     }
-    if (msg.type === 'theme:dark') {
-      lastSystemDark = msg.systemDark;
-      void chrome.storage.session.set({ systemDark: msg.systemDark }).catch(() => {});
-      void client.loadAppData().then((d) => updateActionIcon(d, msg.systemDark)).catch(() => {});
-      sendResponse({ ok: true });
-      return false;
-    }
     return false;
   });
 
@@ -65,76 +54,7 @@ export default defineBackground(() => {
       }
     }
   });
-
-  // Keep the toolbar icon on the active theme's brand color. Re-applied on
-  // every SW start (setIcon imageData does not persist) and on theme changes.
-  void client.loadAppData().then(updateActionIcon).catch(() => {});
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== 'local' || !('app:data' in changes)) return;
-    void client.loadAppData().then(updateActionIcon).catch(() => {});
-  });
 });
-
-/** The icon PNGs' baked-in colors (Cobalt light brand background + white glyph). */
-const ICON_BASE_BRAND = '37 99 235';
-const ICON_BASE_GLYPH = '255 255 255';
-const ICON_SIZES = [16, 32, 48, 128] as const;
-let lastIconBrand: string | undefined;
-let lastSystemDark: boolean | undefined;
-
-/** Last reported prefers-color-scheme state (UI contexts report it — a SW has no matchMedia). */
-async function getSystemDark(): Promise<boolean> {
-  if (lastSystemDark !== undefined) return lastSystemDark;
-  try {
-    const stored = await chrome.storage.session.get('systemDark');
-    lastSystemDark = stored['systemDark'] === true;
-  } catch {
-    lastSystemDark = false;
-  }
-  return lastSystemDark;
-}
-
-/**
- * Tint the action icon to the active theme's brand/brand-fg pair, using the
- * SAME variant resolution and color accessor as the in-page trigger icon
- * (resolveEffectiveTheme + themeBrandColors), so the two icons can never
- * disagree. Cosmetic only: any failure leaves the default icon in place.
- */
-async function updateActionIcon(data: AppData, systemDark?: boolean): Promise<void> {
-  const theme = resolveThemeDefinition(data.settings.themeId, data.settings.customThemes ?? []);
-  const isDark = resolveEffectiveTheme(data.settings.theme, systemDark ?? (await getSystemDark()));
-  const { brand, brandFg } = themeBrandColors(theme, isDark);
-  const cacheKey = `${brand}/${brandFg}`;
-  if (cacheKey === lastIconBrand) return;
-  try {
-    if (brand === ICON_BASE_BRAND && brandFg === ICON_BASE_GLYPH) {
-      await chrome.action.setIcon({
-        path: { 16: 'icon/16.png', 32: 'icon/32.png', 48: 'icon/48.png', 128: 'icon/128.png' },
-      });
-      lastIconBrand = cacheKey;
-      return;
-    }
-    const from = parseRgbTriple(ICON_BASE_BRAND);
-    const to = parseRgbTriple(brand);
-    const toGlyph = parseRgbTriple(brandFg);
-    const imageData: Record<number, ImageData> = {};
-    for (const size of ICON_SIZES) {
-      const blob = await (await fetch(chrome.runtime.getURL(`icon/${size}.png`))).blob();
-      const bitmap = await createImageBitmap(blob);
-      const canvas = new OffscreenCanvas(size, size);
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      ctx.drawImage(bitmap, 0, 0, size, size);
-      const img = ctx.getImageData(0, 0, size, size);
-      recolorIconPixels(img.data, from, to, toGlyph);
-      imageData[size] = img;
-    }
-    await chrome.action.setIcon({ imageData });
-    lastIconBrand = cacheKey;
-  } catch {
-    // never let icon cosmetics break the worker
-  }
-}
 
 async function handleTranslate(
   msg: TranslateRequest,

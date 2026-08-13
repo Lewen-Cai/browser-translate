@@ -3,7 +3,6 @@ import type { StringKey } from './en';
 export const zhCN: Record<StringKey, string> = {
   // Common
   loading: '加载中…',
-  delete: '删除',
   clearAll: '清空全部',
   // Popup / options shared
   settings: '设置',
@@ -26,9 +25,9 @@ export const zhCN: Record<StringKey, string> = {
   // Translation engine
   engine: '翻译引擎',
   engineKindService: '翻译服务',
-  engineKindLlm: '大模型',
+  engineKindLlm: '模型提供商',
   engineHint: '免费引擎无需密钥，但只提供纯翻译；使用自有 API 还能对单词进行词典查询。',
-  engineFreeDisclaimer: '微软和谷歌翻译使用的是公开端点，并非官方 API，也未获得两家公司的授权或背书。它们可能随时变更或失效，按现状提供，不作任何担保。',
+  engineFreeDisclaimer: '微软和谷歌翻译使用的是公开端点，并非官方 API，也未获得两家公司的授权或背书。它们可能随时变更或失效，按现状提供，不作任何担保。为防免费服务失效后无法使用，建议自备模型 API：配置好自己的 Key，服务出问题时切过去即可。',
   // Provider type + presets
   providerType: '服务类型',
   providerTypeCloud: '云服务',
@@ -71,10 +70,7 @@ export const zhCN: Record<StringKey, string> = {
   cacheTtl: '缓存有效期（天）',
   cacheShort: '缓存',
   // Appearance
-  colorTheme: '配色主题',
   themeMode: '明暗模式',
-  uploadTheme: '上传主题',
-  invalidThemeFile: '不是有效的主题文件',
   themeAuto: '跟随系统',
   themeLight: '浅色',
   themeDark: '深色',

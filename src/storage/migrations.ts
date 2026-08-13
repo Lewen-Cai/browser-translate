@@ -2,7 +2,6 @@ import { APP_DATA_VERSION, isThinkingSetting, isTranslationEngine, type AppData 
 import type { ProviderConfig, ProviderSlot } from './schema';
 import { inferCloudProvider, isCloudProvider } from '~/core/providers/presets';
 import { activeSlot } from '~/core/providers/providerSlots';
-import { DEFAULT_THEME_ID, isBuiltInThemeId, isValidThemeDefinition } from '~/core/theme/themes';
 import {
   DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
   DEFAULT_SUBTITLE_FONT_SCALE,
@@ -41,20 +40,23 @@ function normalizeThinking(data: AppData): AppData {
 }
 
 /**
- * Strip keys left behind by the removed prompt-template system (< v0.1.8):
- * AppData.promptTemplates and api.promptTemplateId. Idempotent.
+ * Strip keys left behind by removed features: the prompt-template system
+ * (< v0.1.8) and the theme system (< v0.1.9). Idempotent.
  */
 function stripLegacyTemplateFields(data: AppData): AppData {
   const d = data as AppData & {
     promptTemplates?: unknown;
     api: AppData['api'] & { promptTemplateId?: unknown };
+    settings: AppData['settings'] & { themeId?: unknown; customThemes?: unknown };
   };
   const hasTemplates = 'promptTemplates' in d;
   const hasRef = 'promptTemplateId' in d.api;
-  if (!hasTemplates && !hasRef) return data;
+  const hasThemeFields = 'themeId' in d.settings || 'customThemes' in d.settings;
+  if (!hasTemplates && !hasRef && !hasThemeFields) return data;
   const { promptTemplates: _templates, ...rest } = d;
   const { promptTemplateId: _ref, ...api } = d.api;
-  return { ...rest, api };
+  const { themeId: _themeId, customThemes: _customThemes, ...settings } = d.settings;
+  return { ...rest, api, settings };
 }
 
 function fillSettingsDefaults(data: AppData): AppData {
@@ -79,30 +81,19 @@ function fillSettingsDefaults(data: AppData): AppData {
       : DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
   );
   const subtitleTranslationOnly = s.subtitleTranslationOnly === true;
-  const rawCustom = Array.isArray(s.customThemes) ? s.customThemes : [];
-  const customThemes = rawCustom.filter(isValidThemeDefinition);
-  const themeIdCandidate = typeof s.themeId === 'string' ? s.themeId : DEFAULT_THEME_ID;
-  const themeId =
-    isBuiltInThemeId(themeIdCandidate) || customThemes.some((t) => t.id === themeIdCandidate)
-      ? themeIdCandidate
-      : DEFAULT_THEME_ID;
-
   const unchanged =
     fullPageHotkey === s.fullPageHotkey &&
-    themeId === s.themeId &&
     engine === s.engine &&
     subtitleOffsetPct === s.subtitleOffsetPct &&
     subtitleFontScale === s.subtitleFontScale &&
     subtitleBackgroundOpacity === s.subtitleBackgroundOpacity &&
-    subtitleTranslationOnly === s.subtitleTranslationOnly &&
-    customThemes.length === rawCustom.length &&
-    s.customThemes === rawCustom;
+    subtitleTranslationOnly === s.subtitleTranslationOnly;
   if (unchanged) return data;
 
   return {
     ...data,
     settings: {
-      ...s, engine, fullPageHotkey, themeId, customThemes,
+      ...s, engine, fullPageHotkey,
       subtitleOffsetPct, subtitleFontScale, subtitleBackgroundOpacity, subtitleTranslationOnly,
     },
   };

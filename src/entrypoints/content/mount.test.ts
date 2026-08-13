@@ -22,20 +22,15 @@ describe('createShadowMount host', () => {
   });
 });
 
-describe('createShadowMount setTheme', () => {
-  it('toggles .dark and injects the theme vars on the in-shadow container', async () => {
-    const { BUILT_IN_THEMES } = await import('~/core/theme/themes');
-    const cobalt = BUILT_IN_THEMES[0]!;
+describe('createShadowMount setDark', () => {
+  it('toggles .dark on the in-shadow container, which has its own copy of the stylesheet', () => {
     const mount = createShadowMount();
     const container = mount.root.querySelector('#bt-root') as HTMLElement;
 
-    mount.setTheme(cobalt, true);
+    mount.setDark(true);
     expect(container.classList.contains('dark')).toBe(true);
-    expect(container.style.getPropertyValue('--ap-bg')).toBe('10 10 10');
 
-    mount.setTheme(cobalt, false);
+    mount.setDark(false);
     expect(container.classList.contains('dark')).toBe(false);
-    expect(container.style.getPropertyValue('--ap-bg')).toBe('252 252 250');
-    expect(container.style.getPropertyValue('--ap-font-sans')).toContain('Geist');
   });
 });

@@ -9,7 +9,6 @@ import { SectionHeader } from '~/ui/components/SectionHeader';
 import { ResultBanner } from '~/ui/components/ResultBanner';
 import { useT } from '~/i18n';
 import { exportAppData, importAppData } from '~/storage/transfer';
-import { ThemePicker } from './ThemePicker';
 import { clampSubtitleBackgroundOpacity, clampSubtitleFontScale } from '~/core/subtitles/layout';
 import type { GlobalSettings } from '~/storage/schema';
 
@@ -161,7 +160,6 @@ export function GeneralPage() {
       <div>
         <SectionHeader number="04" label={t('sectionAppearance').toUpperCase()} />
         <div class="space-y-4">
-          <ThemePicker />
           <Select label={t('themeMode')}
             value={settings.theme}
             options={[

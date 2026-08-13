@@ -30,8 +30,6 @@ export function createDefaultAppData(): AppData {
       subtitleBackgroundOpacity: DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
       subtitleTranslationOnly: false,
       theme: 'auto',
-      themeId: 'cobalt',
-      customThemes: [],
       uiLanguage: 'auto',
     },
   };

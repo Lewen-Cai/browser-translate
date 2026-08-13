@@ -84,29 +84,7 @@ export interface GlobalSettings {
   /** Show only the translation, dropping the source line. */
   subtitleTranslationOnly: boolean;
   theme: 'light' | 'dark' | 'auto';
-  themeId: string;                 // built-in id or a customThemes entry id
-  customThemes: ThemeDefinition[]; // user-uploaded, deletable
   uiLanguage: 'auto' | 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'ko' | 'es' | 'fr' | 'de';
-}
-
-/** The ap-* color tokens a theme must define, per light/dark variant. */
-export const THEME_TOKEN_KEYS = [
-  'bg', 'surface', 'fg', 'fg-muted', 'fg-subtle', 'border', 'border-strong',
-  'brand', 'brand-fg', 'brand-soft', 'danger', 'success',
-] as const;
-export type ThemeTokenKey = (typeof THEME_TOKEN_KEYS)[number];
-
-/** Values are space-separated RGB triples, e.g. '37 99 235' (rgb(var(--ap-*)) compatible). */
-export type ThemePalette = Record<ThemeTokenKey, string>;
-
-export interface ThemeDefinition {
-  /** Built-ins: 'cobalt' | 'graphite' | 'sepia' | 'teal'; uploads: 'custom-<uuid>'. */
-  id: string;
-  /** Display name — locale-invariant. */
-  name: string;
-  colors: { light: ThemePalette; dark: ThemePalette };
-  /** CSS font-family stacks. Applied via --ap-font-sans / --ap-font-mono. */
-  fonts: { sans: string; mono: string };
 }
 
 export interface CacheMeta {

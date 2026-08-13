@@ -3,7 +3,6 @@ import type { StringKey } from './en';
 export const ja: Record<StringKey, string> = {
   // Common
   loading: '読み込み中…',
-  delete: '削除',
   clearAll: 'すべて消去',
   // Popup / options shared
   settings: '設定',
@@ -26,9 +25,9 @@ export const ja: Record<StringKey, string> = {
   // Translation engine
   engine: '翻訳エンジン',
   engineKindService: '翻訳サービス',
-  engineKindLlm: 'LLM',
+  engineKindLlm: 'モデル提供元',
   engineHint: '無料エンジンはキー不要ですが、訳文のみを返します。自分の API なら単語の辞書引きも使えます。',
-  engineFreeDisclaimer: 'Microsoft と Google の翻訳は公開エンドポイントを利用しており、公式 API ではなく、両社の承認も受けていません。予告なく変更・停止される可能性があり、現状のまま無保証で提供されます。',
+  engineFreeDisclaimer: 'Microsoft と Google の翻訳は公開エンドポイントを利用しており、公式 API ではなく、両社の承認も受けていません。予告なく変更・停止される可能性があり、現状のまま無保証で提供されます。無料サービスが止まったときに備えて、自分のモデル API を用意しておくことをおすすめします。キーを設定しておけば切り替えるだけで済みます。',
   // Provider type + presets
   providerType: 'プロバイダー種別',
   providerTypeCloud: 'クラウド',
@@ -71,10 +70,7 @@ export const ja: Record<StringKey, string> = {
   cacheTtl: 'キャッシュ保持期間（日）',
   cacheShort: 'キャッシュ',
   // Appearance
-  colorTheme: 'カラーテーマ',
   themeMode: 'ライト／ダークモード',
-  uploadTheme: 'テーマをアップロード',
-  invalidThemeFile: '有効なテーマファイルではありません',
   themeAuto: 'システムに従う',
   themeLight: 'ライト',
   themeDark: 'ダーク',

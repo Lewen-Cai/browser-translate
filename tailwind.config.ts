@@ -23,9 +23,21 @@ export default {
         },
       },
       fontFamily: {
-        // Var-backed so the active theme's fonts flow into font-sans/font-mono.
+        // Var-backed, so the CJK fall-through defined in theme.css applies to
+        // every utility class as well.
         sans: 'var(--ap-font-sans)',
         mono: 'var(--ap-font-mono)',
+      },
+      // Softer than Tailwind's defaults across the board. Rounding is set here
+      // rather than by rewriting every class, so the whole UI stays consistent
+      // and one edit changes the whole feel.
+      borderRadius: {
+        sm: '6px',
+        DEFAULT: '8px',
+        md: '10px',
+        lg: '14px',
+        xl: '18px',
+        '2xl': '24px',
       },
       fontSize: {
         '2xs': ['10px', { lineHeight: '14px', letterSpacing: '0.04em' }],
