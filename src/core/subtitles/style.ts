@@ -15,12 +15,21 @@ export const SUBTITLE_TRANSLATION_POSITIONS = ['above', 'below'] as const;
 export type SubtitleTranslationPosition = (typeof SUBTITLE_TRANSLATION_POSITIONS)[number];
 
 /**
- * Font choices are stacks of fonts the viewer's system already has. Nothing is
- * bundled and nothing is fetched — a subtitle is not worth a font download, and
- * the CJK faces here ship with the OS and are not ours to redistribute.
+ * Font choices are stacks of font names. Nothing is bundled and nothing is
+ * fetched — naming a family asks for whatever is already there, which is why
+ * this costs nothing and carries no licence: the OS-shipped CJK faces and
+ * YouTube's own webfont are referenced, never copied.
+ *
+ * `youtube` is YouTube's caption stack verbatim, so our lines match the
+ * player's. Its "YouTube Noto" is a webfont YouTube itself serves, and a
+ * @font-face declared by the page does reach into a shadow root — so the name
+ * resolves for us on a watch page and falls through to Roboto anywhere it
+ * doesn't. The CJK faces are appended because the stack has none of its own and
+ * fallback is per character.
  */
 export const SUBTITLE_FONT_FAMILIES = {
-  system: '"YouTube Noto", Roboto, Arial, "PingFang SC", "Microsoft YaHei", sans-serif',
+  youtube: '"YouTube Noto", Roboto, "Arial Unicode Ms", Arial, Helvetica, Verdana,'
+    + ' "PT Sans Caption", "PingFang SC", "Microsoft YaHei", sans-serif',
   sans: '"Noto Sans", "Noto Sans SC", "Noto Sans JP", "Noto Sans KR", sans-serif',
   serif: '"Noto Serif", Georgia, "Songti SC", SimSun, "Hiragino Mincho ProN", serif',
   kai: '"LXGW WenKai", KaiTi, 楷体, STKaiti, 华文楷体, serif',
@@ -81,7 +90,7 @@ export const MAX_SUBTITLE_POSITION_PCT = 92;
 export const DEFAULT_SUBTITLE_TEXT_STYLE: SubtitleTextStyle = {
   fontScale: DEFAULT_SUBTITLE_FONT_SCALE,
   color: DEFAULT_SUBTITLE_COLOR,
-  fontFamily: 'system',
+  fontFamily: 'youtube',
   fontWeight: DEFAULT_SUBTITLE_FONT_WEIGHT,
 };
 
@@ -131,7 +140,7 @@ export function normalizeSubtitleTextStyle(value: unknown): SubtitleTextStyle {
   const color = normalizeSubtitleColor(raw.color);
   const fontFamily = SUBTITLE_FONT_FAMILY_IDS.includes(raw.fontFamily as SubtitleFontFamily)
     ? (raw.fontFamily as SubtitleFontFamily)
-    : 'system';
+    : 'youtube';
   const fontWeight = clampSubtitleFontWeight(raw.fontWeight);
 
   if (

@@ -66,7 +66,7 @@ export interface SettingsPanel {
 
 /** Font stacks are named after the face, not translated. */
 const FONT_LABELS: Record<SubtitleFontFamily, string> = {
-  system: 'System',
+  youtube: 'YouTube',
   sans: 'Noto Sans',
   serif: 'Noto Serif',
   kai: '楷体 Kai',

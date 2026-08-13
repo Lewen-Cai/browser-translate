@@ -18,7 +18,8 @@ export const SUBTITLES_CSS = `
   inset: 0;
   pointer-events: none;
   overflow: hidden;
-  font-family: "YouTube Noto", Roboto, Arial, sans-serif;
+  font-family: "YouTube Noto", Roboto, "Arial Unicode Ms", Arial, Helvetica, Verdana,
+    "PT Sans Caption", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 .group {

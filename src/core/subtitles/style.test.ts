@@ -49,7 +49,7 @@ describe('clamps', () => {
 describe('normalizeSubtitleTextStyle', () => {
   it('fills every field from junk', () => {
     expect(normalizeSubtitleTextStyle(undefined)).toEqual(DEFAULT_SUBTITLE_TEXT_STYLE);
-    expect(normalizeSubtitleTextStyle({ fontFamily: 'comic' }).fontFamily).toBe('system');
+    expect(normalizeSubtitleTextStyle({ fontFamily: 'comic' }).fontFamily).toBe('youtube');
   });
 
   it('keeps a known font family', () => {
