@@ -50,8 +50,9 @@ export function TriggerIcon({ rect, onClick }: Props) {
         width: `${ICON_SIZE}px`,
         height: `${ICON_SIZE}px`,
         borderRadius: '5px',
-        background: '#2563EB',
-        color: 'white',
+        // Theme tokens — the shadow container carries the active theme's vars.
+        background: 'rgb(var(--ap-brand))',
+        color: 'rgb(var(--ap-brand-fg))',
         border: 'none',
         cursor: 'pointer',
         display: 'flex',

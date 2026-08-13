@@ -54,9 +54,13 @@
   --ap-brand:     37 99 235;    /* #2563EB cobalt */
   --ap-brand-fg:  255 255 255;
   --ap-brand-soft: 219 234 254; /* #DBEAFE — soft cobalt */
-  --ap-accent:    24 24 27;     /* charcoal for secondary accent */
   --ap-danger:    220 38 38;    /* #DC2626 */
   --ap-success:   22 163 74;    /* #16A34A */
+
+  /* Font tokens. These literals are the pre-JS fallback (no FOUC before the
+     store loads); the active theme overrides them via inline style vars. */
+  --ap-font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --ap-font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 .dark {
@@ -75,7 +79,7 @@
 html, body {
   background: rgb(var(--ap-bg));
   color: rgb(var(--ap-fg));
-  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--ap-font-sans);
   font-feature-settings: 'cv11', 'ss03', 'ss05';  /* Geist stylistic sets */
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -137,7 +141,7 @@ html, body {
   background: rgb(var(--ap-bg));
   border: 1px solid rgb(var(--ap-border));
   box-shadow: 0 1px 0 rgb(0 0 0 / 0.04), 0 8px 24px -8px rgb(0 0 0 / 0.12);
-  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--ap-font-sans);
   font-size: 13px;
   color: rgb(var(--ap-fg));
   border-radius: 6px;
@@ -168,7 +172,7 @@ html, body {
   gap: 8px;
 }
 .bt-card-mono-label {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--ap-font-mono);
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -211,7 +215,7 @@ html, body {
   margin-top: 4px;
 }
 .bt-card-dict-phon {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--ap-font-mono);
   font-size: 12px;
   color: rgb(var(--ap-fg-muted));
 }
@@ -234,7 +238,7 @@ html, body {
   border-radius: 4px;
   background: rgb(var(--ap-bg));
   border: 1px solid rgb(var(--ap-border));
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--ap-font-mono);
   font-size: 10px;
   letter-spacing: 0.04em;
   color: rgb(var(--ap-fg-muted));
@@ -254,7 +258,7 @@ html, body {
 }
 .bt-card-dict-num {
   flex-shrink: 0;
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--ap-font-mono);
   font-size: 11px;
   font-weight: 600;
   color: rgb(var(--ap-brand));
@@ -266,7 +270,7 @@ html, body {
   border-top: 1px solid rgb(var(--ap-border));
 }
 .bt-card-dict-example-label {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--ap-font-mono);
   font-size: 10px;
   letter-spacing: 0.08em;
   color: rgb(var(--ap-fg-subtle));
@@ -302,7 +306,7 @@ html, body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-family: 'Geist Mono', monospace;
+  font-family: var(--ap-font-mono);
   font-size: 11px;
 }
 .bt-card-error {

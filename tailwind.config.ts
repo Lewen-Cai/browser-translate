@@ -5,16 +5,6 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50:  'rgb(239 246 255)',
-          100: 'rgb(219 234 254)',
-          200: 'rgb(191 219 254)',
-          500: 'rgb(59 130 246)',
-          600: 'rgb(37 99 235)',
-          700: 'rgb(29 78 216)',
-          800: 'rgb(30 64 175)',
-          900: 'rgb(30 58 138)',
-        },
         // Apparatus semantic tokens — usable as bg-ap, text-ap-muted etc.
         ap: {
           DEFAULT: 'rgb(var(--ap-fg) / <alpha-value>)',
@@ -33,8 +23,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        mono: ['"Geist Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        // Var-backed so the active theme's fonts flow into font-sans/font-mono.
+        sans: 'var(--ap-font-sans)',
+        mono: 'var(--ap-font-mono)',
       },
       fontSize: {
         '2xs': ['10px', { lineHeight: '14px', letterSpacing: '0.04em' }],

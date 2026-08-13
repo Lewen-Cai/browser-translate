@@ -1,5 +1,7 @@
 import { render, type ComponentChild } from 'preact';
 import themeCss from '~/ui/theme.css?inline';
+import { applyThemeTokens } from '~/ui/applyThemeTokens';
+import type { ThemeDefinition } from '~/storage/schema';
 
 const HOST_ID = 'browsertranslate-host';
 
@@ -7,7 +9,7 @@ export interface MountedShadow {
   root: ShadowRoot;
   unmount: () => void;
   render: (node: ComponentChild) => void;
-  setTheme: (isDark: boolean) => void;
+  setTheme: (theme: ThemeDefinition, isDark: boolean) => void;
 }
 
 export function createShadowMount(): MountedShadow {
@@ -37,9 +39,12 @@ export function createShadowMount(): MountedShadow {
     root,
     unmount: () => render(null, container),
     render: (node: ComponentChild) => render(node, container),
-    setTheme: (isDark: boolean) => {
+    setTheme: (theme: ThemeDefinition, isDark: boolean) => {
       if (isDark) container.classList.add('dark');
       else container.classList.remove('dark');
+      // Inline vars on the in-shadow container cascade to all card content and
+      // beat the :host defaults baked into the injected stylesheet.
+      applyThemeTokens(container, theme, isDark);
     },
   };
 }

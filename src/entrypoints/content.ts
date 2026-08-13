@@ -8,6 +8,8 @@ import { createPageTranslator, type PageTranslator } from './content/pageTransla
 import { createYouTubeSubTranslator, type YouTubeSubTranslator } from './content/youtubeSubs';
 import { StorageClient } from '~/storage/client';
 import { resolveEffectiveTheme } from '~/ui/themeResolver';
+import { resolveThemeDefinition } from '~/core/theme/themes';
+import type { ThemeDefinition } from '~/storage/schema';
 import { isLikelyPassage } from '~/core/selection/isLikelyPassage';
 import { isSameLanguageAsTarget } from '~/core/language/sameLanguage';
 import { resolveLocale, t } from '~/i18n';
@@ -22,10 +24,11 @@ export default defineContentScript({
     const client = new StorageClient();
     const mql = window.matchMedia('(prefers-color-scheme: dark)');
     let themeSetting: GlobalSettings['theme'] = 'auto';
+    let themeDefinition: ThemeDefinition = resolveThemeDefinition('cobalt', []);
     let locale: Locale = 'en';
 
     const applyTheme = () => {
-      mount.setTheme(resolveEffectiveTheme(themeSetting, mql.matches));
+      mount.setTheme(themeDefinition, resolveEffectiveTheme(themeSetting, mql.matches));
     };
 
     mql.addEventListener('change', applyTheme);
@@ -83,6 +86,7 @@ export default defineContentScript({
 
       const data = await client.loadAppData();
       themeSetting = data.settings.theme;
+      themeDefinition = resolveThemeDefinition(data.settings.themeId, data.settings.customThemes ?? []);
       locale = resolveLocale(data.settings.uiLanguage, navigator.language);
       targetLanguage = data.settings.targetLanguage;
       applyTheme();
