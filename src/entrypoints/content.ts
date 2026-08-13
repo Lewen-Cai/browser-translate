@@ -186,6 +186,14 @@ export default defineContentScript({
             void client.patchSettings({ subtitleOffsetPct: pct });
           },
           getAppearance: () => subtitleAppearance,
+          setAppearance: (next) => {
+            subtitleAppearance = next;
+            void client.patchSettings({
+              subtitleFontScale: next.fontScale,
+              subtitleBackgroundOpacity: next.backgroundOpacity,
+              subtitleTranslationOnly: next.translationOnly,
+            });
+          },
           strings: {
             titleOff: t('ytSubsButtonTitle', locale),
             titleOn: t('ytSubsButtonTitleOn', locale),
@@ -196,6 +204,11 @@ export default defineContentScript({
             failed: t('ytSubsFailed', locale),
             translating: t('ytSubsTranslating', locale),
             dragHint: t('ytSubsDragHint', locale),
+            settings: t('ytSubsSettings', locale),
+            fontScale: t('subtitleFontScale', locale),
+            backgroundOpacity: t('subtitleBackgroundOpacity', locale),
+            translationOnly: t('subtitleTranslationOnly', locale),
+            resetPosition: t('subtitleResetPosition', locale),
           },
           notify: (msg) => console.info('[BrowserTranslate]', msg),
         });

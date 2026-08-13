@@ -6,7 +6,8 @@ vi.mock('~/messaging/client', () => ({
 }));
 vi.mock('./requestCaptionTracks', () => ({
   requestCaptionTracks: vi.fn(async () => ({
-    source: 'bt-yt-captions-response', isLive: false,
+    source: 'bt-yt-captions-response',
+    isLive: false,
     tracks: [{ baseUrl: 'u', languageCode: 'en' }],
   })),
 }));
@@ -24,8 +25,20 @@ import { fetchTranscript } from './fetchTranscript';
 import { translateBatch } from '~/messaging/client';
 
 const STRINGS: YouTubeSubsStrings = {
-  titleOff: 'off', titleOn: 'on', noCaptions: 'nc', enableCc: 'cc',
-  noTranslationNeeded: 'nt', live: 'lv', failed: 'fail', translating: 'tr', dragHint: 'drag',
+  titleOff: 'off',
+  titleOn: 'on',
+  noCaptions: 'nc',
+  enableCc: 'cc',
+  noTranslationNeeded: 'nt',
+  live: 'lv',
+  failed: 'fail',
+  translating: 'tr',
+  dragHint: 'drag',
+  settings: 'set',
+  fontScale: 'size',
+  backgroundOpacity: 'bg',
+  translationOnly: 'only',
+  resetPosition: 'reset',
 };
 
 function make(overrides: { notify?: (m: string) => void } = {}) {
@@ -37,15 +50,23 @@ function make(overrides: { notify?: (m: string) => void } = {}) {
     getSubtitleOffsetPct: () => 0.11,
     setSubtitleOffsetPct: vi.fn(),
     getAppearance: () => ({ fontScale: 100, backgroundOpacity: 78, translationOnly: false }),
+    setAppearance: vi.fn(),
   });
 }
 
 const asrOnly = {
-  source: 'bt-yt-captions-response', isLive: false,
+  source: 'bt-yt-captions-response',
+  isLive: false,
   tracks: [{ baseUrl: 'u', languageCode: 'en', kind: 'asr' }],
 };
 
 const noTracks = { source: 'bt-yt-captions-response', isLive: false, tracks: [] };
+
+/** Subtitle lines live in the overlay's shadow root. */
+function subtitleLine(selector: string): string | undefined {
+  const host = document.querySelector<HTMLElement>('.bt-yt-subs');
+  return host?.shadowRoot?.querySelector<HTMLElement>(selector)?.textContent ?? undefined;
+}
 
 /** Let queued microtasks (the chained awaits inside enable) settle. */
 async function flush() {
@@ -74,8 +95,8 @@ describe('createYouTubeSubTranslator', () => {
     await flush();
     expect(t.isOn()).toBe(true);
     // Both lines are ours: the transcript's own text on top, translation below.
-    expect(document.querySelector('.bt-yt-line-original')?.textContent).toBe('Hello');
-    expect(document.querySelector('.bt-yt-line-translation')?.textContent).toBe('译:Hello');
+    expect(subtitleLine('.bt-yt-line-original')).toBe('Hello');
+    expect(subtitleLine('.bt-yt-line-translation')).toBe('译:Hello');
     t.disable();
     expect(t.isOn()).toBe(false);
     expect(document.querySelector('.bt-yt-subs')).toBeNull();
@@ -131,7 +152,10 @@ describe('createYouTubeSubTranslator', () => {
   it('does not start translation if toggled off during the transcript-fetch gap', async () => {
     let resolveFetch: (v: unknown) => void = () => {};
     vi.mocked(fetchTranscript).mockImplementationOnce(
-      () => new Promise((r) => { resolveFetch = r as (v: unknown) => void; }),
+      () =>
+        new Promise((r) => {
+          resolveFetch = r as (v: unknown) => void;
+        }),
     );
     const t = make();
     await t.attachButton();

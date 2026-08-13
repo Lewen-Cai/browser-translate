@@ -107,6 +107,8 @@ export const de: Record<StringKey, string> = {
   ytSubsFailed: 'Untertitelübersetzung fehlgeschlagen',
   ytSubsTranslating: 'Übersetzen…',
   ytSubsDragHint: 'Zum Verschieben der Untertitel ziehen',
+  ytSubsSettings: 'Untertitel-Einstellungen',
+  subtitleResetPosition: 'Position zurücksetzen',
   sectionSubtitles: 'YouTube-Untertitel',
   subtitleFontScale: 'Untertitelgröße',
   subtitleBackgroundOpacity: 'Hintergrunddeckkraft',

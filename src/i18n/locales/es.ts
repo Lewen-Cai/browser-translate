@@ -107,6 +107,8 @@ export const es: Record<StringKey, string> = {
   ytSubsFailed: 'Error al traducir los subtítulos',
   ytSubsTranslating: 'Traduciendo…',
   ytSubsDragHint: 'Arrastra para mover los subtítulos',
+  ytSubsSettings: 'Ajustes de subtítulos',
+  subtitleResetPosition: 'Restablecer posición',
   sectionSubtitles: 'Subtítulos de YouTube',
   subtitleFontScale: 'Tamaño de subtítulos',
   subtitleBackgroundOpacity: 'Opacidad del fondo',

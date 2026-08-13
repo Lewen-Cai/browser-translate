@@ -18,8 +18,13 @@ export interface YouTubeSubsStrings {
   titleOff: string; titleOn: string; noCaptions: string;
   enableCc: string; noTranslationNeeded: string; live: string; failed: string;
   translating: string;
-  /** Tooltip on the subtitle drag handle. */
+  /** Labels for the in-player handle and settings panel. */
   dragHint: string;
+  settings: string;
+  fontScale: string;
+  backgroundOpacity: string;
+  translationOnly: string;
+  resetPosition: string;
 }
 
 export interface YouTubeSubTranslatorDeps {
@@ -32,6 +37,7 @@ export interface YouTubeSubTranslatorDeps {
   setSubtitleOffsetPct: (pct: number) => void;
   /** Read live so a settings change reaches an already-playing video. */
   getAppearance: () => SubtitleAppearance;
+  setAppearance: (next: SubtitleAppearance) => void;
 }
 
 export interface YouTubeSubTranslator {
@@ -104,12 +110,20 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     // "translating…" placeholder beneath it — the subtitle is never blank while
     // a translation is in flight.
     overlay = createSubtitleOverlay({
-      placeholder: deps.strings.translating,
-      dragHint: deps.strings.dragHint,
+      strings: {
+        placeholder: deps.strings.translating,
+        dragHint: deps.strings.dragHint,
+        settings: deps.strings.settings,
+        fontScale: deps.strings.fontScale,
+        backgroundOpacity: deps.strings.backgroundOpacity,
+        translationOnly: deps.strings.translationOnly,
+        resetPosition: deps.strings.resetPosition,
+      },
       getLines,
       getOffsetPct: deps.getSubtitleOffsetPct,
       onOffsetChange: deps.setSubtitleOffsetPct,
       getAppearance: deps.getAppearance,
+      onAppearanceChange: deps.setAppearance,
     });
     overlay.start();
     rafId = requestAnimationFrame(tick);

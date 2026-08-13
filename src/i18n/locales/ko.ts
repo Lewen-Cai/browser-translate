@@ -107,6 +107,8 @@ export const ko: Record<StringKey, string> = {
   ytSubsFailed: '자막 번역 실패',
   ytSubsTranslating: '번역 중…',
   ytSubsDragHint: '드래그하여 자막 이동',
+  ytSubsSettings: '자막 설정',
+  subtitleResetPosition: '위치 초기화',
   sectionSubtitles: 'YouTube 자막',
   subtitleFontScale: '자막 크기',
   subtitleBackgroundOpacity: '배경 불투명도',

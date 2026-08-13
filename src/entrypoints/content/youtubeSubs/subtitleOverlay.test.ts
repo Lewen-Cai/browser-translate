@@ -5,16 +5,33 @@ const PLAYER_HEIGHT = 500;
 
 function setup(lines: SubtitleLines | null, offsetPct = 0.11) {
   let current = lines;
+  let appearance = { fontScale: 100, backgroundOpacity: 78, translationOnly: false };
   const onOffsetChange = vi.fn();
+  const onAppearanceChange = vi.fn((next: typeof appearance) => { appearance = next; });
   const overlay = createSubtitleOverlay({
     getLines: () => current,
-    placeholder: '翻译中…',
-    dragHint: 'drag me',
+    strings: {
+      placeholder: '翻译中…',
+      dragHint: 'drag me',
+      settings: 'settings',
+      fontScale: 'size',
+      backgroundOpacity: 'backdrop',
+      translationOnly: 'translation only',
+      resetPosition: 'reset',
+    },
     getOffsetPct: () => offsetPct,
     onOffsetChange,
-    getAppearance: () => ({ fontScale: 100, backgroundOpacity: 78, translationOnly: false }),
+    onAppearanceChange,
+    getAppearance: () => appearance,
   });
-  return { overlay, onOffsetChange, setLines: (l: SubtitleLines | null) => { current = l; } };
+  return {
+    overlay,
+    onOffsetChange,
+    onAppearanceChange,
+    setLines: (l: SubtitleLines | null) => {
+      current = l;
+    },
+  };
 }
 
 function pointer(type: string, clientY: number): PointerEvent {
@@ -23,16 +40,25 @@ function pointer(type: string, clientY: number): PointerEvent {
   return e;
 }
 
-const block = () => document.querySelector<HTMLElement>('.bt-yt-subs > div');
-const handle = () => document.querySelector<HTMLElement>('.bt-yt-subs-handle');
-const original = () => document.querySelector<HTMLElement>('.bt-yt-line-original');
-const translation = () => document.querySelector<HTMLElement>('.bt-yt-line-translation');
+/** The overlay lives in a shadow root, so every lookup goes through the host. */
+function inShadow<T extends HTMLElement>(selector: string): T | null {
+  const shadowHost = document.querySelector<HTMLElement>('.bt-yt-subs');
+  return shadowHost?.shadowRoot?.querySelector<T>(selector) ?? null;
+}
+
+const block = () => inShadow('.block');
+const handle = () => inShadow('.handle');
+const gear = () => inShadow('.gear');
+const panel = () => inShadow('.panel');
+const original = () => inShadow('.bt-yt-line-original');
+const translation = () => inShadow('.bt-yt-line-translation');
 
 beforeEach(() => {
   document.body.innerHTML = '<div id="movie_player"></div>';
   document.head.innerHTML = '';
   Object.defineProperty(document.querySelector('#movie_player'), 'clientHeight', {
-    value: PLAYER_HEIGHT, configurable: true,
+    value: PLAYER_HEIGHT,
+    configurable: true,
   });
 });
 
@@ -42,8 +68,9 @@ describe('createSubtitleOverlay', () => {
     overlay.start();
 
     expect(document.querySelector('#movie_player .bt-yt-subs')).not.toBeNull();
-    expect(document.getElementById('bt-yt-subs-style')?.textContent)
-      .toContain('.ytp-caption-window-container');
+    expect(document.getElementById('bt-yt-subs-style')?.textContent).toContain(
+      '.ytp-caption-window-container',
+    );
 
     overlay.teardown();
     expect(document.querySelector('.bt-yt-subs')).toBeNull();
@@ -133,10 +160,18 @@ describe('createSubtitleOverlay', () => {
     let current: SubtitleLines | null = { original: 'Hello', translation: '你好' };
     const overlay = createSubtitleOverlay({
       getLines: () => current,
-      placeholder: '翻译中…',
-      dragHint: 'drag me',
+      strings: {
+        placeholder: '翻译中…',
+        dragHint: 'drag me',
+        settings: 'settings',
+        fontScale: 'size',
+        backgroundOpacity: 'backdrop',
+        translationOnly: 'translation only',
+        resetPosition: 'reset',
+      },
       getOffsetPct: () => 0.11,
       onOffsetChange: vi.fn(),
+      onAppearanceChange: vi.fn(),
       getAppearance: () => ({ fontScale: 100, backgroundOpacity: 78, translationOnly: true }),
     });
     overlay.start();
@@ -149,10 +184,18 @@ describe('createSubtitleOverlay', () => {
   it('applies the configured font scale on top of the player-derived size', () => {
     const overlay = createSubtitleOverlay({
       getLines: () => ({ original: 'Hello', translation: '你好' }),
-      placeholder: '…',
-      dragHint: 'drag me',
+      strings: {
+        placeholder: '翻译中…',
+        dragHint: 'drag me',
+        settings: 'settings',
+        fontScale: 'size',
+        backgroundOpacity: 'backdrop',
+        translationOnly: 'translation only',
+        resetPosition: 'reset',
+      },
       getOffsetPct: () => 0.11,
       onOffsetChange: vi.fn(),
+      onAppearanceChange: vi.fn(),
       getAppearance: () => ({ fontScale: 200, backgroundOpacity: 0, translationOnly: false }),
     });
     overlay.start();
@@ -187,5 +230,70 @@ describe('createSubtitleOverlay', () => {
     window.dispatchEvent(pointer('pointermove', 100));
     expect(el.style.bottom).toBe('10%');
     expect(onOffsetChange).not.toHaveBeenCalled();
+  });
+});
+
+describe('subtitle settings panel', () => {
+  it('stays closed until the gear is used', () => {
+    const { overlay } = setup({ original: 'Hello', translation: '你好' });
+    overlay.start();
+    expect(panel()?.style.display).toBe('none');
+
+    gear()!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(panel()?.style.display).toBe('block');
+  });
+
+  it('reports a size change and re-lays out immediately', () => {
+    const { overlay, onAppearanceChange } = setup({ original: 'Hello', translation: '你好' });
+    overlay.start();
+    gear()!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    // First row is size; its second button is the increment.
+    const plus = panel()!.querySelectorAll<HTMLButtonElement>('.stepper button')[1]!;
+    plus.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(onAppearanceChange).toHaveBeenCalledWith(
+      expect.objectContaining({ fontScale: 110 }),
+    );
+    // 500px player -> 17.5px automatic size, scaled by 110%.
+    expect(block()?.style.fontSize).toBe('19px');
+  });
+
+  it('clamps the size at the bottom of its range', () => {
+    const { overlay, onAppearanceChange } = setup({ original: 'Hello', translation: '你好' });
+    overlay.start();
+    gear()!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    for (let i = 0; i < 12; i++) {
+      panel()!.querySelectorAll<HTMLButtonElement>('.stepper button')[0]!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }
+    const last = onAppearanceChange.mock.calls.at(-1)![0];
+    expect(last.fontScale).toBe(50);
+  });
+
+  it('puts the block back at the default position on reset', () => {
+    const { overlay, onOffsetChange } = setup({ original: 'Hello', translation: '你好' }, 0.5);
+    overlay.start();
+    gear()!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    panel()!.querySelector<HTMLButtonElement>('.reset')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(onOffsetChange).toHaveBeenCalledWith(0.11);
+    expect(block()?.style.bottom).toBe('11%');
+  });
+
+  it('keeps a press on the panel away from the player underneath', () => {
+    const { overlay } = setup({ original: 'Hello', translation: '你好' });
+    overlay.start();
+    gear()!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    const reachedPage = vi.fn();
+    document.addEventListener('pointerdown', reachedPage);
+    panel()!.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    document.removeEventListener('pointerdown', reachedPage);
+
+    expect(reachedPage).not.toHaveBeenCalled();
   });
 });

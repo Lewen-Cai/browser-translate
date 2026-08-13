@@ -107,6 +107,8 @@ export const fr: Record<StringKey, string> = {
   ytSubsFailed: 'Échec de la traduction des sous-titres',
   ytSubsTranslating: 'Traduction…',
   ytSubsDragHint: 'Faites glisser pour déplacer les sous-titres',
+  ytSubsSettings: 'Réglages des sous-titres',
+  subtitleResetPosition: 'Réinitialiser la position',
   sectionSubtitles: 'Sous-titres YouTube',
   subtitleFontScale: 'Taille des sous-titres',
   subtitleBackgroundOpacity: 'Opacité du fond',

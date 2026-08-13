@@ -107,6 +107,8 @@ export const ja: Record<StringKey, string> = {
   ytSubsFailed: '字幕の翻訳に失敗しました',
   ytSubsTranslating: '翻訳中…',
   ytSubsDragHint: 'ドラッグで字幕を移動',
+  ytSubsSettings: '字幕設定',
+  subtitleResetPosition: '位置をリセット',
   sectionSubtitles: 'YouTube 字幕',
   subtitleFontScale: '字幕のサイズ',
   subtitleBackgroundOpacity: '背景の不透明度',

@@ -107,6 +107,8 @@ export const zhCN: Record<StringKey, string> = {
   ytSubsFailed: '字幕翻译失败',
   ytSubsTranslating: '翻译中…',
   ytSubsDragHint: '拖动可移动字幕',
+  ytSubsSettings: '字幕设置',
+  subtitleResetPosition: '恢复默认位置',
   sectionSubtitles: 'YouTube 字幕',
   subtitleFontScale: '字幕大小',
   subtitleBackgroundOpacity: '背景不透明度',

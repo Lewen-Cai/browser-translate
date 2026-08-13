@@ -107,6 +107,8 @@ export const en = {
   ytSubsFailed: 'Subtitle translation failed',
   ytSubsTranslating: 'Translating…',
   ytSubsDragHint: 'Drag to move the subtitles',
+  ytSubsSettings: 'Subtitle settings',
+  subtitleResetPosition: 'Reset position',
   sectionSubtitles: 'YouTube subtitles',
   subtitleFontScale: 'Subtitle size',
   subtitleBackgroundOpacity: 'Background opacity',
