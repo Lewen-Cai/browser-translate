@@ -80,4 +80,31 @@ describe('StorageClient', () => {
     expect(await client.getCacheEntry('a')).toBeUndefined();
     expect(await client.getCacheEntry('b')).toBeUndefined();
   });
+
+  describe('patchSettings', () => {
+    it('merges a patch into stored settings, leaving the rest alone', async () => {
+      await client.loadAppData();
+      await client.patchSettings({ subtitleOffsetPct: 0.42 });
+
+      const reloaded = await client.loadAppData();
+      expect(reloaded.settings.subtitleOffsetPct).toBe(0.42);
+      expect(reloaded.settings.targetLanguage).toBe('zh-CN');
+    });
+
+    it('re-reads before merging, so it cannot clobber a concurrent change', async () => {
+      const initial = await client.loadAppData();
+
+      // Another surface (the popup) writes while this caller still holds the
+      // older snapshot — content scripts have no store to keep them in sync.
+      await client.saveAppData({
+        ...initial,
+        settings: { ...initial.settings, targetLanguage: 'ja' },
+      });
+      await client.patchSettings({ subtitleOffsetPct: 0.3 });
+
+      const reloaded = await client.loadAppData();
+      expect(reloaded.settings.targetLanguage).toBe('ja');
+      expect(reloaded.settings.subtitleOffsetPct).toBe(0.3);
+    });
+  });
 });
