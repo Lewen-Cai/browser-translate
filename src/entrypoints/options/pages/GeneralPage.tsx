@@ -8,6 +8,7 @@ import { Button } from '~/ui/components/Button';
 import { SectionHeader } from '~/ui/components/SectionHeader';
 import { useT } from '~/i18n';
 import { exportAppData, importAppData } from '~/storage/transfer';
+import { ThemePicker } from './ThemePicker';
 import type { GlobalSettings } from '~/storage/schema';
 
 const LANGUAGES = [
@@ -130,7 +131,8 @@ export function GeneralPage() {
       <div>
         <SectionHeader number="03" label={t('sectionAppearance').toUpperCase()} />
         <div class="space-y-4">
-          <Select label={t('theme')}
+          <ThemePicker />
+          <Select label={t('themeMode')}
             value={settings.theme}
             options={[
               { value: 'auto', label: t('themeAuto') },

@@ -65,7 +65,10 @@ export const ja: Record<StringKey, string> = {
   cacheTtl: 'キャッシュ保持期間（日）',
   cacheShort: 'キャッシュ',
   // Appearance
-  theme: 'テーマ',
+  colorTheme: 'カラーテーマ',
+  themeMode: 'ライト／ダークモード',
+  uploadTheme: 'テーマをアップロード',
+  invalidThemeFile: '有効なテーマファイルではありません',
   themeAuto: 'システムに従う',
   themeLight: 'ライト',
   themeDark: 'ダーク',

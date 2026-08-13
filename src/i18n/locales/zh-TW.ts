@@ -65,7 +65,10 @@ export const zhTW: Record<StringKey, string> = {
   cacheTtl: '快取有效期（天）',
   cacheShort: '快取',
   // Appearance
-  theme: '主題',
+  colorTheme: '配色主題',
+  themeMode: '明暗模式',
+  uploadTheme: '上傳主題',
+  invalidThemeFile: '不是有效的主題檔案',
   themeAuto: '跟隨系統',
   themeLight: '淺色',
   themeDark: '深色',

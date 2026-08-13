@@ -65,7 +65,10 @@ export const fr: Record<StringKey, string> = {
   cacheTtl: 'Durée du cache (jours)',
   cacheShort: 'Cache',
   // Appearance
-  theme: 'Thème',
+  colorTheme: 'Thème de couleurs',
+  themeMode: 'Mode clair/sombre',
+  uploadTheme: 'Importer un thème',
+  invalidThemeFile: 'Fichier de thème non valide',
   themeAuto: 'Selon le système',
   themeLight: 'Clair',
   themeDark: 'Sombre',

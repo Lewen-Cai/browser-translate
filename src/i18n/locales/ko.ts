@@ -65,7 +65,10 @@ export const ko: Record<StringKey, string> = {
   cacheTtl: '캐시 유지 기간(일)',
   cacheShort: '캐시',
   // Appearance
-  theme: '테마',
+  colorTheme: '색상 테마',
+  themeMode: '라이트/다크 모드',
+  uploadTheme: '테마 업로드',
+  invalidThemeFile: '유효한 테마 파일이 아닙니다',
   themeAuto: '시스템 설정 따름',
   themeLight: '라이트',
   themeDark: '다크',

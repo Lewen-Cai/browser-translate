@@ -65,7 +65,10 @@ export const en = {
   cacheTtl: 'Cache TTL (days)',
   cacheShort: 'Cache',
   // Appearance
-  theme: 'Theme',
+  colorTheme: 'Color theme',
+  themeMode: 'Light / dark mode',
+  uploadTheme: 'Upload theme',
+  invalidThemeFile: 'Not a valid theme file',
   themeAuto: 'Follow system',
   themeLight: 'Light',
   themeDark: 'Dark',

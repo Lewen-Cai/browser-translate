@@ -65,7 +65,10 @@ export const zhCN: Record<StringKey, string> = {
   cacheTtl: '缓存有效期（天）',
   cacheShort: '缓存',
   // Appearance
-  theme: '主题',
+  colorTheme: '配色主题',
+  themeMode: '明暗模式',
+  uploadTheme: '上传主题',
+  invalidThemeFile: '不是有效的主题文件',
   themeAuto: '跟随系统',
   themeLight: '浅色',
   themeDark: '深色',
