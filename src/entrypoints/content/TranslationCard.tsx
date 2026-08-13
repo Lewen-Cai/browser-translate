@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import { X, AlertCircle, Loader2, Pin, ChevronDown, ChevronUp } from '~/ui/icons';
 import { streamTranslate, abortTranslate } from '~/messaging/client';
-import { computeIconPosition, ICON_SIZE } from './TriggerIcon';
-import { clampCardPosition, computeCardVerticalLayout } from './cardLayout';
+import { clampCardPosition, computeCardBasePosition } from './cardLayout';
 import { looksLikeDictionary } from '~/core/dictionary/discriminate';
 import { advanceReveal } from './reveal';
 import { parseDictionaryEntry } from '~/core/dictionary/parse';
@@ -39,6 +38,9 @@ export function TranslationCard({
   text, rect, locale, onClose, notice, attribution, onPinChange,
 }: Props) {
   const [pinned, setPinned] = useState(false);
+  // Viewport-space position frozen at the moment of pinning; non-null means the
+  // card is positioned against the screen rather than the document.
+  const [pin, setPin] = useState<{ left: number; top: number } | null>(null);
   const [received, setReceived] = useState('');   // full text received so far
   const [displayed, setDisplayed] = useState(''); // progressively revealed slice
   const [streaming, setStreaming] = useState(true);
@@ -53,6 +55,11 @@ export function TranslationCard({
   const receivedRef = useRef('');
   const displayedLenRef = useRef(0);
   const doneRef = useRef(false);
+
+  // Fixed for as long as the card is showing this selection. See
+  // computeCardBasePosition: it reads the scroll position, so recomputing it per
+  // render would slide the card whenever a chunk arrived mid-scroll.
+  const base = useMemo(() => computeCardBasePosition(rect, CARD_WIDTH), [rect]);
 
   useEffect(() => {
     const animId = window.requestAnimationFrame(() => setVisible(true));
@@ -136,8 +143,30 @@ export function TranslationCard({
     }
   }
 
+  /**
+   * Pinning holds the card to the screen, not to the page. The shadow host is
+   * anchored to the document so the card scrolls away with the text it came
+   * from — which is right until the reader pins it precisely so they can go
+   * looking somewhere else. Switching to fixed positioning at the scroll offset
+   * it was pinned at leaves the card exactly where it already was and keeps it
+   * there; unpinning re-anchors it to the document at the spot it now occupies,
+   * so it doesn't jump either way.
+   */
   function togglePin(): void {
     const next = !pinned;
+    if (next) {
+      // Freeze where it already is, in screen coordinates. Drag offsets then
+      // count from there, so the switch of positioning scheme is invisible.
+      setPin({ left: left - window.scrollX, top: top - window.scrollY });
+      setOffset({ x: 0, y: 0 });
+    } else if (pin) {
+      // Re-anchor to the document at the spot it currently occupies.
+      setOffset({
+        x: pin.left + offset.x + window.scrollX - base.left,
+        y: pin.top + offset.y + window.scrollY - base.top,
+      });
+      setPin(null);
+    }
     setPinned(next);
     onPinChange?.(next);
   }
@@ -165,19 +194,13 @@ export function TranslationCard({
     (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
   }
 
-  const iconPos = computeIconPosition(rect);
-  const iconRight = iconPos.left + ICON_SIZE;
-  let cardLeft = iconRight - CARD_WIDTH;
-  const minLeft = window.scrollX + 4;
-  const maxLeft = window.scrollX + window.innerWidth - CARD_WIDTH - 4;
-  if (cardLeft < minLeft) cardLeft = minLeft;
-  if (cardLeft > maxLeft) cardLeft = maxLeft;
-  const { top: cardTop, maxHeight } = computeCardVerticalLayout(rect);
-
   // The card is placed relative to the selection, which is often not where the
   // reader wants it — it can land on the very text being translated. Dragging
   // the grip nudges it, clamped so it can't be thrown off screen.
-  const { left, top } = clampCardPosition(cardLeft + offset.x, cardTop + offset.y, CARD_WIDTH);
+  const held = pinned && pin !== null;
+  const { left, top } = held
+    ? clampCardPosition(pin.left + offset.x, pin.top + offset.y, CARD_WIDTH, { x: 0, y: 0 })
+    : clampCardPosition(base.left + offset.x, base.top + offset.y, CARD_WIDTH);
 
   // Discriminate on the full received text. Dictionary (JSON, starts with '{')
   // renders only once complete; translations show the typewriter-revealed slice.
@@ -188,11 +211,11 @@ export function TranslationCard({
     <div
       class="bt-card"
       style={{
-        position: 'absolute',
+        position: held ? 'fixed' : 'absolute',
         top: `${top}px`,
         left: `${left}px`,
         width: `${CARD_WIDTH}px`,
-        maxHeight: `${maxHeight}px`,
+        maxHeight: `${base.maxHeight}px`,
         transformOrigin: 'top right',
         transform: visible ? 'scale(1)' : 'scale(0.88)',
         opacity: visible ? 1 : 0,
@@ -204,19 +227,19 @@ export function TranslationCard({
         willChange: 'transform, opacity',
       }}
     >
+      <div
+        class="bt-card-grip"
+        data-dragging={dragging ? 'true' : 'false'}
+        title={t('cardDrag', locale)}
+        onPointerDown={onGripPointerDown}
+        onPointerMove={onGripPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+      >
+        <span class="bt-card-grip-bar" />
+      </div>
       <div class="bt-card-header">
         <div class="bt-card-strip" />
-        <div
-          class="bt-card-grip"
-          data-dragging={dragging ? 'true' : 'false'}
-          title={t('cardDrag', locale)}
-          onPointerDown={onGripPointerDown}
-          onPointerMove={onGripPointerMove}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
-        >
-          <span class="bt-card-grip-bar" />
-        </div>
         <div class="bt-card-header-content">
           <div class="bt-card-title-row">
             <span class="bt-card-brand-mark">BrowserTranslate</span>

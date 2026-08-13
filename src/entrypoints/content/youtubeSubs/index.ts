@@ -3,28 +3,21 @@ import { fetchTranscript, pickTrack } from './fetchTranscript';
 import { fetchTranscriptText } from './transcriptBridge';
 import { createCueTranslator } from './translateCues';
 import {
-  createSubtitleOverlay,
-  type SubtitleAppearance,
+  createSubtitlesUi,
   type SubtitleLines,
-} from './subtitleOverlay';
+  type SubtitleUiStrings,
+} from './subtitlesUi';
 import { mountSubsButton, removeSubsButton, type SubsButtonHandle } from './button';
 import type { CaptionsResponse } from './bridgeProtocol';
 import { activeCue } from '~/core/subtitles/activeCue';
 import type { Cue } from '~/core/subtitles/types';
+import type { SubtitlePosition, SubtitleStyle } from '~/core/subtitles/style';
 import { translateBatch, abortTranslate } from '~/messaging/client';
 import type { TranslateBatchRequest } from '~/messaging/types';
 
-export interface YouTubeSubsStrings {
+export interface YouTubeSubsStrings extends SubtitleUiStrings {
   titleOff: string; titleOn: string; noCaptions: string;
   enableCc: string; noTranslationNeeded: string; live: string; failed: string;
-  translating: string;
-  /** Labels for the in-player handle and settings panel. */
-  dragHint: string;
-  settings: string;
-  fontScale: string;
-  backgroundOpacity: string;
-  translationOnly: string;
-  resetPosition: string;
 }
 
 export interface YouTubeSubTranslatorDeps {
@@ -32,17 +25,18 @@ export interface YouTubeSubTranslatorDeps {
   strings: YouTubeSubsStrings;
   notify: (msg: string) => void;
   concurrency: number;
-  /** Vertical position of the subtitle block, persisted across videos. */
-  getSubtitleOffsetPct: () => number;
-  setSubtitleOffsetPct: (pct: number) => void;
   /** Read live so a settings change reaches an already-playing video. */
-  getAppearance: () => SubtitleAppearance;
-  setAppearance: (next: SubtitleAppearance) => void;
+  getPosition: () => SubtitlePosition;
+  setPosition: (next: SubtitlePosition) => void;
+  getStyle: () => SubtitleStyle;
+  setStyle: (next: SubtitleStyle) => void;
 }
 
 export interface YouTubeSubTranslator {
   attachButton: () => Promise<void>;
   disable: () => void;
+  /** Stop translating and take the whole in-player UI back down. */
+  teardown: () => void;
   isOn: () => boolean;
 }
 
@@ -58,7 +52,9 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
   let on = false;
   let button: SubsButtonHandle | null = null;
   let translator: ReturnType<typeof createCueTranslator> | null = null;
-  let overlay: ReturnType<typeof createSubtitleOverlay> | null = null;
+  // The in-player UI outlives on/off: the menu that turns translation on lives
+  // inside it, so it has to be there before there is anything to translate.
+  let ui: ReturnType<typeof createSubtitlesUi> | null = null;
   let cues: Cue[] = [];
   let rafId = 0;
   let pumpTarget: HTMLVideoElement | null = null;
@@ -88,6 +84,21 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     };
   }
 
+  function ensureUi(): ReturnType<typeof createSubtitlesUi> {
+    if (ui) return ui;
+    ui = createSubtitlesUi({
+      getLines,
+      strings: deps.strings,
+      getPosition: deps.getPosition,
+      onPositionChange: deps.setPosition,
+      getStyle: deps.getStyle,
+      onStyleChange: deps.setStyle,
+      isActive: () => on,
+      onActiveChange: (next) => { if (next) void enable(); else disable(); },
+    });
+    return ui;
+  }
+
   function tick(): void {
     // YouTube SPA-navigated to a different video → drop everything (otherwise the
     // previous video's cues would be shown against the new captions).
@@ -95,7 +106,7 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
       disable();
       return;
     }
-    overlay?.refresh();
+    ui?.refresh();
     rafId = requestAnimationFrame(tick);
   }
 
@@ -105,27 +116,11 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     enabledVideoId = currentVideoId();
     button?.setActive(true);
 
-    // Start the overlay immediately. Until the transcript arrives getLines()
+    // Show the subtitles immediately. Until the transcript arrives getLines()
     // returns null, and once it does the original shows straight away with the
     // "translating…" placeholder beneath it — the subtitle is never blank while
     // a translation is in flight.
-    overlay = createSubtitleOverlay({
-      strings: {
-        placeholder: deps.strings.translating,
-        dragHint: deps.strings.dragHint,
-        settings: deps.strings.settings,
-        fontScale: deps.strings.fontScale,
-        backgroundOpacity: deps.strings.backgroundOpacity,
-        translationOnly: deps.strings.translationOnly,
-        resetPosition: deps.strings.resetPosition,
-      },
-      getLines,
-      getOffsetPct: deps.getSubtitleOffsetPct,
-      onOffsetChange: deps.setSubtitleOffsetPct,
-      getAppearance: deps.getAppearance,
-      onAppearanceChange: deps.setAppearance,
-    });
-    overlay.start();
+    ensureUi().setActive(true);
     rafId = requestAnimationFrame(tick);
 
     let captions = probed;
@@ -170,7 +165,7 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
       getTargetLang: deps.getTargetLang,
       getCurrentTimeMs: currentTimeMs,
       getPlaybackRate: () => videoEl()?.playbackRate ?? 1,
-      onUpdate: () => overlay?.refresh(),
+      onUpdate: () => ui?.refresh(),
       concurrency: deps.concurrency,
     });
     translator.start(cues);
@@ -203,10 +198,16 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     cancelAnimationFrame(rafId);
     detachPump();
     translator?.teardown();
-    overlay?.teardown();
     translator = null;
-    overlay = null;
     cues = [];
+    // The UI stays: its menu is how translation gets turned back on.
+    ui?.setActive(false);
+  }
+
+  function teardown(): void {
+    disable();
+    ui?.teardown();
+    ui = null;
   }
 
   async function attachButton(): Promise<void> {
@@ -222,6 +223,7 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     // over from a previous video (the control bar persists across SPA navigation).
     if (probed && pickTrack(probed.tracks) === null) {
       removeSubsButton();
+      teardown();
       return;
     }
     // Manual track present, or probe failed (mount anyway as a graceful fallback —
@@ -229,9 +231,14 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     button = mountSubsButton({
       titleOff: deps.strings.titleOff,
       titleOn: deps.strings.titleOn,
-      onToggle: () => { if (on) disable(); else void enable(); },
+      // The button opens the menu rather than translating outright: the same
+      // press has to reach the style settings, which are useless once the video
+      // has moved on and the reader has to hunt for them.
+      onToggle: () => ensureUi().togglePanel(),
     });
+    button.setActive(on);
+    ensureUi();
   }
 
-  return { attachButton, disable, isOn: () => on };
+  return { attachButton, disable, teardown, isOn: () => on };
 }

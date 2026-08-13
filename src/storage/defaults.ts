@@ -1,9 +1,5 @@
 import { APP_DATA_VERSION, type AppData } from './schema';
-import {
-  DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
-  DEFAULT_SUBTITLE_FONT_SCALE,
-  DEFAULT_SUBTITLE_OFFSET_PCT,
-} from '~/core/subtitles/layout';
+import { DEFAULT_SUBTITLE_POSITION, DEFAULT_SUBTITLE_STYLE } from '~/core/subtitles/style';
 
 export function createDefaultAppData(): AppData {
   return {
@@ -25,10 +21,8 @@ export function createDefaultAppData(): AppData {
       fullPageHotkey: 'Alt+A',
       cacheEnabled: true,
       cacheTTLDays: 7,
-      subtitleOffsetPct: DEFAULT_SUBTITLE_OFFSET_PCT,
-      subtitleFontScale: DEFAULT_SUBTITLE_FONT_SCALE,
-      subtitleBackgroundOpacity: DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
-      subtitleTranslationOnly: false,
+      subtitlePosition: DEFAULT_SUBTITLE_POSITION,
+      subtitleStyle: DEFAULT_SUBTITLE_STYLE,
       theme: 'auto',
       uiLanguage: 'auto',
     },

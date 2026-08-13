@@ -12,10 +12,14 @@ const baseSettings = {
   fullPageHotkey: 'Alt+A',
   cacheEnabled: true,
   cacheTTLDays: 30,
-  subtitleOffsetPct: 0.11,
-  subtitleFontScale: 100,
-  subtitleBackgroundOpacity: 78,
-  subtitleTranslationOnly: false,
+  subtitlePosition: { percent: 6, anchor: 'bottom' as const },
+  subtitleStyle: {
+    displayMode: 'bilingual' as const,
+    translationPosition: 'below' as const,
+    backgroundOpacity: 78,
+    main: { fontScale: 100, color: '#FFFFFF', fontFamily: 'system' as const, fontWeight: 400 },
+    translation: { fontScale: 100, color: '#FFFFFF', fontFamily: 'system' as const, fontWeight: 400 },
+  },
   theme: 'auto' as const,
   uiLanguage: 'auto' as const,
 };

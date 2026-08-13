@@ -192,10 +192,20 @@ html, body {
 
 /* Drag handle. Its own control rather than the whole header, so text in the
    header stays selectable and a stray press can't move the card. */
+/* Centred over the top edge rather than tucked into a corner: the middle of the
+   header is where a hand reaches for a window, and it leaves the corners to the
+   controls that live in them. */
 .bt-card-grip {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
   display: flex;
   align-items: center;
-  padding: 0 6px;
+  justify-content: center;
+  width: 56px;
+  height: 16px;
   cursor: grab;
   color: rgb(var(--ap-fg-subtle));
   touch-action: none;
@@ -203,8 +213,8 @@ html, body {
 .bt-card-grip:hover { color: rgb(var(--ap-fg-muted)); }
 .bt-card-grip[data-dragging='true'] { cursor: grabbing; color: rgb(var(--ap-fg-muted)); }
 .bt-card-grip-bar {
-  width: 22px;
-  height: 4px;
+  width: 26px;
+  height: 3px;
   border-radius: 2px;
   background: currentColor;
 }

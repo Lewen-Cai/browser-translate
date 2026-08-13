@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { clampCardPosition, computeCardVerticalLayout } from './cardLayout';
+import { clampCardPosition, computeCardBasePosition, computeCardVerticalLayout } from './cardLayout';
 
 function rect(top: number, right: number): DOMRect {
   return { top, right, left: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON() {} } as DOMRect;
@@ -11,6 +11,8 @@ function setViewport({ scrollY = 0, innerHeight = 800, innerWidth = 1024 }: { sc
   Object.defineProperty(window, 'innerHeight', { value: innerHeight, configurable: true });
   Object.defineProperty(window, 'innerWidth', { value: innerWidth, configurable: true });
 }
+
+const WIDTH = 360;
 
 afterEach(() => setViewport({}));
 
@@ -38,7 +40,6 @@ describe('computeCardVerticalLayout', () => {
 });
 
 describe('clampCardPosition', () => {
-  const WIDTH = 360;
 
   it('leaves a position that is already on screen alone', () => {
     setViewport({ innerWidth: 1024, innerHeight: 800 });
@@ -69,5 +70,40 @@ describe('clampCardPosition', () => {
   it('pins the card to the left edge when the window is narrower than the card', () => {
     setViewport({ innerWidth: 200, innerHeight: 800 });
     expect(clampCardPosition(50, 100, WIDTH).left).toBe(4);
+  });
+});
+
+describe('clampCardPosition origin', () => {
+  it('measures the box from the screen corner when told the origin is zero', () => {
+    // A pinned card is positioned against the viewport, so its coordinates start
+    // at the screen's corner no matter how far the page has scrolled.
+    setViewport({ innerWidth: 1024, innerHeight: 800, scrollY: 5000 });
+    expect(clampCardPosition(200, 300, WIDTH, { x: 0, y: 0 })).toEqual({ left: 200, top: 300 });
+    expect(clampCardPosition(200, 5000, WIDTH, { x: 0, y: 0 }).top).toBe(800 - 48);
+  });
+});
+
+describe('computeCardBasePosition', () => {
+  it('right-aligns the card with the trigger icon', () => {
+    setViewport({ innerWidth: 1024, innerHeight: 800 });
+    const base = computeCardBasePosition(rect(200, 700), WIDTH);
+    expect(base.left + WIDTH).toBeGreaterThan(600);
+    expect(base.left).toBeGreaterThanOrEqual(4);
+  });
+
+  it('keeps the card on screen for a selection at the right edge', () => {
+    setViewport({ innerWidth: 1024, innerHeight: 800 });
+    const base = computeCardBasePosition(rect(200, 1020), WIDTH);
+    expect(base.left).toBeLessThanOrEqual(1024 - WIDTH - 4);
+  });
+
+  it('answers in document space, which is what makes it safe to freeze', () => {
+    // The viewport clamp inside means the answer moves with the scroll — the
+    // reason the caller computes this once and holds it rather than per render.
+    setViewport({ innerWidth: 1024, innerHeight: 800 });
+    const atTop = computeCardBasePosition(rect(200, 400), WIDTH);
+    setViewport({ innerWidth: 1024, innerHeight: 800, scrollY: 4000 });
+    const scrolled = computeCardBasePosition(rect(200, 400), WIDTH);
+    expect(scrolled.top).not.toBe(atTop.top);
   });
 });

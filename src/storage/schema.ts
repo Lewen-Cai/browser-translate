@@ -1,4 +1,5 @@
 import { MT_ENGINE_IDS, type MtEngineId } from '~/core/mt/types';
+import type { SubtitlePosition, SubtitleStyle } from '~/core/subtitles/style';
 
 export const APP_DATA_VERSION = 1 as const;
 
@@ -74,15 +75,10 @@ export interface GlobalSettings {
   fullPageHotkey: string;
   cacheEnabled: boolean;
   cacheTTLDays: number;
-  /** Where the YouTube subtitle block sits, as a fraction of player height above
-   *  the bottom edge. Stored as a fraction so it survives resizing and fullscreen. */
-  subtitleOffsetPct: number;
-  /** Text size as a percentage of the size derived from the player (50–200). */
-  subtitleFontScale: number;
-  /** Opacity of the plate behind the subtitle text (0–100). */
-  subtitleBackgroundOpacity: number;
-  /** Show only the translation, dropping the source line. */
-  subtitleTranslationOnly: boolean;
+  /** Where the on-video subtitle block sits, relative to a player edge. */
+  subtitlePosition: SubtitlePosition;
+  /** How the on-video subtitles are drawn. */
+  subtitleStyle: SubtitleStyle;
   theme: 'light' | 'dark' | 'auto';
   uiLanguage: 'auto' | 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'ko' | 'es' | 'fr' | 'de';
 }

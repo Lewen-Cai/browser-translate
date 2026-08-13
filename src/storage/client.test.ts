@@ -84,10 +84,10 @@ describe('StorageClient', () => {
   describe('patchSettings', () => {
     it('merges a patch into stored settings, leaving the rest alone', async () => {
       await client.loadAppData();
-      await client.patchSettings({ subtitleOffsetPct: 0.42 });
+      await client.patchSettings({ subtitlePosition: { percent: 42, anchor: 'top' } });
 
       const reloaded = await client.loadAppData();
-      expect(reloaded.settings.subtitleOffsetPct).toBe(0.42);
+      expect(reloaded.settings.subtitlePosition).toEqual({ percent: 42, anchor: 'top' });
       expect(reloaded.settings.targetLanguage).toBe('zh-CN');
     });
 
@@ -100,11 +100,11 @@ describe('StorageClient', () => {
         ...initial,
         settings: { ...initial.settings, targetLanguage: 'ja' },
       });
-      await client.patchSettings({ subtitleOffsetPct: 0.3 });
+      await client.patchSettings({ subtitlePosition: { percent: 30, anchor: 'bottom' } });
 
       const reloaded = await client.loadAppData();
       expect(reloaded.settings.targetLanguage).toBe('ja');
-      expect(reloaded.settings.subtitleOffsetPct).toBe(0.3);
+      expect(reloaded.settings.subtitlePosition).toEqual({ percent: 30, anchor: 'bottom' });
     });
   });
 });

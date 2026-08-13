@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import { h, Fragment, type ComponentChild } from 'preact';
 import { createShadowMount } from './content/mount';
 import { createSelectionWatcher, getCurrentParagraphText, type SelectionInfo } from './content/selectionWatcher';
 import { createHotkeyWatcher, type HotkeyWatcher } from './content/hotkeyWatcher';
@@ -11,15 +11,15 @@ import { resolveEffectiveTheme } from '~/ui/themeResolver';
 import { isLikelyPassage } from '~/core/selection/isLikelyPassage';
 import { isSameLanguageAsTarget } from '~/core/language/sameLanguage';
 import {
-  DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
-  DEFAULT_SUBTITLE_FONT_SCALE,
-  DEFAULT_SUBTITLE_OFFSET_PCT,
-} from '~/core/subtitles/layout';
+  DEFAULT_SUBTITLE_POSITION,
+  DEFAULT_SUBTITLE_STYLE,
+  type SubtitlePosition,
+  type SubtitleStyle,
+} from '~/core/subtitles/style';
 import { translationAttribution, type TranslationAttribution } from '~/ui/attribution';
-import type { SubtitleAppearance } from './content/youtubeSubs/subtitleOverlay';
 import { resolveLocale, t } from '~/i18n';
 import type { Locale } from '~/i18n/strings';
-import type { GlobalSettings } from '~/storage/schema';
+import type { AppData, GlobalSettings } from '~/storage/schema';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -37,17 +37,17 @@ export default defineContentScript({
 
     mql.addEventListener('change', applyTheme);
 
-    let state: 'idle' | 'icon' | 'card' = 'idle';
+    // The icon and the card are painted together rather than one replacing the
+    // other: a pinned card stays put while the reader selects something else,
+    // and the icon has to appear beside it to act on that new selection.
+    let iconNode: ComponentChild = null;
+    let cardNode: ComponentChild = null;
     let selectionWatcher: { stop: () => void } | null = null;
     let hotkey: HotkeyWatcher | null = null;
     let pageTranslator: PageTranslator | null = null;
     let targetLanguage = 'zh-CN';
-    let subtitleOffsetPct = DEFAULT_SUBTITLE_OFFSET_PCT;
-    let subtitleAppearance: SubtitleAppearance = {
-      fontScale: DEFAULT_SUBTITLE_FONT_SCALE,
-      backgroundOpacity: DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
-      translationOnly: false,
-    };
+    let subtitlePosition: SubtitlePosition = DEFAULT_SUBTITLE_POSITION;
+    let subtitleStyle: SubtitleStyle = DEFAULT_SUBTITLE_STYLE;
     let fullPageHotkey: HotkeyWatcher | null = null;
     let ytSubs: YouTubeSubTranslator | null = null;
     let attribution: TranslationAttribution = { iconId: 'custom', label: '' };
@@ -57,46 +57,58 @@ export default defineContentScript({
     let pinnedRect: DOMRect | null = null;
     let ytNavHandler: (() => void) | null = null;
 
+    const paint = () => {
+      if (!iconNode && !cardNode) {
+        mount.unmount();
+        return;
+      }
+      mount.render(h(Fragment, null, iconNode, cardNode));
+    };
+
     const showIcon = (info: SelectionInfo) => {
-      state = 'icon';
-      mount.render(
-        h(TriggerIcon, {
-          rect: info.rect,
-          onClick: () => showCard(info),
-        }),
-      );
+      iconNode = h(TriggerIcon, {
+        rect: info.rect,
+        onClick: () => showCard(info),
+      });
+      paint();
+    };
+
+    const clearIcon = () => {
+      if (!iconNode) return;
+      iconNode = null;
+      paint();
     };
 
     const showCard = (info: SelectionInfo) => {
-      state = 'card';
+      // The icon has done its job the moment the card opens.
+      iconNode = null;
       const skip = isLikelyPassage(info.text) && isSameLanguageAsTarget(info.text, targetLanguage);
       // While pinned the card must not jump back to the new selection.
       const rect = cardPinned && pinnedRect ? pinnedRect : info.rect;
       if (!cardPinned) pinnedRect = info.rect;
-      mount.render(
-        h(TranslationCard, {
-          text: info.text,
-          rect,
-          locale,
-          attribution,
-          notice: skip ? t('noTranslationNeeded', locale) : undefined,
-          onPinChange: (next: boolean) => {
-            cardPinned = next;
-            if (next) pinnedRect = rect;
-          },
-          onClose: () => {
-            state = 'idle';
-            cardPinned = false;
-            pinnedRect = null;
-            mount.unmount();
-          },
-        }),
-      );
+      // Same component in the same slot, so a pinned card keeps its pin state and
+      // the spot it was dragged to while it translates the new text.
+      cardNode = h(TranslationCard, {
+        text: info.text,
+        rect,
+        locale,
+        attribution,
+        notice: skip ? t('noTranslationNeeded', locale) : undefined,
+        onPinChange: (next: boolean) => {
+          cardPinned = next;
+          if (next) pinnedRect = rect;
+        },
+        onClose: hide,
+      });
+      paint();
     };
 
     const hide = () => {
-      state = 'idle';
-      mount.unmount();
+      iconNode = null;
+      cardNode = null;
+      cardPinned = false;
+      pinnedRect = null;
+      paint();
     };
 
     /** Tear down then re-create watchers based on the current settings. */
@@ -107,27 +119,25 @@ export default defineContentScript({
       selectionWatcher = null;
       hotkey = null;
       fullPageHotkey = null;
-      if (state !== 'idle') hide();
+      hide();
 
       const data = await client.loadAppData();
       themeSetting = data.settings.theme;
       locale = resolveLocale(data.settings.uiLanguage, navigator.language);
       targetLanguage = data.settings.targetLanguage;
-      subtitleOffsetPct = data.settings.subtitleOffsetPct;
-      subtitleAppearance = {
-        fontScale: data.settings.subtitleFontScale,
-        backgroundOpacity: data.settings.subtitleBackgroundOpacity,
-        translationOnly: data.settings.subtitleTranslationOnly,
-      };
+      subtitlePosition = data.settings.subtitlePosition;
+      subtitleStyle = data.settings.subtitleStyle;
       attribution = translationAttribution(data.settings.engine, data.api);
       applyTheme();
 
       if (data.settings.triggerMode === 'icon') {
         const w = createSelectionWatcher((info) => {
           if (info) {
-            if (state !== 'card') showIcon(info);
-          } else if (state === 'icon') {
-            hide();
+            // A pinned card is meant to stay while the reader works, so the icon
+            // still offers to translate whatever they pick next.
+            if (!cardNode || cardPinned) showIcon(info);
+          } else {
+            clearIcon();
           }
         });
         w.start();
@@ -159,7 +169,7 @@ export default defineContentScript({
       if (wasOn) pageTranslator.enable();
 
       // YouTube subtitle translator — only on watch pages.
-      ytSubs?.disable();
+      ytSubs?.teardown();
       ytSubs = null;
       if (isYouTubeWatch()) {
         ytSubs = createYouTubeSubTranslator({
@@ -173,19 +183,15 @@ export default defineContentScript({
           concurrency: data.settings.engine !== 'llm' ? 6
             : data.api.providerType === 'cloud' ? 4
             : 2,
-          getSubtitleOffsetPct: () => subtitleOffsetPct,
-          setSubtitleOffsetPct: (pct) => {
-            subtitleOffsetPct = pct;
-            void client.patchSettings({ subtitleOffsetPct: pct });
+          getPosition: () => subtitlePosition,
+          setPosition: (next) => {
+            subtitlePosition = next;
+            void client.patchSettings({ subtitlePosition: next });
           },
-          getAppearance: () => subtitleAppearance,
-          setAppearance: (next) => {
-            subtitleAppearance = next;
-            void client.patchSettings({
-              subtitleFontScale: next.fontScale,
-              subtitleBackgroundOpacity: next.backgroundOpacity,
-              subtitleTranslationOnly: next.translationOnly,
-            });
+          getStyle: () => subtitleStyle,
+          setStyle: (next) => {
+            subtitleStyle = next;
+            void client.patchSettings({ subtitleStyle: next });
           },
           strings: {
             titleOff: t('ytSubsButtonTitle', locale),
@@ -195,13 +201,28 @@ export default defineContentScript({
             noTranslationNeeded: t('ytSubsNoTranslationNeeded', locale),
             live: t('ytSubsLive', locale),
             failed: t('ytSubsFailed', locale),
-            translating: t('ytSubsTranslating', locale),
+            placeholder: t('ytSubsTranslating', locale),
             dragHint: t('ytSubsDragHint', locale),
-            settings: t('ytSubsSettings', locale),
-            fontScale: t('subtitleFontScale', locale),
+            subtitlesToggle: t('ytSubsToggleLabel', locale),
+            styleTitle: t('subtitleStyle', locale),
+            general: t('subtitleGeneral', locale),
+            displayMode: t('subtitleDisplayMode', locale),
+            displayBilingual: t('subtitleDisplayBilingual', locale),
+            displayOriginalOnly: t('subtitleDisplayOriginalOnly', locale),
+            displayTranslationOnly: t('subtitleDisplayTranslationOnly', locale),
+            translationPosition: t('subtitleTranslationPosition', locale),
+            positionAbove: t('subtitlePositionAbove', locale),
+            positionBelow: t('subtitlePositionBelow', locale),
             backgroundOpacity: t('subtitleBackgroundOpacity', locale),
-            translationOnly: t('subtitleTranslationOnly', locale),
+            mainSubtitle: t('subtitleMainLine', locale),
+            translationSubtitle: t('subtitleTranslationLine', locale),
+            fontScale: t('subtitleFontScale', locale),
+            color: t('subtitleColor', locale),
+            fontFamily: t('subtitleFontFamily', locale),
+            fontWeight: t('subtitleFontWeight', locale),
+            reset: t('subtitleReset', locale),
             resetPosition: t('subtitleResetPosition', locale),
+            back: t('back', locale),
           },
           notify: (msg) => console.info('[BrowserTranslate]', msg),
         });
@@ -224,7 +245,19 @@ export default defineContentScript({
 
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
-      if (!('app:data' in changes)) return;
+      const change = changes['app:data'];
+      if (!change) return;
+      const next = change.newValue as AppData | undefined;
+      // Moving or restyling the subtitles writes to storage, and this listener
+      // fires on our own write. Rebuilding the watchers for it would take the
+      // YouTube translator down mid-video — the drag would end with the
+      // subtitles gone. These two are read live by the running UI, so applying
+      // them here is the whole job.
+      if (next && onlySubtitleAppearanceChanged(change.oldValue as AppData | undefined, next)) {
+        subtitlePosition = next.settings.subtitlePosition;
+        subtitleStyle = next.settings.subtitleStyle;
+        return;
+      }
       void reattach();
     });
 
@@ -242,15 +275,33 @@ export default defineContentScript({
     });
 
     document.addEventListener('mousedown', (e) => {
-      if (state === 'idle') return;
-      const target = e.target as Node;
-      if (mount.root.contains(target)) return;
-      if (state === 'icon') return;
+      if (!cardNode) return; // an icon alone goes away with its selection
+      // Our UI lives in a shadow root, so by the time the event reaches this
+      // listener `e.target` has been retargeted to the host element — testing it
+      // against the shadow root always says "outside", which closed the card on
+      // every press of its own pin, grip and expand controls. The composed path
+      // still carries the real chain, shadow tree included.
+      if (e.composedPath().includes(mount.root)) return;
       if (cardPinned) return; // pinning exists precisely to survive this
       hide();
     }, true);
   },
 });
+
+/**
+ * True when a stored-data change touched nothing but the subtitle position and
+ * style. Both are read live by whatever is already running, so they need no
+ * rebuild; everything else does.
+ */
+function onlySubtitleAppearanceChanged(
+  before: AppData | undefined,
+  after: AppData,
+): boolean {
+  if (!before) return false;
+  const blank = { subtitlePosition: null, subtitleStyle: null };
+  return JSON.stringify({ ...before, settings: { ...before.settings, ...blank } })
+    === JSON.stringify({ ...after, settings: { ...after.settings, ...blank } });
+}
 
 function isYouTubeWatch(): boolean {
   return location.hostname.endsWith('youtube.com') && location.pathname === '/watch';

@@ -20,6 +20,7 @@ vi.mock('./fetchTranscript', async (orig) => {
 });
 
 import { createYouTubeSubTranslator, type YouTubeSubsStrings } from './index';
+import { DEFAULT_SUBTITLE_POSITION, DEFAULT_SUBTITLE_STYLE } from '~/core/subtitles/style';
 import { requestCaptionTracks } from './requestCaptionTracks';
 import { fetchTranscript } from './fetchTranscript';
 import { translateBatch } from '~/messaging/client';
@@ -32,13 +33,28 @@ const STRINGS: YouTubeSubsStrings = {
   noTranslationNeeded: 'nt',
   live: 'lv',
   failed: 'fail',
-  translating: 'tr',
+  placeholder: 'tr',
   dragHint: 'drag',
-  settings: 'set',
-  fontScale: 'size',
+  subtitlesToggle: 'subs',
+  styleTitle: 'style',
+  general: 'general',
+  displayMode: 'mode',
+  displayBilingual: 'bi',
+  displayOriginalOnly: 'orig',
+  displayTranslationOnly: 'trans',
+  translationPosition: 'pos',
+  positionAbove: 'above',
+  positionBelow: 'below',
   backgroundOpacity: 'bg',
-  translationOnly: 'only',
-  resetPosition: 'reset',
+  mainSubtitle: 'main',
+  translationSubtitle: 'translation',
+  fontScale: 'size',
+  color: 'color',
+  fontFamily: 'font',
+  fontWeight: 'weight',
+  reset: 'reset',
+  resetPosition: 'reset position',
+  back: 'back',
 };
 
 function make(overrides: { notify?: (m: string) => void } = {}) {
@@ -47,11 +63,28 @@ function make(overrides: { notify?: (m: string) => void } = {}) {
     strings: STRINGS,
     notify: overrides.notify ?? vi.fn(),
     concurrency: 1,
-    getSubtitleOffsetPct: () => 0.11,
-    setSubtitleOffsetPct: vi.fn(),
-    getAppearance: () => ({ fontScale: 100, backgroundOpacity: 78, translationOnly: false }),
-    setAppearance: vi.fn(),
+    getPosition: () => DEFAULT_SUBTITLE_POSITION,
+    setPosition: vi.fn(),
+    getStyle: () => DEFAULT_SUBTITLE_STYLE,
+    setStyle: vi.fn(),
   });
+}
+
+/** The control-bar button opens the menu; the switch inside it starts translation. */
+function subsSwitch(): HTMLElement {
+  const host = document.querySelector<HTMLElement>('.bt-yt-subs');
+  const el = host?.shadowRoot?.querySelector<HTMLElement>('.switch');
+  if (!el) throw new Error('subtitles switch not mounted');
+  return el;
+}
+
+function openMenu(): void {
+  document.querySelector<HTMLButtonElement>('.bt-yt-subs-button')!.click();
+}
+
+function turnOn(): void {
+  openMenu();
+  subsSwitch().click();
 }
 
 const asrOnly = {
@@ -91,13 +124,13 @@ describe('createYouTubeSubTranslator', () => {
     await t.attachButton();
     const btn = document.querySelector<HTMLButtonElement>('.bt-yt-subs-button');
     expect(btn).not.toBeNull();
-    btn!.click();
+    turnOn();
     await flush();
     expect(t.isOn()).toBe(true);
     // Both lines are ours: the transcript's own text on top, translation below.
-    expect(subtitleLine('.bt-yt-line-original')).toBe('Hello');
-    expect(subtitleLine('.bt-yt-line-translation')).toBe('译:Hello');
-    t.disable();
+    expect(subtitleLine('.line-main')).toBe('Hello');
+    expect(subtitleLine('.line-translation')).toBe('译:Hello');
+    t.teardown();
     expect(t.isOn()).toBe(false);
     expect(document.querySelector('.bt-yt-subs')).toBeNull();
   });
@@ -129,7 +162,7 @@ describe('createYouTubeSubTranslator', () => {
     const t = make();
     await t.attachButton();
     expect(vi.mocked(requestCaptionTracks)).toHaveBeenCalledTimes(1);
-    document.querySelector<HTMLButtonElement>('.bt-yt-subs-button')!.click();
+    turnOn();
     await flush();
     expect(vi.mocked(requestCaptionTracks)).toHaveBeenCalledTimes(1);
     expect(t.isOn()).toBe(true);
@@ -143,7 +176,7 @@ describe('createYouTubeSubTranslator', () => {
     const notify = vi.fn();
     const t = make({ notify });
     await t.attachButton();
-    document.querySelector<HTMLButtonElement>('.bt-yt-subs-button')!.click();
+    turnOn();
     await flush();
     expect(notify).toHaveBeenCalledWith('nc');
     expect(t.isOn()).toBe(false);
@@ -159,7 +192,7 @@ describe('createYouTubeSubTranslator', () => {
     );
     const t = make();
     await t.attachButton();
-    document.querySelector<HTMLButtonElement>('.bt-yt-subs-button')!.click();
+    turnOn();
     await flush();
     expect(t.isOn()).toBe(true);
     t.disable(); // user toggles off while fetchTranscript is pending
@@ -176,7 +209,7 @@ describe('createYouTubeSubTranslator', () => {
     const notify = vi.fn();
     const t = make({ notify });
     await t.attachButton();
-    document.querySelector<HTMLButtonElement>('.bt-yt-subs-button')!.click();
+    turnOn();
     await flush();
     expect(notify).toHaveBeenCalledWith('fail');
     expect(notify).not.toHaveBeenCalledWith('cc');
