@@ -2,6 +2,41 @@
 
 All notable changes will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.8] — 2026-08-13
+
+### Added
+- Model thinking control, off by default: hybrid reasoning models (e.g.
+  DeepSeek V4) think before every answer unless told not to, which made
+  translations noticeably slower and billed invisible reasoning tokens. The
+  extension now sends the provider's disable parameter by default for
+  DeepSeek, Zhipu, Qwen (DashScope), SiliconFlow, and OpenRouter, restoring
+  fast non-thinking replies. A "Model thinking" control (Settings → API, and
+  in the popup for supported providers) turns thinking back on at five
+  effort levels — Low / Medium / High / XHigh / Max — mapped to each
+  provider's native parameter (reasoning_effort, thinking_budget, or
+  reasoning.effort); the choice is remembered per provider. Providers
+  without a safe parameter (OpenAI, Moonshot, Mistral, custom, local) are
+  unaffected.
+- Themes: four built-in themes — Cobalt (default, the previous look),
+  Graphite, Sepia, and Teal — in Settings → General → Appearance. Each theme
+  styles the popup, the settings page, and the in-page translation card,
+  defines both light and dark variants (the light/dark mode setting keeps
+  working independently), and carries its own typography — Cobalt keeps
+  Geist, Graphite pairs a neutral grotesque with Consolas, Sepia is a serif
+  with a typewriter mono, Teal a humanist sans. You can also upload your own
+  theme as a JSON file and delete it again; the format (documented in the
+  README) is validated strictly — all 12 color tokens required in light,
+  unknown fields rejected. The extension's toolbar icon follows the theme
+  too: it is tinted to the active theme's brand color using the same
+  light/dark variant the page resolves, matching the in-page trigger icon.
+
+### Removed
+- Prompt templates. The four built-in styles and custom templates are gone;
+  translation always uses one built-in prompt, and the model judges register
+  and topic on its own. The Prompts settings page, the template pickers, and
+  the related storage fields were removed — existing settings (and old
+  settings-export files) load cleanly, with the legacy fields stripped.
+
 ## [0.1.7] — 2026-06-02
 
 ### Changed
