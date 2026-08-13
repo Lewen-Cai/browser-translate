@@ -1,7 +1,11 @@
 export interface CacheKeyInput {
   text: string;
   model: string;
-  promptTemplateId: string;
+  /**
+   * Namespace discriminator: selection results may be dictionary JSON while
+   * fullpage results are plain text — the two must never share cache entries.
+   */
+  mode: 'selection' | 'fullpage';
   targetLang: string;
 }
 
@@ -16,7 +20,7 @@ export async function computeCacheKey(input: CacheKeyInput): Promise<string> {
   const canonical = [
     input.text,
     input.model,
-    input.promptTemplateId,
+    input.mode,
     input.targetLang,
   ].join('\0'); // null byte separator — cannot appear in normal text
   const bytes = new TextEncoder().encode(canonical);

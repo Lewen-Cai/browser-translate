@@ -2,9 +2,7 @@ export interface TranslateRequest {
   type: 'translate';
   requestId: string;
   text: string;
-  sourceLang?: string;
   targetLang?: string;           // omit → use global setting
-  context?: { url?: string; title?: string };
 }
 
 export type TranslateResponse =

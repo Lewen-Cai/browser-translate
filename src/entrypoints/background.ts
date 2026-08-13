@@ -3,8 +3,8 @@ import { CacheStore } from '~/storage/cacheStore';
 import { OpenAICompatibleProvider } from '~/core/providers/openai';
 import { TranslationProviderError } from '~/core/providers/types';
 import { computeCacheKey } from '~/core/cache/key';
-import { detectLanguage } from '~/core/language/detect';
 import { autoSystemPrompt } from '~/core/dictionary/prompt';
+import { selectionUserPrompt } from '~/core/prompt/style';
 import { batchSystemPrompt, batchUserPrompt } from '~/core/batch/prompt';
 import { parseBatchArray } from '~/core/batch/parse';
 import { runBatch } from '~/core/batch/runBatch';
@@ -79,29 +79,13 @@ async function handleTranslate(
       });
       return;
     }
-    const activeTemplate = data.promptTemplates.find((t) => t.id === api.promptTemplateId);
-    if (!activeTemplate) {
-      send({
-        type: 'translate:error',
-        requestId: msg.requestId,
-        message: 'Prompt template missing',
-        kind: 'unknown',
-      });
-      return;
-    }
-    const template = {
-      ...activeTemplate,
-      systemPrompt: autoSystemPrompt(),
-    };
-
     const targetLang = msg.targetLang ?? data.settings.targetLanguage;
-    const sourceLang = msg.sourceLang ?? detectLanguage(msg.text);
 
     let cacheKey: string | undefined;
     if (data.settings.cacheEnabled) {
       cacheKey = await computeCacheKey({
         text: msg.text, model: api.model,
-        promptTemplateId: template.id, targetLang,
+        mode: 'selection', targetLang,
       });
       const cached = await new CacheStore(client, data.settings.cacheTTLDays).get(cacheKey);
       if (cached !== undefined) {
@@ -126,14 +110,11 @@ async function handleTranslate(
       await withRetry(async () => {
         full = '';
         for await (const chunk of provider.translate({
-          text: msg.text,
-          targetLang,
-          sourceLang: sourceLang === 'unknown' ? undefined : sourceLang,
-          template,
+          systemPrompt: autoSystemPrompt(),
+          userPrompt: selectionUserPrompt(msg.text, targetLang),
           maxTokens: api.maxTokens,
           stream: true,
           signal: abortCtl.signal,
-          context: msg.context,
         })) {
           if (chunk.delta) {
             full += chunk.delta;
@@ -186,17 +167,6 @@ async function handleTranslateBatch(
       });
       return;
     }
-    const activeTemplate = data.promptTemplates.find((t) => t.id === api.promptTemplateId);
-    if (!activeTemplate) {
-      send({
-        type: 'translate:batch:error',
-        requestId: msg.requestId,
-        message: 'Prompt template missing',
-        kind: 'unknown',
-      });
-      return;
-    }
-
     const targetLang = msg.targetLang ?? data.settings.targetLanguage;
     const systemPrompt = batchSystemPrompt();
     const provider = new OpenAICompatibleProvider({
@@ -215,24 +185,12 @@ async function handleTranslateBatch(
 
     // One provider call for a set of segments → { parsed, raw }.
     const translateOnce = async (segments: string[]) => {
-      const userContent = batchUserPrompt(segments, targetLang);
-      // Pass the batch body as the `text` value through a bare `{{text}}` template.
-      // renderPrompt is single-pass, so any literal {{...}} inside page segments is
-      // preserved verbatim (it lives in the substituted VALUE, not the template, and
-      // is never re-scanned). Putting userContent directly in the template would
-      // re-substitute page-supplied mustaches and silently corrupt the text.
-      const template = {
-        ...activeTemplate,
-        systemPrompt,
-        userPromptTemplate: '{{text}}',
-      };
       let raw = '';
       await withRetry(async () => {
         raw = '';
         for await (const chunk of provider.translate({
-          text: userContent,
-          targetLang,
-          template,
+          systemPrompt,
+          userPrompt: batchUserPrompt(segments, targetLang),
           maxTokens: api.maxTokens,
           stream: false,
           signal: abortCtl.signal,
@@ -243,7 +201,6 @@ async function handleTranslateBatch(
       return { parsed: parseBatchArray(raw, segments.length), raw };
     };
 
-    const cacheKeyId = `fullpage:${activeTemplate.id}`;
     const cacheStore = new CacheStore(client, data.settings.cacheTTLDays);
     const cacheEnabled = data.settings.cacheEnabled;
 
@@ -253,7 +210,7 @@ async function handleTranslateBatch(
         const key = await computeCacheKey({
           text: segment,
           model: api.model,
-          promptTemplateId: cacheKeyId,
+          mode: 'fullpage',
           targetLang,
         });
         return cacheStore.get(key);
@@ -263,7 +220,7 @@ async function handleTranslateBatch(
         const key = await computeCacheKey({
           text: segment,
           model: api.model,
-          promptTemplateId: cacheKeyId,
+          mode: 'fullpage',
           targetLang,
         });
         await cacheStore.set(key, translated);

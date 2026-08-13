@@ -1,4 +1,3 @@
-import { renderPrompt } from '~/core/prompt/render';
 import {
   type TranslateOptions,
   type TranslationChunk,
@@ -22,22 +21,14 @@ export class OpenAICompatibleProvider implements TranslationProvider {
   }
 
   async *translate(opts: TranslateOptions): AsyncIterable<TranslationChunk> {
-    const userContent = renderPrompt(opts.template.userPromptTemplate, {
-      text: opts.text,
-      targetLang: opts.targetLang,
-      sourceLang: opts.sourceLang ?? '',
-      url: opts.context?.url ?? '',
-      title: opts.context?.title ?? '',
-    });
-
     const body = {
       model: this.cfg.model,
       stream: opts.stream,
       ...(opts.temperature !== undefined && { temperature: opts.temperature }),
       ...(opts.maxTokens !== undefined && { max_tokens: opts.maxTokens }),
       messages: [
-        { role: 'system', content: opts.template.systemPrompt },
-        { role: 'user', content: userContent },
+        { role: 'system', content: opts.systemPrompt },
+        { role: 'user', content: opts.userPrompt },
       ],
     };
 

@@ -86,7 +86,6 @@ export function TranslationCard({ text, rect, locale, onClose, notice }: Props) 
         type: 'translate',
         requestId: reqId,
         text,
-        context: { url: location.href, title: document.title },
       })) {
         if (cancelled.current) return;
         if (msg.type === 'translate:chunk') {

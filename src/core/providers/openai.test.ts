@@ -2,14 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { OpenAICompatibleProvider } from './openai';
 import { TranslationProviderError } from './types';
 
-const template = {
-  id: 'p',
-  name: 'p',
-  isBuiltin: true,
+const prompts = {
   systemPrompt: 'You are a translator.',
-  userPromptTemplate: 'Translate to {{targetLang}}: {{text}}',
-  createdAt: 0,
-  updatedAt: 0,
+  userPrompt: 'Translate the following text to zh-CN:\n\nhello',
 };
 
 function makeProvider() {
@@ -40,7 +35,7 @@ describe('OpenAICompatibleProvider (non-streaming)', () => {
     vi.unstubAllGlobals();
   });
 
-  it('sends POST to /chat/completions with bearer auth', async () => {
+  it('sends POST to /chat/completions with bearer auth and verbatim messages', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
       new Response(
         JSON.stringify({ choices: [{ message: { content: '你好' } }] }),
@@ -48,10 +43,7 @@ describe('OpenAICompatibleProvider (non-streaming)', () => {
       ),
     );
     const p = makeProvider();
-    await collect(p.translate({
-      text: 'hello', targetLang: 'zh-CN', template,
-      temperature: 0.3, stream: false,
-    }));
+    await collect(p.translate({ ...prompts, temperature: 0.3, stream: false }));
     const call = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]!;
     expect(call[0]).toBe('https://api.example.com/v1/chat/completions');
     expect(call[1]!.method).toBe('POST');
@@ -60,9 +52,19 @@ describe('OpenAICompatibleProvider (non-streaming)', () => {
     const body = JSON.parse(call[1]!.body) as { model: string; stream: boolean; messages: Array<{ role: string; content: string }> };
     expect(body.model).toBe('test-model');
     expect(body.stream).toBe(false);
-    expect(body.messages[0]!.role).toBe('system');
-    expect(body.messages[1]!.content).toContain('hello');
-    expect(body.messages[1]!.content).toContain('zh-CN');
+    expect(body.messages[0]).toEqual({ role: 'system', content: prompts.systemPrompt });
+    expect(body.messages[1]).toEqual({ role: 'user', content: prompts.userPrompt });
+  });
+
+  it('sends the user prompt untouched, including literal {{...}} sequences', async () => {
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+      new Response(JSON.stringify({ choices: [{ message: { content: 'x' } }] }), { status: 200 }),
+    );
+    const p = makeProvider();
+    const userPrompt = 'Translate: use {{name}} as a placeholder';
+    await collect(p.translate({ systemPrompt: 's', userPrompt, stream: false }));
+    const body = JSON.parse((fetch as ReturnType<typeof vi.fn>).mock.calls[0]![1]!.body) as { messages: Array<{ content: string }> };
+    expect(body.messages[1]!.content).toBe(userPrompt);
   });
 
   it('returns single chunk with full text', async () => {
@@ -73,10 +75,7 @@ describe('OpenAICompatibleProvider (non-streaming)', () => {
       ),
     );
     const p = makeProvider();
-    const result = await collect(p.translate({
-      text: 'hello world', targetLang: 'zh-CN', template,
-      temperature: 0.3, stream: false,
-    }));
+    const result = await collect(p.translate({ ...prompts, temperature: 0.3, stream: false }));
     expect(result.full).toBe('你好世界');
     expect(result.sawDone).toBe(true);
   });
@@ -91,7 +90,7 @@ describe('OpenAICompatibleProvider (non-streaming)', () => {
       model: 'm',
       customHeaders: { 'HTTP-Referer': 'https://browsertranslate.dev' },
     });
-    await collect(p.translate({ text: 't', targetLang: 'en', template, temperature: 0.3, stream: false }));
+    await collect(p.translate({ ...prompts, temperature: 0.3, stream: false }));
     const call = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]!;
     expect(call[1]!.headers['HTTP-Referer']).toBe('https://browsertranslate.dev');
   });
@@ -101,9 +100,8 @@ describe('OpenAICompatibleProvider (non-streaming)', () => {
       new Response(JSON.stringify({ error: { message: 'Invalid API key' } }), { status: 401 }),
     );
     const p = makeProvider();
-    await expect(collect(p.translate({
-      text: 't', targetLang: 'en', template, temperature: 0.3, stream: false,
-    }))).rejects.toBeInstanceOf(TranslationProviderError);
+    await expect(collect(p.translate({ ...prompts, temperature: 0.3, stream: false })))
+      .rejects.toBeInstanceOf(TranslationProviderError);
   });
 
   it('marks 429 as retryable rate-limit', async () => {
@@ -112,7 +110,7 @@ describe('OpenAICompatibleProvider (non-streaming)', () => {
     );
     const p = makeProvider();
     try {
-      await collect(p.translate({ text: 't', targetLang: 'en', template, temperature: 0.3, stream: false }));
+      await collect(p.translate({ ...prompts, temperature: 0.3, stream: false }));
       expect.fail('should have thrown');
     } catch (e) {
       expect(e).toBeInstanceOf(TranslationProviderError);
@@ -129,7 +127,7 @@ describe('OpenAICompatibleProvider (non-streaming)', () => {
       baseUrl: 'https://api.example.com/v1/',  // trailing slash
       apiKey: 'k', model: 'm',
     });
-    await collect(p.translate({ text: 't', targetLang: 'en', template, temperature: 0.3, stream: false }));
+    await collect(p.translate({ ...prompts, temperature: 0.3, stream: false }));
     expect((fetch as ReturnType<typeof vi.fn>).mock.calls[0]![0])
       .toBe('https://api.example.com/v1/chat/completions');
   });
@@ -160,10 +158,7 @@ describe('OpenAICompatibleProvider (streaming)', () => {
       ]),
     );
     const p = makeProvider();
-    const result = await collect(p.translate({
-      text: 'hi', targetLang: 'zh-CN', template,
-      temperature: 0.3, stream: true,
-    }));
+    const result = await collect(p.translate({ ...prompts, temperature: 0.3, stream: true }));
     expect(result.full).toBe('你好世界');
     expect(result.chunks).toBeGreaterThanOrEqual(3);
     expect(result.sawDone).toBe(true);
@@ -177,10 +172,7 @@ describe('OpenAICompatibleProvider (streaming)', () => {
       ]),
     );
     const p = makeProvider();
-    const result = await collect(p.translate({
-      text: 'hi', targetLang: 'en', template,
-      temperature: 0.3, stream: true,
-    }));
+    const result = await collect(p.translate({ ...prompts, temperature: 0.3, stream: true }));
     expect(result.full).toBe('x');
   });
 
@@ -199,10 +191,7 @@ describe('OpenAICompatibleProvider (streaming)', () => {
       new Response(readable, { status: 200, headers: { 'content-type': 'text/event-stream' } }),
     );
     const p = makeProvider();
-    const result = await collect(p.translate({
-      text: 'hi', targetLang: 'en', template,
-      temperature: 0.3, stream: true,
-    }));
+    const result = await collect(p.translate({ ...prompts, temperature: 0.3, stream: true }));
     expect(result.full).toBe('AB');
   });
 
@@ -213,10 +202,7 @@ describe('OpenAICompatibleProvider (streaming)', () => {
       ]),
     );
     const p = makeProvider();
-    const result = await collect(p.translate({
-      text: 'hi', targetLang: 'en', template,
-      temperature: 0.3, stream: true,
-    }));
+    const result = await collect(p.translate({ ...prompts, temperature: 0.3, stream: true }));
     expect(result.sawDone).toBe(true);
   });
 });

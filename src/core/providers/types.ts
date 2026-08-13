@@ -1,15 +1,10 @@
-import type { PromptTemplate } from '~/storage/schema';
-
 export interface TranslateOptions {
-  text: string;
-  sourceLang?: string;             // optional hint; provider may ignore
-  targetLang: string;
-  template: PromptTemplate;
+  systemPrompt: string;
+  userPrompt: string;          // the complete, final user message — sent verbatim
   temperature?: number;        // omit → provider uses its own default
   maxTokens?: number;
   stream: boolean;
   signal?: AbortSignal;
-  context?: { url?: string; title?: string };
 }
 
 export interface TranslationChunk {
