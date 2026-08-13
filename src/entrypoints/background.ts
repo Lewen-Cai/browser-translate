@@ -91,7 +91,7 @@ async function handleTranslate(
     }
     const template = {
       ...activeTemplate,
-      systemPrompt: autoSystemPrompt(activeTemplate.systemPrompt),
+      systemPrompt: autoSystemPrompt(),
     };
 
     const targetLang = msg.targetLang ?? data.settings.targetLanguage;
@@ -198,7 +198,7 @@ async function handleTranslateBatch(
     }
 
     const targetLang = msg.targetLang ?? data.settings.targetLanguage;
-    const systemPrompt = batchSystemPrompt(activeTemplate.systemPrompt);
+    const systemPrompt = batchSystemPrompt();
     const provider = new OpenAICompatibleProvider({
       baseUrl: api.baseUrl,
       apiKey: api.apiKey,

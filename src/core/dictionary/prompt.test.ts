@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { autoSystemPrompt, DICTIONARY_SPEC } from './prompt';
+import { DEFAULT_STYLE_PROMPT } from '~/core/prompt/style';
 
 describe('DICTIONARY_SPEC', () => {
   it('carries the JSON contract parseDictionaryEntry expects', () => {
@@ -10,10 +11,10 @@ describe('DICTIONARY_SPEC', () => {
 });
 
 describe('autoSystemPrompt', () => {
-  it('embeds the dictionary spec and preserves the translation style', () => {
-    const sys = autoSystemPrompt('Be very formal and academic.');
+  it('embeds the dictionary spec and the default translation style', () => {
+    const sys = autoSystemPrompt();
     expect(sys).toContain('headword');
-    expect(sys).toContain('Be very formal and academic.');
+    expect(sys).toContain(DEFAULT_STYLE_PROMPT);
     expect(sys).toContain('TRANSLATION MODE');
     expect(sys).toContain('DICTIONARY MODE');
   });

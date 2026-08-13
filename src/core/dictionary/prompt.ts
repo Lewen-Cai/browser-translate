@@ -18,12 +18,14 @@ export const DICTIONARY_SPEC =
   '- senses: 1 to 3 short definitions in the target language; for a proper noun, a single sense glossing what it refers to.\n' +
   '- example: one natural example sentence (source in the term\'s own language, target translated into the target language), or null.';
 
+import { DEFAULT_STYLE_PROMPT } from '~/core/prompt/style';
+
 /**
  * Build the unified system prompt. The model decides between returning a
  * dictionary JSON object (per DICTIONARY_SPEC) and a plain-text translation that
- * follows the user's selected translation style (`styleSystemPrompt`).
+ * follows the fixed default translation style.
  */
-export function autoSystemPrompt(styleSystemPrompt: string): string {
+export function autoSystemPrompt(): string {
   return (
     'You handle a user text selection and decide, on your own, which of two modes fits.\n\n' +
     'Routing rule: choose DICTIONARY MODE when the selection is a single word, or a short established ' +
@@ -33,7 +35,7 @@ export function autoSystemPrompt(styleSystemPrompt: string): string {
     'DICTIONARY MODE — ' + DICTIONARY_SPEC + '\n\n' +
     'TRANSLATION MODE — output ONLY the translation as plain text: no JSON, no quotes, no labels. ' +
     'Follow these translation style instructions:\n' +
-    styleSystemPrompt + '\n\n' +
+    DEFAULT_STYLE_PROMPT + '\n\n' +
     'Output ONLY the dictionary JSON object OR the plain translation — nothing else.'
   );
 }

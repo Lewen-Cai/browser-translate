@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { batchSystemPrompt, batchUserPrompt } from './prompt';
+import { DEFAULT_STYLE_PROMPT } from '~/core/prompt/style';
 
 describe('batchSystemPrompt', () => {
-  it('embeds the style prompt and forbids dictionary JSON', () => {
-    const sys = batchSystemPrompt('Be formal and precise.');
-    expect(sys).toContain('Be formal and precise.');
+  it('embeds the default style prompt and demands a JSON array', () => {
+    const sys = batchSystemPrompt();
+    expect(sys).toContain(DEFAULT_STYLE_PROMPT);
     expect(sys).toContain('JSON array');
     expect(sys.toLowerCase()).toContain('translation');
   });

@@ -1,9 +1,11 @@
+import { DEFAULT_STYLE_PROMPT } from '~/core/prompt/style';
+
 /**
- * System prompt for full-page batch translation. Embeds the user's active
- * translation-style systemPrompt for tone, but always produces a JSON array of
- * plain-text translations — never a dictionary object.
+ * System prompt for full-page batch translation. Embeds the fixed default
+ * translation style for tone, but always produces a JSON array of plain-text
+ * translations — never a dictionary object.
  */
-export function batchSystemPrompt(styleSystemPrompt: string): string {
+export function batchSystemPrompt(): string {
   return (
     'You are a translation engine for a web page. You receive a numbered list of ' +
     'text segments and translate EACH into the target language.\n' +
@@ -14,7 +16,7 @@ export function batchSystemPrompt(styleSystemPrompt: string): string {
     'numbers in your output. If a segment needs no change, ' +
     'return it as-is. Preserve inline meaning and tone.\n' +
     'Follow these translation style instructions:\n' +
-    styleSystemPrompt
+    DEFAULT_STYLE_PROMPT
   );
 }
 
