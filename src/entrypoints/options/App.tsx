@@ -6,6 +6,7 @@ import { KeyRound, Settings } from '~/ui/icons';
 import { cn } from '~/lib/cn';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
+import { useApplyLocale } from '~/ui/useApplyLocale';
 
 type Tab = 'general' | 'api';
 
@@ -15,6 +16,7 @@ export function App() {
   const [tab, setTab] = useState<Tab>('general');
   const t = useT();
   useApplyTheme();
+  useApplyLocale();
 
   useEffect(() => { void load(); }, [load]);
 

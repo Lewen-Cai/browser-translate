@@ -38,6 +38,7 @@ function setup(lines: SubtitleLines | null, options: {
   position?: SubtitlePosition;
   style?: SubtitleStyle;
   active?: boolean;
+  targetLang?: string;
 } = {}) {
   let current = lines;
   let position = options.position ?? DEFAULT_SUBTITLE_POSITION;
@@ -49,6 +50,7 @@ function setup(lines: SubtitleLines | null, options: {
 
   const ui = createSubtitlesUi({
     getLines: () => current,
+    getTargetLang: () => options.targetLang ?? 'zh-CN',
     strings: STRINGS,
     getPosition: () => position,
     onPositionChange,
@@ -203,15 +205,44 @@ describe('style', () => {
         ...DEFAULT_SUBTITLE_STYLE,
         backgroundOpacity: 50,
         main: { fontScale: 120, color: '#ff0000', fontFamily: 'serif', fontWeight: 700 },
-        translation: { fontScale: 90, color: '#00ff00', fontFamily: 'kai', fontWeight: 300 },
+        translation: { fontScale: 90, color: '#00ff00', fontFamily: 'serif', fontWeight: 300 },
       },
     });
     expect(original()?.style.fontSize).toBe('1.2em');
     expect(original()?.style.fontWeight).toBe('700');
-    expect(original()?.style.fontFamily).toContain('Noto Serif');
+    expect(original()?.style.fontFamily).toContain('Georgia');
     expect(translation()?.style.fontSize).toBe('0.9em');
-    expect(translation()?.style.fontFamily).toContain('KaiTi');
+    expect(translation()?.style.fontFamily).toContain('--bt-cjk-serif');
     expect(plate()?.style.background).toBe('rgba(0, 0, 0, 0.5)');
+  });
+
+  it('declares the target language, which is what picks the CJK fallback', () => {
+    // Han characters are drawn differently in Chinese, Japanese and Korean, and
+    // the stack ends in a generic family the browser resolves from this.
+    const { ui } = setup({ original: 'Hello', translation: '안녕하세요' }, { targetLang: 'ko' });
+    expect(windowEl()?.getAttribute('lang')).toBe('ko');
+    ui.refresh();
+    expect(windowEl()?.getAttribute('lang')).toBe('ko');
+  });
+
+  it('follows a change of target language without a remount', () => {
+    let lang = 'zh-CN';
+    const ui = createSubtitlesUi({
+      getLines: () => ({ original: 'Hello', translation: '你好' }),
+      getTargetLang: () => lang,
+      strings: STRINGS,
+      getPosition: () => DEFAULT_SUBTITLE_POSITION,
+      onPositionChange: vi.fn(),
+      getStyle: () => DEFAULT_SUBTITLE_STYLE,
+      onStyleChange: vi.fn(),
+      isActive: () => true,
+      onActiveChange: vi.fn(),
+    });
+    ui.setActive(true);
+    expect(windowEl()?.getAttribute('lang')).toBe('zh-CN');
+    lang = 'ja';
+    ui.refresh();
+    expect(windowEl()?.getAttribute('lang')).toBe('ja');
   });
 
   it('puts the translation first when it is set to sit above', () => {

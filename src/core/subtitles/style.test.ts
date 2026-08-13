@@ -53,8 +53,15 @@ describe('normalizeSubtitleTextStyle', () => {
   });
 
   it('keeps a known font family', () => {
+    expect(normalizeSubtitleTextStyle({ ...DEFAULT_SUBTITLE_TEXT_STYLE, fontFamily: 'serif' })
+      .fontFamily).toBe('serif');
+  });
+
+  it('falls back when a family this version no longer offers is stored', () => {
+    // 'kai' was an option before v0.1.9; a store that still names it must not
+    // end up asking for a family that no longer exists.
     expect(normalizeSubtitleTextStyle({ ...DEFAULT_SUBTITLE_TEXT_STYLE, fontFamily: 'kai' })
-      .fontFamily).toBe('kai');
+      .fontFamily).toBe('youtube');
   });
 
   it('returns the same object when nothing needed fixing', () => {

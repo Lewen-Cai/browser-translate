@@ -51,6 +51,8 @@ export interface SubtitleUiStrings extends SubtitlePanelStrings {
 export interface SubtitlesUiDeps {
   /** The lines to show right now, or null when no cue is active. */
   getLines: () => SubtitleLines | null;
+  /** The language the translated line is in, so the block can declare it. */
+  getTargetLang: () => string;
   strings: SubtitleUiStrings;
   getPosition: () => SubtitlePosition;
   /** Called once per drag, when the pointer is released. */
@@ -163,6 +165,11 @@ export function createSubtitlesUi(deps: SubtitlesUiDeps): SubtitlesUi {
 
     windowEl = document.createElement('div');
     windowEl.className = 'window';
+    // Declaring the language is what makes the CJK fallback correct: our own
+    // serif stack is chosen from it, and the browser resolves the generic
+    // families from it too, so Japanese gets a Japanese face rather than
+    // whichever Chinese font happened to contain the glyph.
+    windowEl.lang = deps.getTargetLang();
 
     group = document.createElement('div');
     group.className = 'group';
@@ -411,6 +418,8 @@ export function createSubtitlesUi(deps: SubtitlesUiDeps): SubtitlesUi {
       const stored = deps.getPosition();
       if (stored !== position) position = stored;
     }
+    const targetLang = deps.getTargetLang();
+    if (windowEl && windowEl.lang !== targetLang) windowEl.lang = targetLang;
     const style = deps.getStyle();
     applyStyle(style);
     applyLayout();

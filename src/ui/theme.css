@@ -48,8 +48,48 @@
      is the intent: a technical Latin face beside a calligraphic Chinese one.
      Kai fonts are referenced from the system, never bundled: KaiTi ships with
      Windows and STKaiti with macOS, and neither is ours to redistribute. */
-  --ap-font-sans: 'JetBrains Mono', 'LXGW WenKai', KaiTi, 楷体, STKaiti, 华文楷体, ui-monospace, monospace;
-  --ap-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* CJK is never shipped by us: those faces are megabytes each, and the ones
+     that come with an OS are not ours to redistribute. Source Han Serif — the
+     same family Google publishes as Noto Serif CJK, SIL OFL — is named first
+     for the many people who already have it, and every stack ends in the
+     generic `serif`, which the browser resolves per language from the element's
+     lang attribute. So with nothing installed at all, Japanese still gets a
+     mincho and Korean a myeongjo instead of a Chinese face.
+
+     Han characters are shared between these languages but drawn differently in
+     each — 直 and 骨 are not the same shape in Chinese and Japanese — so one
+     stack cannot serve them all, and each language repeats all three
+     properties. It has to: a var() inside a custom property is substituted on
+     the element that DECLARES it, not where it is used, so a --ap-font-sans
+     written once on :root would freeze the Chinese stack into itself and no
+     [lang] override below could ever reach it. Verified with
+     CSS.getPlatformFontsForNode; before this, Japanese rendered in Noto Serif
+     SC.
+
+     The lang attribute is set on <html> for the popup and options, and on
+     #bt-root inside the card's shadow root. subtitlesCss.ts does the same for
+     the on-video subtitles; keep the stacks in sync. */
+  --ap-font-cjk: 'Source Han Serif SC', 'Noto Serif CJK SC', 'Noto Serif SC', serif;
+  --ap-font-sans: 'JetBrains Mono', var(--ap-font-cjk);
+  /* Section labels go through the mono token and are translated, so it needs
+     the CJK tail too. */
+  --ap-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, var(--ap-font-cjk);
+}
+
+[lang='zh-TW'] {
+  --ap-font-cjk: 'Source Han Serif TC', 'Noto Serif CJK TC', 'Noto Serif TC', serif;
+  --ap-font-sans: 'JetBrains Mono', var(--ap-font-cjk);
+  --ap-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, var(--ap-font-cjk);
+}
+[lang='ja'] {
+  --ap-font-cjk: 'Source Han Serif', 'Noto Serif CJK JP', 'Noto Serif JP', serif;
+  --ap-font-sans: 'JetBrains Mono', var(--ap-font-cjk);
+  --ap-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, var(--ap-font-cjk);
+}
+[lang='ko'] {
+  --ap-font-cjk: 'Source Han Serif K', 'Noto Serif CJK KR', 'Noto Serif KR', serif;
+  --ap-font-sans: 'JetBrains Mono', var(--ap-font-cjk);
+  --ap-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, var(--ap-font-cjk);
 }
 
 .dark {

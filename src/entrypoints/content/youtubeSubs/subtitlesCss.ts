@@ -18,8 +18,26 @@ export const SUBTITLES_CSS = `
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+  /* Han characters are shared between these languages but drawn differently in
+     each, so the serif stack follows the language of the text rather than
+     trying to serve all three. The block carries the target language in its
+     lang attribute; the generic 'serif' at the end is resolved per language by
+     the browser from that same attribute, so a reader with none of these
+     installed still gets a mincho for Japanese rather than a Chinese face.
+     Keep in sync with theme.css, which does the same for the extension's UI. */
+  --bt-cjk-serif: 'Source Han Serif SC', 'Noto Serif CJK SC', 'Noto Serif SC', serif;
   font-family: "YouTube Noto", Roboto, "Arial Unicode Ms", Arial, Helvetica, Verdana,
-    "PT Sans Caption", "PingFang SC", "Microsoft YaHei", sans-serif;
+    "PT Sans Caption", sans-serif;
+}
+
+.window[lang='zh-TW'] {
+  --bt-cjk-serif: 'Source Han Serif TC', 'Noto Serif CJK TC', 'Noto Serif TC', serif;
+}
+.window[lang='ja'] {
+  --bt-cjk-serif: 'Source Han Serif', 'Noto Serif CJK JP', 'Noto Serif JP', serif;
+}
+.window[lang='ko'] {
+  --bt-cjk-serif: 'Source Han Serif K', 'Noto Serif CJK KR', 'Noto Serif KR', serif;
 }
 
 .group {

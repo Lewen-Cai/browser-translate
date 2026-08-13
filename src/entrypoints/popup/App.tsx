@@ -9,6 +9,7 @@ import { Button } from '~/ui/components/Button';
 import { Settings, Eye, EyeOff } from '~/ui/icons';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
+import { useApplyLocale } from '~/ui/useApplyLocale';
 import {
   CLOUD_PRESETS,
   supportsThinkingToggle,
@@ -54,6 +55,7 @@ export function App() {
   const updateSettings = useAppStore((s) => s.updateSettings);
   const t = useT();
   useApplyTheme();
+  useApplyLocale();
 
   const [showKey, setShowKey] = useState(false);
   const [draft, setDraft] = useState<ApiSettings>(api);

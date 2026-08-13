@@ -124,6 +124,7 @@ export default defineContentScript({
       const data = await client.loadAppData();
       themeSetting = data.settings.theme;
       locale = resolveLocale(data.settings.uiLanguage, navigator.language);
+      mount.setLang(locale);
       targetLanguage = data.settings.targetLanguage;
       subtitlePosition = data.settings.subtitlePosition;
       subtitleStyle = data.settings.subtitleStyle;

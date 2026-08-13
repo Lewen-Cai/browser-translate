@@ -17,22 +17,25 @@ export type SubtitleTranslationPosition = (typeof SUBTITLE_TRANSLATION_POSITIONS
 /**
  * Font choices are stacks of font names. Nothing is bundled and nothing is
  * fetched — naming a family asks for whatever is already there, which is why
- * this costs nothing and carries no licence: the OS-shipped CJK faces and
- * YouTube's own webfont are referenced, never copied.
+ * this costs nothing and carries no licence.
+ *
+ * Every stack ends in a generic family rather than in named CJK faces. The
+ * subtitle block carries the target language in its `lang` attribute, and the
+ * browser resolves `serif` and `sans-serif` per language from it — so Japanese
+ * gets a Japanese face and Korean a Korean one, instead of whichever Chinese
+ * font happened to be listed first and to contain the glyph.
  *
  * `youtube` is YouTube's caption stack verbatim, so our lines match the
  * player's. Its "YouTube Noto" is a webfont YouTube itself serves, and a
- * @font-face declared by the page does reach into a shadow root — so the name
- * resolves for us on a watch page and falls through to Roboto anywhere it
- * doesn't. The CJK faces are appended because the stack has none of its own and
- * fallback is per character.
+ * @font-face declared by the page does reach into a shadow root, so the name
+ * resolves on a watch page and falls through to Roboto anywhere it doesn't.
+ * `serif` defers to a per-language custom property; see subtitlesCss.ts.
  */
 export const SUBTITLE_FONT_FAMILIES = {
   youtube: '"YouTube Noto", Roboto, "Arial Unicode Ms", Arial, Helvetica, Verdana,'
-    + ' "PT Sans Caption", "PingFang SC", "Microsoft YaHei", sans-serif',
-  sans: '"Noto Sans", "Noto Sans SC", "Noto Sans JP", "Noto Sans KR", sans-serif',
-  serif: '"Noto Serif", Georgia, "Songti SC", SimSun, "Hiragino Mincho ProN", serif',
-  kai: '"LXGW WenKai", KaiTi, 楷体, STKaiti, 华文楷体, serif',
+    + ' "PT Sans Caption", sans-serif',
+  sans: '"Noto Sans", sans-serif',
+  serif: 'Georgia, var(--bt-cjk-serif)',
 } as const;
 
 export type SubtitleFontFamily = keyof typeof SUBTITLE_FONT_FAMILIES;

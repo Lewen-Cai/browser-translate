@@ -8,6 +8,7 @@ export interface MountedShadow {
   unmount: () => void;
   render: (node: ComponentChild) => void;
   setDark: (isDark: boolean) => void;
+  setLang: (lang: string) => void;
 }
 
 export function createShadowMount(): MountedShadow {
@@ -40,5 +41,9 @@ export function createShadowMount(): MountedShadow {
     // The shadow root has its own copy of the stylesheet, so the dark palette
     // has to be switched on inside it rather than inherited from <html>.
     setDark: (isDark: boolean) => container.classList.toggle('dark', isDark),
+    // The CJK font stack is chosen from this, and the browser reads it to decide
+    // what the generic families mean. Set inside the shadow root for the same
+    // reason as the palette: <html lang> does not reach in here.
+    setLang: (lang: string) => container.setAttribute('lang', lang),
   };
 }

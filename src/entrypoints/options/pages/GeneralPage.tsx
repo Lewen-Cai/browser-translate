@@ -48,8 +48,7 @@ const UI_LANGUAGES: { value: Exclude<GlobalSettings['uiLanguage'], 'auto'>; labe
 const SUBTITLE_FONT_LABELS: Record<SubtitleFontFamily, string> = {
   youtube: 'YouTube',
   sans: 'Noto Sans',
-  serif: 'Noto Serif',
-  kai: '楷体 Kai',
+  serif: 'Source Han Serif',
 };
 
 function TextStyleFields({ label, value, onChange }: {

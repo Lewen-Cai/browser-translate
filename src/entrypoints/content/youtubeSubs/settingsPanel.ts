@@ -68,8 +68,7 @@ export interface SettingsPanel {
 const FONT_LABELS: Record<SubtitleFontFamily, string> = {
   youtube: 'YouTube',
   sans: 'Noto Sans',
-  serif: 'Noto Serif',
-  kai: '楷体 Kai',
+  serif: 'Source Han Serif',
 };
 
 function svgSpan(className: string, markup: string): HTMLElement {

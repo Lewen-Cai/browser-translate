@@ -88,6 +88,7 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     if (ui) return ui;
     ui = createSubtitlesUi({
       getLines,
+      getTargetLang: deps.getTargetLang,
       strings: deps.strings,
       getPosition: deps.getPosition,
       onPositionChange: deps.setPosition,
