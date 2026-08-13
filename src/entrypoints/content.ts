@@ -12,6 +12,12 @@ import { resolveThemeDefinition } from '~/core/theme/themes';
 import type { ThemeDefinition } from '~/storage/schema';
 import { isLikelyPassage } from '~/core/selection/isLikelyPassage';
 import { isSameLanguageAsTarget } from '~/core/language/sameLanguage';
+import {
+  DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
+  DEFAULT_SUBTITLE_FONT_SCALE,
+  DEFAULT_SUBTITLE_OFFSET_PCT,
+} from '~/core/subtitles/layout';
+import type { SubtitleAppearance } from './content/youtubeSubs/subtitleOverlay';
 import { reportSystemDark } from '~/messaging/client';
 import { resolveLocale, t } from '~/i18n';
 import type { Locale } from '~/i18n/strings';
@@ -41,6 +47,12 @@ export default defineContentScript({
     let hotkey: HotkeyWatcher | null = null;
     let pageTranslator: PageTranslator | null = null;
     let targetLanguage = 'zh-CN';
+    let subtitleOffsetPct = DEFAULT_SUBTITLE_OFFSET_PCT;
+    let subtitleAppearance: SubtitleAppearance = {
+      fontScale: DEFAULT_SUBTITLE_FONT_SCALE,
+      backgroundOpacity: DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
+      translationOnly: false,
+    };
     let fullPageHotkey: HotkeyWatcher | null = null;
     let ytSubs: YouTubeSubTranslator | null = null;
     let ytNavHandler: (() => void) | null = null;
@@ -92,6 +104,12 @@ export default defineContentScript({
       themeDefinition = resolveThemeDefinition(data.settings.themeId, data.settings.customThemes ?? []);
       locale = resolveLocale(data.settings.uiLanguage, navigator.language);
       targetLanguage = data.settings.targetLanguage;
+      subtitleOffsetPct = data.settings.subtitleOffsetPct;
+      subtitleAppearance = {
+        fontScale: data.settings.subtitleFontScale,
+        backgroundOpacity: data.settings.subtitleBackgroundOpacity,
+        translationOnly: data.settings.subtitleTranslationOnly,
+      };
       applyTheme();
 
       if (data.settings.triggerMode === 'icon') {
@@ -145,6 +163,12 @@ export default defineContentScript({
           concurrency: data.settings.engine !== 'llm' ? 6
             : data.api.providerType === 'cloud' ? 4
             : 2,
+          getSubtitleOffsetPct: () => subtitleOffsetPct,
+          setSubtitleOffsetPct: (pct) => {
+            subtitleOffsetPct = pct;
+            void client.patchSettings({ subtitleOffsetPct: pct });
+          },
+          getAppearance: () => subtitleAppearance,
           strings: {
             titleOff: t('ytSubsButtonTitle', locale),
             titleOn: t('ytSubsButtonTitleOn', locale),
@@ -154,7 +178,7 @@ export default defineContentScript({
             live: t('ytSubsLive', locale),
             failed: t('ytSubsFailed', locale),
             translating: t('ytSubsTranslating', locale),
-            autoOnly: t('ytSubsAutoOnly', locale),
+            dragHint: t('ytSubsDragHint', locale),
           },
           notify: (msg) => console.info('[BrowserTranslate]', msg),
         });

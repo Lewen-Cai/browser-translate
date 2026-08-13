@@ -101,5 +101,10 @@ export const zhCN: Record<StringKey, string> = {
   ytSubsLive: '不支持直播',
   ytSubsFailed: '字幕翻译失败',
   ytSubsTranslating: '翻译中…',
-  ytSubsAutoOnly: '不支持自动生成的字幕',
+  ytSubsDragHint: '拖动可移动字幕',
+  sectionSubtitles: 'YouTube 字幕',
+  subtitleFontScale: '字幕大小',
+  subtitleBackgroundOpacity: '背景不透明度',
+  subtitleTranslationOnly: '只显示译文',
+  subtitleTranslationOnlyDesc: '隐藏原文行，只显示译文。',
 };

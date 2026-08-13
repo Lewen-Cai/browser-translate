@@ -3,6 +3,14 @@ import type { ProviderConfig, ProviderSlot } from './schema';
 import { inferCloudProvider, isCloudProvider } from '~/core/providers/presets';
 import { activeSlot } from '~/core/providers/providerSlots';
 import { DEFAULT_THEME_ID, isBuiltInThemeId, isValidThemeDefinition } from '~/core/theme/themes';
+import {
+  DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
+  DEFAULT_SUBTITLE_FONT_SCALE,
+  DEFAULT_SUBTITLE_OFFSET_PCT,
+  clampSubtitleBackgroundOpacity,
+  clampSubtitleFontScale,
+  clampSubtitleOffset,
+} from '~/core/subtitles/layout';
 
 /**
  * Integrity repairs applied to AppData on every load.
@@ -59,6 +67,18 @@ function fillSettingsDefaults(data: AppData): AppData {
     : data.api.baseUrl && data.api.model
       ? 'llm'
       : 'microsoft';
+  const subtitleOffsetPct = typeof s.subtitleOffsetPct === 'number'
+    ? clampSubtitleOffset(s.subtitleOffsetPct)
+    : DEFAULT_SUBTITLE_OFFSET_PCT;
+  const subtitleFontScale = clampSubtitleFontScale(
+    typeof s.subtitleFontScale === 'number' ? s.subtitleFontScale : DEFAULT_SUBTITLE_FONT_SCALE,
+  );
+  const subtitleBackgroundOpacity = clampSubtitleBackgroundOpacity(
+    typeof s.subtitleBackgroundOpacity === 'number'
+      ? s.subtitleBackgroundOpacity
+      : DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
+  );
+  const subtitleTranslationOnly = s.subtitleTranslationOnly === true;
   const rawCustom = Array.isArray(s.customThemes) ? s.customThemes : [];
   const customThemes = rawCustom.filter(isValidThemeDefinition);
   const themeIdCandidate = typeof s.themeId === 'string' ? s.themeId : DEFAULT_THEME_ID;
@@ -71,11 +91,21 @@ function fillSettingsDefaults(data: AppData): AppData {
     fullPageHotkey === s.fullPageHotkey &&
     themeId === s.themeId &&
     engine === s.engine &&
+    subtitleOffsetPct === s.subtitleOffsetPct &&
+    subtitleFontScale === s.subtitleFontScale &&
+    subtitleBackgroundOpacity === s.subtitleBackgroundOpacity &&
+    subtitleTranslationOnly === s.subtitleTranslationOnly &&
     customThemes.length === rawCustom.length &&
     s.customThemes === rawCustom;
   if (unchanged) return data;
 
-  return { ...data, settings: { ...s, engine, fullPageHotkey, themeId, customThemes } };
+  return {
+    ...data,
+    settings: {
+      ...s, engine, fullPageHotkey, themeId, customThemes,
+      subtitleOffsetPct, subtitleFontScale, subtitleBackgroundOpacity, subtitleTranslationOnly,
+    },
+  };
 }
 
 function fillApiProviderDefaults(data: AppData): AppData {

@@ -2,7 +2,11 @@ import { requestCaptionTracks } from './requestCaptionTracks';
 import { fetchTranscript, pickTrack } from './fetchTranscript';
 import { fetchTranscriptText } from './transcriptBridge';
 import { createCueTranslator } from './translateCues';
-import { createCaptionInjector } from './injectTranslation';
+import {
+  createSubtitleOverlay,
+  type SubtitleAppearance,
+  type SubtitleLines,
+} from './subtitleOverlay';
 import { mountSubsButton, removeSubsButton, type SubsButtonHandle } from './button';
 import type { CaptionsResponse } from './bridgeProtocol';
 import { activeCue } from '~/core/subtitles/activeCue';
@@ -14,13 +18,8 @@ export interface YouTubeSubsStrings {
   titleOff: string; titleOn: string; noCaptions: string;
   enableCc: string; noTranslationNeeded: string; live: string; failed: string;
   translating: string;
-  /** Video has only auto-generated (asr) captions, which we don't translate. */
-  autoOnly: string;
-}
-
-/** Normalize caption text for matching the on-screen line to a cue. */
-function normalizeText(s: string): string {
-  return s.replace(/\s+/g, ' ').trim().toLowerCase();
+  /** Tooltip on the subtitle drag handle. */
+  dragHint: string;
 }
 
 export interface YouTubeSubTranslatorDeps {
@@ -28,6 +27,11 @@ export interface YouTubeSubTranslatorDeps {
   strings: YouTubeSubsStrings;
   notify: (msg: string) => void;
   concurrency: number;
+  /** Vertical position of the subtitle block, persisted across videos. */
+  getSubtitleOffsetPct: () => number;
+  setSubtitleOffsetPct: (pct: number) => void;
+  /** Read live so a settings change reaches an already-playing video. */
+  getAppearance: () => SubtitleAppearance;
 }
 
 export interface YouTubeSubTranslator {
@@ -48,10 +52,10 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
   let on = false;
   let button: SubsButtonHandle | null = null;
   let translator: ReturnType<typeof createCueTranslator> | null = null;
-  let injector: ReturnType<typeof createCaptionInjector> | null = null;
+  let overlay: ReturnType<typeof createSubtitleOverlay> | null = null;
   let cues: Cue[] = [];
-  let textToId = new Map<string, number>();
   let rafId = 0;
+  let pumpTarget: HTMLVideoElement | null = null;
   let enabledVideoId = '';
   // Caption tracks probed up front in attachButton(); reused by enable() so we don't
   // round-trip the MAIN-world bridge twice. Null if the probe hasn't run / failed.
@@ -65,16 +69,17 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     return Math.round((videoEl()?.currentTime ?? 0) * 1000);
   }
 
-  // Resolve the translation for the on-screen native text. Stable closure so the
-  // injector (created early, before cues exist) always sees the latest state.
-  function getTranslation(nativeText: string): string | undefined {
-    const byText = textToId.get(normalizeText(nativeText));
-    if (byText !== undefined) {
-      const t = translator?.get(byText);
-      if (t) return t;
-    }
-    const c = activeCue(currentTimeMs(), cues);
-    return c ? translator?.get(c.id) : undefined;
+  // The lines to draw right now, straight from the transcript's own timing.
+  // Stable closure so the overlay (created before the cues are fetched) always
+  // sees the latest state.
+  function getLines(): SubtitleLines | null {
+    const cue = activeCue(currentTimeMs(), cues);
+    if (!cue) return null;
+    return {
+      original: cue.text,
+      translation: translator?.get(cue.id) ?? null,
+      failed: translator?.isFailed(cue.id) ?? false,
+    };
   }
 
   function tick(): void {
@@ -84,7 +89,7 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
       disable();
       return;
     }
-    injector?.refresh();
+    overlay?.refresh();
     rafId = requestAnimationFrame(tick);
   }
 
@@ -94,10 +99,19 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     enabledVideoId = currentVideoId();
     button?.setActive(true);
 
-    // Start the overlay immediately: while we fetch + translate, getTranslation
-    // returns undefined, so the injector shows the "translating…" placeholder.
-    injector = createCaptionInjector({ placeholder: deps.strings.translating, getTranslation });
-    injector.start();
+    // Start the overlay immediately. Until the transcript arrives getLines()
+    // returns null, and once it does the original shows straight away with the
+    // "translating…" placeholder beneath it — the subtitle is never blank while
+    // a translation is in flight.
+    overlay = createSubtitleOverlay({
+      placeholder: deps.strings.translating,
+      dragHint: deps.strings.dragHint,
+      getLines,
+      getOffsetPct: deps.getSubtitleOffsetPct,
+      onOffsetChange: deps.setSubtitleOffsetPct,
+      getAppearance: deps.getAppearance,
+    });
+    overlay.start();
     rafId = requestAnimationFrame(tick);
 
     let captions = probed;
@@ -115,8 +129,7 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     if (captions.isLive) { deps.notify(deps.strings.live); disable(); return; }
     const track = pickTrack(captions.tracks, trackPref(captions));
     if (!track) {
-      // tracks present but all asr → distinct message; no tracks at all → enable CC.
-      deps.notify(captions.tracks.length > 0 ? deps.strings.autoOnly : deps.strings.noCaptions);
+      deps.notify(deps.strings.noCaptions);
       disable();
       return;
     }
@@ -136,17 +149,37 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     if (!on) return; // user toggled off during the await
     if (fetched.length === 0) { deps.notify(deps.strings.noCaptions); disable(); return; }
     cues = fetched;
-    textToId = new Map(cues.map((c) => [normalizeText(c.text), c.id]));
 
     translator = createCueTranslator({
       translateBatchFn: (req) => translateBatch(req as TranslateBatchRequest),
       abortFn: abortTranslate,
       getTargetLang: deps.getTargetLang,
       getCurrentTimeMs: currentTimeMs,
-      onUpdate: () => injector?.refresh(),
+      getPlaybackRate: () => videoEl()?.playbackRate ?? 1,
+      onUpdate: () => overlay?.refresh(),
       concurrency: deps.concurrency,
     });
-    void translator.run(cues).catch(() => deps.notify(deps.strings.failed));
+    translator.start(cues);
+
+    // Translation follows the playhead rather than draining the track, so it has
+    // to be nudged as the video moves. timeupdate fires a few times a second,
+    // which is plenty to keep the look-ahead window filled.
+    pumpTarget = videoEl();
+    pumpTarget?.addEventListener('timeupdate', pump);
+    pumpTarget?.addEventListener('seeked', pump);
+    pumpTarget?.addEventListener('ratechange', pump);
+    pump();
+  }
+
+  function pump(): void {
+    translator?.pump();
+  }
+
+  function detachPump(): void {
+    pumpTarget?.removeEventListener('timeupdate', pump);
+    pumpTarget?.removeEventListener('seeked', pump);
+    pumpTarget?.removeEventListener('ratechange', pump);
+    pumpTarget = null;
   }
 
   function disable(): void {
@@ -154,12 +187,12 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     on = false;
     button?.setActive(false);
     cancelAnimationFrame(rafId);
+    detachPump();
     translator?.teardown();
-    injector?.teardown();
+    overlay?.teardown();
     translator = null;
-    injector = null;
+    overlay = null;
     cues = [];
-    textToId = new Map();
   }
 
   async function attachButton(): Promise<void> {

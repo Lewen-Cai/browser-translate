@@ -101,7 +101,12 @@ export const en = {
   ytSubsLive: 'Live streams are not supported',
   ytSubsFailed: 'Subtitle translation failed',
   ytSubsTranslating: 'Translating…',
-  ytSubsAutoOnly: 'Auto-generated captions are not supported',
+  ytSubsDragHint: 'Drag to move the subtitles',
+  sectionSubtitles: 'YouTube subtitles',
+  subtitleFontScale: 'Subtitle size',
+  subtitleBackgroundOpacity: 'Background opacity',
+  subtitleTranslationOnly: 'Translation only',
+  subtitleTranslationOnlyDesc: 'Hide the original line and show only the translation.',
 } as const;
 
 export type StringKey = keyof typeof en;

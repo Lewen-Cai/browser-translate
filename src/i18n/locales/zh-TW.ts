@@ -101,5 +101,10 @@ export const zhTW: Record<StringKey, string> = {
   ytSubsLive: '不支援直播',
   ytSubsFailed: '字幕翻譯失敗',
   ytSubsTranslating: '翻譯中…',
-  ytSubsAutoOnly: '不支援自動生成的字幕',
+  ytSubsDragHint: '拖曳可移動字幕',
+  sectionSubtitles: 'YouTube 字幕',
+  subtitleFontScale: '字幕大小',
+  subtitleBackgroundOpacity: '背景不透明度',
+  subtitleTranslationOnly: '只顯示譯文',
+  subtitleTranslationOnlyDesc: '隱藏原文行，只顯示譯文。',
 };

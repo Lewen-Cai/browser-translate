@@ -101,5 +101,10 @@ export const ko: Record<StringKey, string> = {
   ytSubsLive: '라이브 스트림은 지원되지 않습니다',
   ytSubsFailed: '자막 번역 실패',
   ytSubsTranslating: '번역 중…',
-  ytSubsAutoOnly: '자동 생성된 자막은 지원되지 않습니다',
+  ytSubsDragHint: '드래그하여 자막 이동',
+  sectionSubtitles: 'YouTube 자막',
+  subtitleFontScale: '자막 크기',
+  subtitleBackgroundOpacity: '배경 불투명도',
+  subtitleTranslationOnly: '번역문만',
+  subtitleTranslationOnlyDesc: '원문 줄을 숨기고 번역문만 표시합니다.',
 };

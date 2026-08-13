@@ -1,6 +1,6 @@
 import { createDefaultAppData } from './defaults';
 import { migrateAppData } from './migrations';
-import type { AppData, CacheEntry, CacheMeta } from './schema';
+import type { AppData, CacheEntry, CacheMeta, GlobalSettings } from './schema';
 
 const KEY_APP = 'app:data';
 const KEY_CACHE_INDEX = 'cache:index';
@@ -26,6 +26,16 @@ export class StorageClient {
 
   async saveAppData(data: AppData): Promise<void> {
     await this.local.set({ [KEY_APP]: data });
+  }
+
+  /**
+   * Merge a settings patch into stored data. Re-reads first, so a write from a
+   * content script (which holds no store) can't clobber a setting changed in
+   * the popup since that script last loaded.
+   */
+  async patchSettings(patch: Partial<GlobalSettings>): Promise<void> {
+    const data = await this.loadAppData();
+    await this.saveAppData({ ...data, settings: { ...data.settings, ...patch } });
   }
 
   async loadCacheIndex(): Promise<CacheMeta[]> {

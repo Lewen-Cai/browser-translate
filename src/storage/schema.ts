@@ -74,6 +74,15 @@ export interface GlobalSettings {
   fullPageHotkey: string;
   cacheEnabled: boolean;
   cacheTTLDays: number;
+  /** Where the YouTube subtitle block sits, as a fraction of player height above
+   *  the bottom edge. Stored as a fraction so it survives resizing and fullscreen. */
+  subtitleOffsetPct: number;
+  /** Text size as a percentage of the size derived from the player (50–200). */
+  subtitleFontScale: number;
+  /** Opacity of the plate behind the subtitle text (0–100). */
+  subtitleBackgroundOpacity: number;
+  /** Show only the translation, dropping the source line. */
+  subtitleTranslationOnly: boolean;
   theme: 'light' | 'dark' | 'auto';
   themeId: string;                 // built-in id or a customThemes entry id
   customThemes: ThemeDefinition[]; // user-uploaded, deletable

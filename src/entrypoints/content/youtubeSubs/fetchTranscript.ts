@@ -8,28 +8,28 @@ export interface TrackPreference {
 }
 
 /**
- * Choose the source caption track to translate. We only ever translate MANUAL
- * (creator-uploaded) tracks — auto-generated (`asr`) tracks are excluded because
- * YouTube renders them in a rolling style that covers our injected translation line
- * (so bilingual can't show). Priority, among manual tracks only:
- *  1. The track the user currently has displayed (matched by vssId, then language).
- *  2. The original spoken language — inferred from the `asr` track's languageCode
- *     (used purely as a hint; the asr track itself is never returned).
- *  3. The first manual track as a last resort.
- * Returns null when there is no manual track (e.g. an ASR-only video) — the caller
- * then hides the button / skips translation.
+ * Choose the source caption track to translate. Manual (creator-uploaded)
+ * tracks are preferred because their wording and timing are better, but an
+ * auto-generated (`asr`) track is used when that is all the video has — we draw
+ * the subtitles ourselves now, so the rolling render that used to make ASR
+ * unusable no longer matters. Priority:
+ *  1. The track the viewer currently has displayed (matched by vssId, then language).
+ *  2. The original spoken language — inferred from the `asr` track's languageCode.
+ *  3. The first manual track, else the ASR track.
+ * Returns null only when the video has no caption track at all.
  */
 export function pickTrack(tracks: CaptionTrack[], pref: TrackPreference = {}): CaptionTrack | null {
+  if (tracks.length === 0) return null;
   const manual = tracks.filter((t) => t.kind !== 'asr');
-  if (manual.length === 0) return null;
   const { activeVssId, activeLanguageCode } = pref;
 
   if (activeVssId) {
-    const byVss = manual.find((t) => t.vssId === activeVssId);
+    const byVss = tracks.find((t) => t.vssId === activeVssId);
     if (byVss) return byVss;
   }
   if (activeLanguageCode) {
-    const inLang = manual.find((t) => t.languageCode === activeLanguageCode);
+    const inLang = manual.find((t) => t.languageCode === activeLanguageCode)
+      ?? tracks.find((t) => t.languageCode === activeLanguageCode);
     if (inLang) return inLang;
   }
   const asr = tracks.find((t) => t.kind === 'asr');
@@ -37,7 +37,7 @@ export function pickTrack(tracks: CaptionTrack[], pref: TrackPreference = {}): C
     const orig = manual.find((t) => t.languageCode === asr.languageCode);
     if (orig) return orig;
   }
-  return manual[0]!;
+  return manual[0] ?? tracks[0]!;
 }
 
 /**

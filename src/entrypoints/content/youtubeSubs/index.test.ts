@@ -25,7 +25,7 @@ import { translateBatch } from '~/messaging/client';
 
 const STRINGS: YouTubeSubsStrings = {
   titleOff: 'off', titleOn: 'on', noCaptions: 'nc', enableCc: 'cc',
-  noTranslationNeeded: 'nt', live: 'lv', failed: 'fail', translating: 'tr', autoOnly: 'auto',
+  noTranslationNeeded: 'nt', live: 'lv', failed: 'fail', translating: 'tr', dragHint: 'drag',
 };
 
 function make(overrides: { notify?: (m: string) => void } = {}) {
@@ -34,6 +34,9 @@ function make(overrides: { notify?: (m: string) => void } = {}) {
     strings: STRINGS,
     notify: overrides.notify ?? vi.fn(),
     concurrency: 1,
+    getSubtitleOffsetPct: () => 0.11,
+    setSubtitleOffsetPct: vi.fn(),
+    getAppearance: () => ({ fontScale: 100, backgroundOpacity: 78, translationOnly: false }),
   });
 }
 
@@ -41,6 +44,8 @@ const asrOnly = {
   source: 'bt-yt-captions-response', isLive: false,
   tracks: [{ baseUrl: 'u', languageCode: 'en', kind: 'asr' }],
 };
+
+const noTracks = { source: 'bt-yt-captions-response', isLive: false, tracks: [] };
 
 /** Let queued microtasks (the chained awaits inside enable) settle. */
 async function flush() {
@@ -50,9 +55,11 @@ async function flush() {
 beforeEach(() => {
   vi.clearAllMocks();
   document.body.innerHTML =
+    '<div id="movie_player">' +
     '<div class="ytp-right-controls"></div>' +
     '<video></video>' +
-    '<div class="ytp-caption-window-container"><span class="ytp-caption-segment">Hello</span></div>';
+    '<div class="ytp-caption-window-container"><span class="ytp-caption-segment">Hello</span></div>' +
+    '</div>';
   vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0 as unknown as number);
   vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
 });
@@ -66,23 +73,25 @@ describe('createYouTubeSubTranslator', () => {
     btn!.click();
     await flush();
     expect(t.isOn()).toBe(true);
-    expect(document.querySelector('.bt-yt-translation')?.textContent).toBe('译:Hello');
+    // Both lines are ours: the transcript's own text on top, translation below.
+    expect(document.querySelector('.bt-yt-line-original')?.textContent).toBe('Hello');
+    expect(document.querySelector('.bt-yt-line-translation')?.textContent).toBe('译:Hello');
     t.disable();
     expect(t.isOn()).toBe(false);
-    expect(document.querySelector('.bt-yt-translation')).toBeNull();
+    expect(document.querySelector('.bt-yt-subs')).toBeNull();
   });
 
-  it('does NOT mount the button when the video only has asr captions', async () => {
+  it('mounts the button on a video that only has auto-generated captions', async () => {
     vi.mocked(requestCaptionTracks).mockResolvedValueOnce(asrOnly as never);
     const t = make();
     await t.attachButton();
-    expect(document.querySelector('.bt-yt-subs-button')).toBeNull();
+    expect(document.querySelector('.bt-yt-subs-button')).not.toBeNull();
   });
 
-  it('removes a stale button left over from a previous (manual) video when the new one is asr-only', async () => {
+  it('removes a stale button left over from a previous video when the new one has no captions', async () => {
     document.querySelector('.ytp-right-controls')!.innerHTML =
       '<button class="ytp-button bt-yt-subs-button"></button>';
-    vi.mocked(requestCaptionTracks).mockResolvedValueOnce(asrOnly as never);
+    vi.mocked(requestCaptionTracks).mockResolvedValueOnce(noTracks as never);
     const t = make();
     await t.attachButton();
     expect(document.querySelector('.bt-yt-subs-button')).toBeNull();
@@ -106,16 +115,16 @@ describe('createYouTubeSubTranslator', () => {
     t.disable(); // tear down the injector observer so it doesn't leak into later tests
   });
 
-  it('notifies autoOnly when a fallback-mounted button is clicked on an asr-only video', async () => {
+  it('reports no captions when a fallback-mounted button is clicked on a video without any', async () => {
     vi.mocked(requestCaptionTracks)
       .mockRejectedValueOnce(new Error('bridge timeout')) // probe fails → button mounts
-      .mockResolvedValueOnce(asrOnly as never); // enable re-fetch → asr-only
+      .mockResolvedValueOnce(noTracks as never); // enable re-fetch → nothing to translate
     const notify = vi.fn();
     const t = make({ notify });
     await t.attachButton();
     document.querySelector<HTMLButtonElement>('.bt-yt-subs-button')!.click();
     await flush();
-    expect(notify).toHaveBeenCalledWith('auto');
+    expect(notify).toHaveBeenCalledWith('nc');
     expect(t.isOn()).toBe(false);
   });
 

@@ -1,3 +1,4 @@
+import { isScrollingAsr, parseScrollingAsr } from './parseAsr';
 import type { Cue } from './types';
 
 interface Json3Seg { utf8?: string }
@@ -12,6 +13,10 @@ export function parseJson3(raw: string): Cue[] {
   }
   const events = (parsed as { events?: unknown }).events;
   if (!Array.isArray(events)) return [];
+
+  // Auto-generated tracks arrive word by word and need regrouping into
+  // sentences before they are worth translating.
+  if (isScrollingAsr(events)) return parseScrollingAsr(events);
 
   const cues: Cue[] = [];
   for (const ev of events as Json3Event[]) {

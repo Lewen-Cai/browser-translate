@@ -101,5 +101,10 @@ export const ja: Record<StringKey, string> = {
   ytSubsLive: 'ライブ配信は非対応です',
   ytSubsFailed: '字幕の翻訳に失敗しました',
   ytSubsTranslating: '翻訳中…',
-  ytSubsAutoOnly: '自動生成の字幕は非対応です',
+  ytSubsDragHint: 'ドラッグで字幕を移動',
+  sectionSubtitles: 'YouTube 字幕',
+  subtitleFontScale: '字幕のサイズ',
+  subtitleBackgroundOpacity: '背景の不透明度',
+  subtitleTranslationOnly: '訳文のみ',
+  subtitleTranslationOnlyDesc: '原文の行を隠し、訳文だけを表示します。',
 };

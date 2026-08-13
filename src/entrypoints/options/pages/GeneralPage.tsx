@@ -10,6 +10,7 @@ import { ResultBanner } from '~/ui/components/ResultBanner';
 import { useT } from '~/i18n';
 import { exportAppData, importAppData } from '~/storage/transfer';
 import { ThemePicker } from './ThemePicker';
+import { clampSubtitleBackgroundOpacity, clampSubtitleFontScale } from '~/core/subtitles/layout';
 import type { GlobalSettings } from '~/storage/schema';
 
 const LANGUAGES = [
@@ -130,7 +131,35 @@ export function GeneralPage() {
       </div>
 
       <div>
-        <SectionHeader number="03" label={t('sectionAppearance').toUpperCase()} />
+        <SectionHeader number="03" label={t('sectionSubtitles').toUpperCase()} />
+        <div class="space-y-4">
+          <Select label={t('subtitleFontScale')}
+            value={String(settings.subtitleFontScale)}
+            options={[50, 75, 100, 125, 150, 200].map((v) => ({ value: String(v), label: `${v}%` }))}
+            onChange={(e) => update({
+              subtitleFontScale: clampSubtitleFontScale(Number((e.target as HTMLSelectElement).value)),
+            })}
+          />
+          <Select label={t('subtitleBackgroundOpacity')}
+            value={String(settings.subtitleBackgroundOpacity)}
+            options={[0, 25, 50, 78, 100].map((v) => ({ value: String(v), label: `${v}%` }))}
+            onChange={(e) => update({
+              subtitleBackgroundOpacity: clampSubtitleBackgroundOpacity(
+                Number((e.target as HTMLSelectElement).value),
+              ),
+            })}
+          />
+          <Switch
+            checked={settings.subtitleTranslationOnly}
+            onChange={(v) => update({ subtitleTranslationOnly: v })}
+            label={t('subtitleTranslationOnly')}
+            description={t('subtitleTranslationOnlyDesc')}
+          />
+        </div>
+      </div>
+
+      <div>
+        <SectionHeader number="04" label={t('sectionAppearance').toUpperCase()} />
         <div class="space-y-4">
           <ThemePicker />
           <Select label={t('themeMode')}
@@ -159,7 +188,7 @@ export function GeneralPage() {
       </div>
 
       <div>
-        <SectionHeader number="04" label={t('sectionData').toUpperCase()} />
+        <SectionHeader number="05" label={t('sectionData').toUpperCase()} />
         <p class="text-xs text-ap-muted mb-4">{t('dataSectionDesc')}</p>
         <div class="space-y-4">
           <Switch
