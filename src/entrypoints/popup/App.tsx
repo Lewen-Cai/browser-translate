@@ -9,9 +9,6 @@ import { useApplyTheme } from '~/ui/useApplyTheme';
 import { useApplyLocale } from '~/ui/useApplyLocale';
 import { EngineRoutingPicker } from '~/ui/components/EngineRoutingPicker';
 import { TARGET_LANGUAGE_OPTIONS } from '~/core/language/targets';
-import { translationAttribution } from '~/ui/attribution';
-import { ProviderIcon } from '~/ui/ProviderIcon';
-import { PROVIDERS } from '~/core/providers/registry';
 
 export function App() {
   const load = useAppStore((s) => s.load);
@@ -61,10 +58,6 @@ export function App() {
     return <div class="p-4 text-2xs font-mono text-ap-subtle">{t('loading').toUpperCase()}</div>;
   }
 
-  // What answers a selection — the surface the popup itself is closest to.
-  const probed = settings.engines.selection;
-  const credit = translationAttribution(probed, providers[probed]);
-
   return (
     <div class="bg-ap-bg text-ap-fg">
       {/* Hero header */}
@@ -89,16 +82,8 @@ export function App() {
         <div class="border-t border-ap-border" />
       </header>
 
-      {/* What answers a selection. No latency here: with a provider per surface
-          one number cannot stand for all of them, and probing on every popup
-          open to produce it was a request nobody asked for. The Providers page
-          measures each one where the answer is actually actionable. */}
-      <div class="px-4 py-2 flex items-center gap-2 border-b border-ap-border bg-ap-surface">
-        <ProviderIcon id={credit.iconId} size={13} />
-        <span class="text-2xs font-mono text-ap-subtle truncate">
-          {credit.label || PROVIDERS[probed].label}
-        </span>
-      </div>
+      {/* No status strip. Naming one provider could not stand for three, and
+          Routing below already names all of them, each with its own mark. */}
 
       {/* 01 Translation */}
       <section class="px-4 pt-3 pb-4 border-b border-ap-border">
