@@ -1,4 +1,4 @@
-import type { SiteButtonStyle } from './site';
+import type { SiteButtonStyle, SiteSelectors } from './site';
 
 const BTN_CLASS = 'bt-subs-button';
 
@@ -38,12 +38,13 @@ export function removeSubsButton(): void {
 export function mountSubsButton(
   style: SiteButtonStyle,
   deps: SubsButtonDeps,
-  playerSelector?: string,
+  selectors?: SiteSelectors,
 ): SubsButtonHandle {
   const controls = style.container ? document.querySelector(style.container) : null;
-  const corner = !controls && style.fallback === 'player-corner' && playerSelector
-    ? document.querySelector(playerSelector)
+  const corner = !controls && style.fallback === 'player-corner' && selectors?.player
+    ? document.querySelector(selectors.player)
     : null;
+  if (corner) cornerFollowsControls(selectors!);
   const host = controls ?? corner;
   if (!host) return { mounted: false, setActive: () => {}, remove: () => {} };
 
@@ -89,7 +90,9 @@ export function mountSubsButton(
   btn._btOnToggle = deps.onToggle;
   if (!existing) {
     btn.addEventListener('click', () => btn._btOnToggle?.());
-    if (corner || style.place === 'end') host.appendChild(btn);
+    const anchor = !corner && style.before ? host.querySelector(style.before) : null;
+    if (anchor) host.insertBefore(btn, anchor);
+    else if (corner || style.place === 'end') host.appendChild(btn);
     else host.insertBefore(btn, host.firstChild);
   }
 
@@ -103,4 +106,25 @@ export function mountSubsButton(
     },
     remove() { btn.remove(); },
   };
+}
+
+const FADE_STYLE_ID = 'bt-subs-corner-fade';
+
+/**
+ * Make a corner button come and go with the player's own controls.
+ *
+ * In a control bar the button inherits that behaviour for free. Over the
+ * picture it would otherwise sit there for the whole video, which is exactly
+ * what a player's controls are careful not to do — every one of them fades out
+ * so the picture is left alone.
+ */
+function cornerFollowsControls(selectors: SiteSelectors): void {
+  const idle = selectors.autohideClass;
+  if (!idle || document.getElementById(FADE_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = FADE_STYLE_ID;
+  style.textContent =
+    `.${BTN_CLASS} { transition: opacity 200ms ease; }` +
+    `${selectors.player}.${idle} .${BTN_CLASS} { opacity: 0; pointer-events: none; }`;
+  document.head.appendChild(style);
 }

@@ -62,7 +62,7 @@ describe('the corner fallback', () => {
     // Without this there is no way into the menu at all on a player we do not
     // recognise, which is most of them.
     document.body.innerHTML = '<div class="player"><video></video></div>';
-    const handle = mountSubsButton(GENERIC, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() }, '.player');
+    const handle = mountSubsButton(GENERIC, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() }, { player: '.player' });
     expect(handle.mounted).toBe(true);
     const btn = document.querySelector<HTMLElement>('.player > .bt-subs-button');
     expect(btn).not.toBeNull();
@@ -74,13 +74,13 @@ describe('the corner fallback', () => {
 
   it('still prefers a real control bar when the page has one', () => {
     document.body.innerHTML = '<div class="player"><div class="vjs-control-bar"></div></div>';
-    mountSubsButton(GENERIC, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() }, '.player');
+    mountSubsButton(GENERIC, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() }, { player: '.player' });
     expect(document.querySelector('.vjs-control-bar > .bt-subs-button')).not.toBeNull();
     expect(document.querySelector('.player > .bt-subs-button')).toBeNull();
   });
 
   it('reports false when neither the bar nor the player is there', () => {
-    expect(mountSubsButton(GENERIC, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() }, '.player').mounted)
+    expect(mountSubsButton(GENERIC, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() }, { player: '.player' }).mounted)
       .toBe(false);
   });
 });
@@ -92,7 +92,7 @@ describe('a site with no bar to join', () => {
     // Zoom has a bar, but one whose right-hand group sits out of the flow, so
     // an appended control lands in the middle of it.
     document.body.innerHTML = '<div class="video-js"><div class="vjs-control-bar"></div></div>';
-    mountSubsButton(CORNER, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() }, '.video-js');
+    mountSubsButton(CORNER, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() }, { player: '.video-js', autohideClass: 'vjs-user-inactive' });
     expect(document.querySelector('.vjs-control-bar > .bt-subs-button')).toBeNull();
     expect(document.querySelector('.video-js > .bt-subs-button')).not.toBeNull();
   });

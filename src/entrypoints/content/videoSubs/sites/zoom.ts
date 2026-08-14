@@ -26,16 +26,24 @@ export function createZoomSite(): SubtitleSite {
     selectors: {
       player: '.video-js',
       controls: '.vjs-control-bar',
-      // Zoom draws its own transcript in a side panel rather than over the
-      // picture, so there is nothing over the video to hide.
+      // Zoom pushes its captions into a text track at playback time rather than
+      // declaring one in the markup, and video.js draws them in its standard
+      // container. Ours goes over the picture too, so without hiding that the
+      // reader gets three lines: Zoom's original, ours, and the translation.
+      nativeCaptions: '.vjs-text-track-display',
+      autohideClass: 'vjs-user-inactive',
     },
     button: {
-      // Zoom's control bar lays its right-hand group out of the flow, so a
-      // control appended to the bar lands in the middle of it, between the
-      // volume slider and nothing in particular. The corner of the picture is
-      // where it goes until that bar can be joined properly.
+      // The right-hand group, not the bar itself: the bar's own children are
+      // the transport controls, and the group is right-aligned by an auto
+      // margin — so a control added to it grows the group leftward and leaves
+      // everything else where it was. Appending to the bar instead dropped the
+      // button between the volume slider and nothing in particular.
+      container: '.vjs-extend-control',
+      before: '.vjs-fullscreen-toggle-control',
+      className: 'vjs-control vjs-button',
       fallback: 'player-corner',
-      width: '40px',
+      width: '36px',
     },
 
     findVideo: () => document.querySelector<HTMLVideoElement>('video'),

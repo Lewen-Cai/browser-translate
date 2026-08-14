@@ -7,6 +7,7 @@ import { TranslationCard } from './content/TranslationCard';
 import { createPageTranslator, type PageTranslator } from './content/pageTranslate';
 import { createVideoSubTranslator, type VideoSubTranslator } from './content/videoSubs';
 import { subtitleSiteFor } from './content/videoSubs/sites';
+import type { SubtitleSite } from './content/videoSubs/site';
 import { StorageClient } from '~/storage/client';
 import { resolveEffectiveTheme } from '~/ui/themeResolver';
 import { isLikelyPassage } from '~/core/selection/isLikelyPassage';
@@ -245,7 +246,7 @@ export default defineContentScript({
           },
           notify: (msg) => console.info('[BrowserTranslate]', msg),
         });
-        attachButtonSoon(subs, site.button?.container);
+        attachWhenPlayerReady(subs, site);
       }
     }
 
@@ -323,24 +324,34 @@ function onlySubtitleAppearanceChanged(
 }
 
 /**
- * Wait for the player's control bar before offering the toggle, then offer it
+ * Wait for the player to exist before offering the toggle, then offer it
  * regardless.
  *
- * Players build their controls after the page settles, so the first look is
- * usually too early — but running out of looks is not a reason to give up. A
- * player we do not recognise has no bar we will ever find, and the toggle knows
- * how to sit in the corner of the picture instead.
+ * The wait is the whole point. A recording page builds its player after
+ * authenticating and asking for the media, which is long after the document
+ * settles — so the first look finds no video, and a translator that took that
+ * for an answer would decide the page has nothing to translate and never look
+ * again. That is exactly what it used to do.
+ *
+ * Running out of looks is not a reason to give up either: the last attempt goes
+ * ahead, and the probe behind it gives the honest answer for a page that really
+ * has no video.
  */
-function attachButtonSoon(subs: VideoSubTranslator, container: string | undefined, tries = 10): void {
-  if (!container) { void subs.attachButton(); return; }
+const PLAYER_WAIT_TRIES = 40;
+const PLAYER_WAIT_MS = 500;
+
+function attachWhenPlayerReady(subs: VideoSubTranslator, site: SubtitleSite): void {
+  const container = site.button?.container;
   const attempt = (n: number) => {
-    if (document.querySelector(container) || n <= 0) {
+    const ready = site.findVideo() !== null
+      && (!container || document.querySelector(container) !== null);
+    if (ready || n <= 0) {
       void subs.attachButton();
       return;
     }
-    setTimeout(() => attempt(n - 1), 400);
+    setTimeout(() => attempt(n - 1), PLAYER_WAIT_MS);
   };
-  attempt(tries);
+  attempt(PLAYER_WAIT_TRIES);
 }
 
 function getSelectionInfo(): SelectionInfo | null {

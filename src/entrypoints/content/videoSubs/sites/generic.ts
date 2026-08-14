@@ -27,11 +27,17 @@ export function createGenericSite(): SubtitleSite {
       // not exist yet when the adapter is built.
       player: `${KNOWN_WRAPPERS}, [data-bt-player]`,
       controls: '.vjs-control-bar, .plyr__controls, .jw-controlbar',
-      // A page's own captions are its business — we do not know the markup, and
-      // guessing at it would risk hiding part of the player.
+      // Only the containers a known player draws its captions in. A page whose
+      // markup we cannot name is left alone: ours goes over the picture either
+      // way, and hiding the wrong element would take part of the player with it.
+      nativeCaptions: '.vjs-text-track-display, .plyr__captions, .jw-captions',
+      autohideClass: 'vjs-user-inactive',
     },
     button: {
       container: '.vjs-control-bar, .plyr__controls, .jw-controlbar',
+      // Beside the player's own fullscreen control, which is reliably the last
+      // one, so ours lands among the settings rather than after everything.
+      before: '.vjs-fullscreen-control, .plyr__control[data-plyr="fullscreen"], .jw-icon-fullscreen',
       // A player we do not recognise has no bar to join, and the menu is only
       // reachable through this button — so it goes in the corner of the picture
       // rather than nowhere.

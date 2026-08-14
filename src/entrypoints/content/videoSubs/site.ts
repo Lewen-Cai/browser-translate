@@ -61,7 +61,13 @@ export interface SiteButtonStyle {
   fallback?: 'player-corner';
   /** The site's own button class, so ours inherits its sizing and hover. */
   className?: string;
-  /** Where among the site's buttons ours goes. */
+  /**
+   * Put it immediately before the first control matching this, rather than at
+   * one end of the bar. A subtitle control belongs beside the site's own
+   * captions button, not off in a corner of the bar next to the volume slider.
+   */
+  before?: string;
+  /** Where among the site's buttons ours goes, when `before` finds nothing. */
   place?: 'start' | 'end';
   /** Colours, since a control bar's idea of "on" is the site's, not ours. */
   idleColor?: string;

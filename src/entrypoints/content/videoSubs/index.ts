@@ -207,7 +207,7 @@ export function createVideoSubTranslator(deps: VideoSubTranslatorDeps): VideoSub
         // press has to reach the style settings, which are useless once the video
         // has moved on and the reader has to hunt for them.
         onToggle: () => ensureUi().togglePanel(),
-      }, site.selectors.player);
+      }, site.selectors);
       button.setActive(on);
     }
     ensureUi();
