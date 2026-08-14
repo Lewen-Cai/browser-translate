@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useAppStore } from '~/storage/store';
-import { ApiSettingsPage } from './pages/ApiSettingsPage';
+import { TranslationPage } from './pages/TranslationPage';
 import { GeneralPage } from './pages/GeneralPage';
-import { KeyRound, Settings } from '~/ui/icons';
+import { VideoPage } from './pages/VideoPage';
+import { DataPage } from './pages/DataPage';
+import { Captions, Download, Languages, Settings } from '~/ui/icons';
 import { cn } from '~/lib/cn';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
 import { useApplyLocale } from '~/ui/useApplyLocale';
 
-type Tab = 'general' | 'api';
+type Tab = 'translation' | 'general' | 'video' | 'data';
 
 export function App() {
   const load = useAppStore((s) => s.load);
   const loaded = useAppStore((s) => s.loaded);
-  const [tab, setTab] = useState<Tab>('general');
+  const [tab, setTab] = useState<Tab>('translation');
   const t = useT();
   useApplyTheme();
   useApplyLocale();
@@ -22,9 +24,13 @@ export function App() {
 
   if (!loaded) return <div class="p-8 text-2xs font-mono text-ap-subtle">LOADING…</div>;
 
-  const TABS: Array<{ id: Tab; num: string; label: string; icon: typeof KeyRound }> = [
-    { id: 'general',   num: '01', label: t('navGeneral'),  icon: Settings },
-    { id: 'api',       num: '02', label: t('navApi'),      icon: KeyRound },
+  // One page per thing being set up, rather than everything that isn't the API
+  // piled into "general".
+  const TABS: Array<{ id: Tab; num: string; label: string; icon: typeof Settings }> = [
+    { id: 'translation', num: '01', label: t('navTranslation'), icon: Languages },
+    { id: 'general',     num: '02', label: t('navGeneral'),     icon: Settings },
+    { id: 'video',       num: '03', label: t('navVideo'),       icon: Captions },
+    { id: 'data',        num: '04', label: t('navData'),        icon: Download },
   ];
 
   return (
@@ -66,8 +72,10 @@ export function App() {
           </ul>
         </nav>
         <main class="flex-1 min-w-0 max-w-[640px]">
-          {tab === 'api' && <ApiSettingsPage />}
+          {tab === 'translation' && <TranslationPage />}
           {tab === 'general' && <GeneralPage />}
+          {tab === 'video' && <VideoPage />}
+          {tab === 'data' && <DataPage />}
         </main>
       </div>
     </div>

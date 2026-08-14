@@ -41,7 +41,7 @@ export interface SubtitlePanelStrings {
   fontFamily: string;
   fontWeight: string;
   reset: string;
-  resetPosition: string;
+  resetAll: string;
   back: string;
 }
 
@@ -339,21 +339,28 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       ),
     );
 
-    const resetPosition = document.createElement('button');
-    resetPosition.type = 'button';
-    resetPosition.className = 'menu-item';
-    resetPosition.append(svgSpan('icon', RESET_ICON));
+    // The per-group buttons above reset their own group. This one is the whole
+    // page: every style setting and the block's position, which is what someone
+    // reaches for after changing several things and wanting out of all of them.
+    const resetAll = document.createElement('button');
+    resetAll.type = 'button';
+    resetAll.className = 'menu-item';
+    resetAll.append(svgSpan('icon', RESET_ICON));
     const resetLabel = document.createElement('span');
     resetLabel.className = 'label';
-    resetLabel.textContent = s.resetPosition;
-    resetPosition.append(resetLabel);
-    resetPosition.addEventListener('click', () => deps.onResetPosition());
+    resetLabel.textContent = s.resetAll;
+    resetAll.append(resetLabel);
+    resetAll.addEventListener('click', () => {
+      deps.onStyleChange(DEFAULT_SUBTITLE_STYLE);
+      deps.onResetPosition();
+      render(); // the controls still show what was just thrown away
+    });
 
     body.append(
       general.block,
       textGroup(SUBTITLES_ICON, s.mainSubtitle, 'main'),
       textGroup(LANGUAGES_ICON, s.translationSubtitle, 'translation'),
-      resetPosition,
+      resetAll,
     );
   }
 

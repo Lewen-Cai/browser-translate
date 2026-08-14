@@ -139,12 +139,26 @@ export const SUBTITLES_CSS = `
   font-weight: 500;
   flex: none;
 }
-.panel-body { overflow-y: auto; padding: 8px; min-height: 0; }
-.panel-body::-webkit-scrollbar { width: 8px; }
-.panel-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 4px;
+/* The scroll track runs the full height of this element, and the panel's own
+   rounded corners clip whatever reaches them — so the track has to stop short
+   of the bottom rather than run into the curve. The margin does that; the
+   transparent border keeps the thumb off the right-hand edge for the same
+   reason. */
+.panel-body {
+  overflow-y: auto;
+  padding: 8px;
+  margin-bottom: 10px;
+  min-height: 0;
 }
+.panel-body::-webkit-scrollbar { width: 10px; }
+.panel-body::-webkit-scrollbar-track { background: transparent; }
+.panel-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.panel-body::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.34); background-clip: content-box; }
 
 .menu-item {
   display: flex;

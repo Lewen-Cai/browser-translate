@@ -43,11 +43,6 @@
   --ap-danger:    220 38 38;    /* #DC2626 */
   --ap-success:   22 163 74;    /* #16A34A */
 
-  /* Latin text is set in JetBrains Mono (SIL OFL). It carries no CJK glyphs, so
-     the browser falls through per character to a kai face for Chinese — which
-     is the intent: a technical Latin face beside a calligraphic Chinese one.
-     Kai fonts are referenced from the system, never bundled: KaiTi ships with
-     Windows and STKaiti with macOS, and neither is ours to redistribute. */
   /* CJK is never shipped by us: those faces are megabytes each, and the ones
      that come with an OS are not ours to redistribute. Source Han Serif — the
      same family Google publishes as Noto Serif CJK, SIL OFL — is named first
@@ -170,7 +165,7 @@ html, body {
   border: 1px solid rgb(var(--ap-border));
   box-shadow: 0 1px 0 rgb(0 0 0 / 0.04), 0 8px 24px -8px rgb(0 0 0 / 0.12);
   font-family: var(--ap-font-sans);
-  font-size: 13px;
+  font-size: 14px;
   color: rgb(var(--ap-fg));
   border-radius: 14px;
   overflow: hidden;
@@ -204,13 +199,13 @@ html, body {
 }
 .bt-card-mono-label {
   font-family: var(--ap-font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgb(var(--ap-fg-muted));
 }
 .bt-card-brand-mark {
-  font-size: 11px;
+  font-size: 12px;
   color: rgb(var(--ap-fg-muted));
 }
 .bt-card-actions {
@@ -274,7 +269,7 @@ html, body {
   flex: 1;
   min-width: 0;
   color: rgb(var(--ap-fg-muted));
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -302,7 +297,7 @@ html, body {
   border-top: 1px solid rgb(var(--ap-border));
   color: rgb(var(--ap-fg-subtle));
   font-family: var(--ap-font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.04em;
   flex-shrink: 0;
 }
@@ -314,7 +309,7 @@ html, body {
 
 /* Structured dictionary entry */
 .bt-card-dict {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
 }
 .bt-card-dict-head {
@@ -324,7 +319,7 @@ html, body {
   gap: 8px;
 }
 .bt-card-dict-word {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
   color: rgb(var(--ap-fg));
 }
@@ -336,18 +331,18 @@ html, body {
 }
 .bt-card-dict-phon {
   font-family: var(--ap-font-mono);
-  font-size: 12px;
+  font-size: 13px;
   color: rgb(var(--ap-fg-muted));
 }
 .bt-card-dict-phon-label {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.06em;
   color: rgb(var(--ap-brand));
 }
 .bt-card-dict-translation {
   margin-top: 8px;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: rgb(var(--ap-brand));
 }
@@ -359,7 +354,7 @@ html, body {
   background: rgb(var(--ap-bg));
   border: 1px solid rgb(var(--ap-border));
   font-family: var(--ap-font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.04em;
   color: rgb(var(--ap-fg-muted));
 }
@@ -379,7 +374,7 @@ html, body {
 .bt-card-dict-num {
   flex-shrink: 0;
   font-family: var(--ap-font-mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: rgb(var(--ap-brand));
   min-width: 12px;
@@ -391,7 +386,7 @@ html, body {
 }
 .bt-card-dict-example-label {
   font-family: var(--ap-font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   color: rgb(var(--ap-fg-subtle));
   margin-bottom: 4px;
@@ -413,10 +408,10 @@ html, body {
   white-space: pre-wrap;
   line-height: 1.55;
   min-height: 1.55em;
-  font-size: 13px;
+  font-size: 14px;
 }
 .bt-card-notice {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
   padding: 2px 0;
   color: rgb(var(--ap-fg-muted));
@@ -427,14 +422,14 @@ html, body {
   align-items: center;
   gap: 4px;
   font-family: var(--ap-font-mono);
-  font-size: 11px;
+  font-size: 12px;
 }
 .bt-card-error {
   color: rgb(var(--ap-danger));
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
 }
 .bt-card-error-icon {

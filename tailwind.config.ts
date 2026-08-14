@@ -40,7 +40,7 @@ export default {
         '2xl': '24px',
       },
       fontSize: {
-        '2xs': ['10px', { lineHeight: '14px', letterSpacing: '0.04em' }],
+        '2xs': ['11px', { lineHeight: '15px', letterSpacing: '0.04em' }],
       },
       letterSpacing: {
         wider: '0.08em',

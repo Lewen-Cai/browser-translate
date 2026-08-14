@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useAppStore } from '~/storage/store';
 import { Input } from '~/ui/components/Input';
+import { Switch } from '~/ui/components/Switch';
 import { Select } from '~/ui/components/Select';
 import { SectionHeader } from '~/ui/components/SectionHeader';
 import { SegmentedControl } from '~/ui/components/SegmentedControl';
@@ -19,9 +20,23 @@ import { EnginePicker } from '~/ui/components/EnginePicker';
 import { ProviderSelect } from '~/ui/components/ProviderSelect';
 import type { ThinkingSetting } from '~/storage/schema';
 
-export function ApiSettingsPage() {
+const LANGUAGES = [
+  { value: 'zh-CN', label: '简体中文 (zh-CN)' },
+  { value: 'zh-TW', label: '繁體中文 (zh-TW)' },
+  { value: 'en', label: 'English' },
+  { value: 'ja', label: '日本語' },
+  { value: 'ko', label: '한국어' },
+  { value: 'es', label: 'Español' },
+  { value: 'fr', label: 'Français' },
+  { value: 'de', label: 'Deutsch' },
+];
+
+export function TranslationPage() {
   const api = useAppStore((s) => s.data.api);
   const engine = useAppStore((s) => s.data.settings.engine);
+  const targetLanguage = useAppStore((s) => s.data.settings.targetLanguage);
+  const cacheEnabled = useAppStore((s) => s.data.settings.cacheEnabled);
+  const cacheTTLDays = useAppStore((s) => s.data.settings.cacheTTLDays);
   const updateApi = useAppStore((s) => s.updateApi);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const [showKey, setShowKey] = useState(false);
@@ -48,14 +63,25 @@ export function ApiSettingsPage() {
 
   return (
     <div class="max-w-lg">
-      <SectionHeader number="01" label={t('engine').toUpperCase()} />
+      <SectionHeader number="01" label={t('sectionTranslation').toUpperCase()} />
+      <div class="space-y-4">
+        <Select label={t('targetLanguage')}
+          value={targetLanguage} options={LANGUAGES}
+          onChange={(e) =>
+            updateSettings({ targetLanguage: (e.target as HTMLSelectElement).value })}
+        />
+      </div>
+
+      <div class="mt-8">
+        <SectionHeader number="02" label={t('engine').toUpperCase()} />
+      </div>
       <EnginePicker value={engine} onChange={(next) => updateSettings({ engine: next })} />
 
       {!usesApi ? null : (
         <>
           <div class="mt-8">
             <SectionHeader
-              number="02"
+              number="03"
               label={t('sectionApiEndpoint').toUpperCase()}
               description={t('openaiCompatible')}
             />
@@ -171,6 +197,24 @@ export function ApiSettingsPage() {
 
       <div class="mt-6">
         <ApiStatusIndicator pingNonce={pingNonce} />
+      </div>
+
+      <div class="mt-8">
+        <SectionHeader number={usesApi ? '04' : '03'} label={t('sectionCache').toUpperCase()} />
+        <div class="space-y-4">
+          <Switch
+            checked={cacheEnabled}
+            onChange={(v) => updateSettings({ cacheEnabled: v })}
+            label={t('cacheTranslations')}
+            description={t('cacheDesc')}
+          />
+          <Input label={t('cacheTtl')} type="number" min="1" max="365"
+            value={String(cacheTTLDays)} disabled={!cacheEnabled} mono
+            onInput={(e) => updateSettings({
+              cacheTTLDays: Math.max(1, parseInt((e.target as HTMLInputElement).value) || 30),
+            })}
+          />
+        </div>
       </div>
     </div>
   );

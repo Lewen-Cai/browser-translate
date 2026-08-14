@@ -26,4 +26,5 @@ export {
   ChevronUp,
   Sparkles,
   Zap,
+  Captions,
 } from 'lucide-preact';

@@ -222,7 +222,7 @@ export default defineContentScript({
             fontFamily: t('subtitleFontFamily', locale),
             fontWeight: t('subtitleFontWeight', locale),
             reset: t('subtitleReset', locale),
-            resetPosition: t('subtitleResetPosition', locale),
+            resetAll: t('subtitleResetAll', locale),
             back: t('back', locale),
           },
           notify: (msg) => console.info('[BrowserTranslate]', msg),

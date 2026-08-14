@@ -53,7 +53,7 @@ const STRINGS: YouTubeSubsStrings = {
   fontFamily: 'font',
   fontWeight: 'weight',
   reset: 'reset',
-  resetPosition: 'reset position',
+  resetAll: 'reset all',
   back: 'back',
 };
 

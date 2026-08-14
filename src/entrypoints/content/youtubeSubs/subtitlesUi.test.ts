@@ -30,7 +30,7 @@ const STRINGS: SubtitleUiStrings = {
   fontFamily: 'Font',
   fontWeight: 'Font weight',
   reset: 'Reset',
-  resetPosition: 'Reset position',
+  resetAll: 'Reset all settings',
   back: 'Back',
 };
 
@@ -444,7 +444,35 @@ describe('settings panel', () => {
     expect(getStyle().displayMode).toBe('translationOnly');
   });
 
-  it('resets the position from the style page', () => {
+  it('resets every style setting, not just the position', () => {
+    // The button used to reset the position alone, so changing the size and
+    // colour and then pressing it appeared to do nothing at all.
+    const { ui, onStyleChange, onPositionChange, getStyle } = setup(null, {
+      position: { percent: 40, anchor: 'top' },
+      style: {
+        ...DEFAULT_SUBTITLE_STYLE,
+        displayMode: 'translationOnly',
+        backgroundOpacity: 12,
+        main: { fontScale: 180, color: '#ff0000', fontFamily: 'serif', fontWeight: 700 },
+      },
+    });
+    ui.togglePanel();
+    const shadow = document.querySelector<HTMLElement>('.bt-yt-subs')!.shadowRoot!;
+    shadow.querySelectorAll<HTMLElement>('.menu-item')[1]!.click();
+
+    const items = shadow.querySelectorAll<HTMLElement>('.menu-item');
+    items[items.length - 1]!.click();
+
+    expect(onStyleChange).toHaveBeenCalledWith(DEFAULT_SUBTITLE_STYLE);
+    expect(getStyle()).toEqual(DEFAULT_SUBTITLE_STYLE);
+    expect(onPositionChange).toHaveBeenCalledWith({ percent: 6, anchor: 'bottom' });
+
+    // And the controls have to show what they were reset to.
+    const select = shadow.querySelector<HTMLSelectElement>('.rows select')!;
+    expect(select.value).toBe('bilingual');
+  });
+
+  it('moves the block back to its default spot when everything is reset', () => {
     const { ui, onPositionChange } = setup(null, { position: { percent: 40, anchor: 'top' } });
     ui.togglePanel();
     const shadow = document.querySelector<HTMLElement>('.bt-yt-subs')!.shadowRoot!;
