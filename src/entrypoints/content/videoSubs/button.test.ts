@@ -1,18 +1,27 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mountSubsButton } from './button';
 
+const YT_BUTTON = {
+  container: '.ytp-right-controls',
+  className: 'ytp-button',
+  place: 'start' as const,
+  idleColor: '#fff',
+  activeColor: '#3ea6ff',
+  width: '48px',
+};
+
 beforeEach(() => { document.body.innerHTML = ''; });
 
 describe('mountSubsButton', () => {
   it('inserts a button into the right-controls and toggles on click', () => {
     document.body.innerHTML = '<div class="ytp-right-controls"></div>';
     const onToggle = vi.fn();
-    const handle = mountSubsButton({
+    const handle = mountSubsButton(YT_BUTTON, {
       titleOff: 'Translate subtitles',
       titleOn: 'Turn off',
       onToggle,
     });
-    const btn = document.querySelector<HTMLButtonElement>('.bt-yt-subs-button');
+    const btn = document.querySelector<HTMLButtonElement>('.bt-subs-button');
     expect(btn).not.toBeNull();
     btn!.click();
     expect(onToggle).toHaveBeenCalledTimes(1);
@@ -22,7 +31,7 @@ describe('mountSubsButton', () => {
   });
 
   it('does nothing and reports false when controls are absent', () => {
-    const handle = mountSubsButton({ titleOff: 'x', titleOn: 'y', onToggle: vi.fn() });
+    const handle = mountSubsButton(YT_BUTTON, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() });
     expect(handle.mounted).toBe(false);
   });
 
@@ -30,10 +39,10 @@ describe('mountSubsButton', () => {
     document.body.innerHTML = '<div class="ytp-right-controls"></div>';
     const first = vi.fn();
     const second = vi.fn();
-    mountSubsButton({ titleOff: 'a', titleOn: 'b', onToggle: first });
+    mountSubsButton(YT_BUTTON, { titleOff: 'a', titleOn: 'b', onToggle: first });
     // Remount (e.g. SPA nav) with a different handler; button element persists.
-    mountSubsButton({ titleOff: 'a', titleOn: 'b', onToggle: second });
-    const btns = document.querySelectorAll('.bt-yt-subs-button');
+    mountSubsButton(YT_BUTTON, { titleOff: 'a', titleOn: 'b', onToggle: second });
+    const btns = document.querySelectorAll('.bt-subs-button');
     expect(btns).toHaveLength(1); // still idempotent, no duplicate
     (btns[0] as HTMLButtonElement).click();
     expect(first).not.toHaveBeenCalled();

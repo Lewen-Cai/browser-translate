@@ -5,7 +5,8 @@ import { createHotkeyWatcher, type HotkeyWatcher } from './content/hotkeyWatcher
 import { TriggerIcon } from './content/TriggerIcon';
 import { TranslationCard } from './content/TranslationCard';
 import { createPageTranslator, type PageTranslator } from './content/pageTranslate';
-import { createYouTubeSubTranslator, type YouTubeSubTranslator } from './content/youtubeSubs';
+import { createVideoSubTranslator, type VideoSubTranslator } from './content/videoSubs';
+import { subtitleSiteFor } from './content/videoSubs/sites';
 import { StorageClient } from '~/storage/client';
 import { resolveEffectiveTheme } from '~/ui/themeResolver';
 import { isLikelyPassage } from '~/core/selection/isLikelyPassage';
@@ -64,7 +65,7 @@ export default defineContentScript({
     let subtitlePosition: SubtitlePosition = DEFAULT_SUBTITLE_POSITION;
     let subtitleStyle: SubtitleStyle = DEFAULT_SUBTITLE_STYLE;
     let fullPageHotkey: HotkeyWatcher | null = null;
-    let ytSubs: YouTubeSubTranslator | null = null;
+    let subs: VideoSubTranslator | null = null;
     // The card offers a reader every provider that is switched on, so it needs
     // the rows rather than a finished credit line.
     let providersConfig: ProvidersConfig = createDefaultProviders();
@@ -73,7 +74,9 @@ export default defineContentScript({
     // the reader dragged it to when they translate something else.
     let cardPinned = false;
     let pinnedRect: DOMRect | null = null;
-    let ytNavHandler: (() => void) | null = null;
+    // YouTube's own SPA-navigation event. No other site we handle needs one,
+    // and listening for it elsewhere costs nothing.
+    let spaNavHandler: (() => void) | null = null;
 
     const paint = () => {
       if (!iconNode && !cardNode) {
@@ -190,11 +193,13 @@ export default defineContentScript({
       });
       if (wasOn) pageTranslator.enable();
 
-      // YouTube subtitle translator — only on watch pages.
-      ytSubs?.teardown();
-      ytSubs = null;
-      if (isYouTubeWatch()) {
-        ytSubs = createYouTubeSubTranslator({
+      // Subtitle translation, on whichever player this page turns out to be.
+      subs?.teardown();
+      subs = null;
+      const site = subtitleSiteFor(location);
+      if (site) {
+        subs = createVideoSubTranslator({
+          site,
           getTargetLang: () => targetLanguage,
           concurrency: subtitleConcurrency(data.settings.engines.subtitle),
           getPosition: () => subtitlePosition,
@@ -240,7 +245,7 @@ export default defineContentScript({
           },
           notify: (msg) => console.info('[BrowserTranslate]', msg),
         });
-        attachYtButtonSoon(ytSubs);
+        attachButtonSoon(subs, site.button?.container);
       }
     }
 
@@ -252,9 +257,9 @@ export default defineContentScript({
 
     await reattach();
 
-    if (!ytNavHandler) {
-      ytNavHandler = () => { void reattach(); };
-      window.addEventListener('yt-navigate-finish', ytNavHandler);
+    if (!spaNavHandler) {
+      spaNavHandler = () => { void reattach(); };
+      window.addEventListener('yt-navigate-finish', spaNavHandler);
     }
 
     chrome.storage.onChanged.addListener((changes, area) => {
@@ -317,13 +322,16 @@ function onlySubtitleAppearanceChanged(
     === JSON.stringify({ ...after, settings: { ...after.settings, ...blank } });
 }
 
-function isYouTubeWatch(): boolean {
-  return location.hostname.endsWith('youtube.com') && location.pathname === '/watch';
-}
-
-function attachYtButtonSoon(subs: YouTubeSubTranslator, tries = 10): void {
+/**
+ * Wait for the player's control bar before offering the toggle. Players build
+ * their controls after the page settles, and a site with no bar to join gets
+ * the attempt straight away — the translator mounts its overlay either way, and
+ * its own menu is the way in.
+ */
+function attachButtonSoon(subs: VideoSubTranslator, container: string | undefined, tries = 10): void {
+  if (!container) { void subs.attachButton(); return; }
   const attempt = (n: number) => {
-    if (document.querySelector('.ytp-right-controls')) {
+    if (document.querySelector(container)) {
       void subs.attachButton();
       return;
     }

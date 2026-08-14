@@ -9,15 +9,10 @@ import {
 } from '~/core/subtitles/style';
 import { SUBTITLES_CSS } from './subtitlesCss';
 import { createSettingsPanel, type SettingsPanel, type SubtitlePanelStrings } from './settingsPanel';
+import type { SiteSelectors } from './site';
 
-const PLAYER_SEL = '#movie_player';
-const NATIVE_CAPTIONS_SEL = '.ytp-caption-window-container';
-const CONTROLS_SEL = '.ytp-chrome-bottom';
-/** YouTube adds this class to the player while the control bar is hidden. */
-const AUTOHIDE_CLASS = 'ytp-autohide';
-
-const HOST_CLASS = 'bt-yt-subs';
-const STYLE_ID = 'bt-yt-subs-style';
+const HOST_CLASS = 'bt-subs';
+const STYLE_ID = 'bt-subs-style';
 
 /** Movement under this many pixels is a press, not a reposition. */
 const CLICK_SLOP = 3;
@@ -49,6 +44,8 @@ export interface SubtitleUiStrings extends SubtitlePanelStrings {
 }
 
 export interface SubtitlesUiDeps {
+  /** Where this site's player is, and what the subtitles have to dodge. */
+  selectors: SiteSelectors;
   /** The lines to show right now, or null when no cue is active. */
   getLines: () => SubtitleLines | null;
   /** The language the translated line is in, so the block can declare it. */
@@ -122,17 +119,23 @@ export function createSubtitlesUi(deps: SubtitlesUiDeps): SubtitlesUi {
   let dragBlockHeight = 0;
 
   function player(): HTMLElement | null {
-    return document.querySelector<HTMLElement>(PLAYER_SEL);
+    return document.querySelector<HTMLElement>(deps.selectors.player);
   }
 
   function controlsVisible(target: HTMLElement): boolean {
-    return !target.classList.contains(AUTOHIDE_CLASS);
+    // A site with no autohide class never hides its controls as far as we can
+    // tell, so the subtitles stay clear of them the whole time — which is the
+    // safe way to be wrong.
+    const cls = deps.selectors.autohideClass;
+    return !cls || !target.classList.contains(cls);
   }
 
   function controlsHeightPx(target: HTMLElement): number {
     // No control bar found means we can't measure one; guessing a height would
     // shift the subtitles for no reason, so treat it as zero.
-    return target.querySelector<HTMLElement>(CONTROLS_SEL)?.getBoundingClientRect().height ?? 0;
+    const sel = deps.selectors.controls;
+    if (!sel) return 0;
+    return target.querySelector<HTMLElement>(sel)?.getBoundingClientRect().height ?? 0;
   }
 
   /** Extra lift, as a percentage of player height, so the control bar can't
@@ -230,10 +233,14 @@ export function createSubtitlesUi(deps: SubtitlesUiDeps): SubtitlesUi {
   }
 
   function hideNativeCaptions(): void {
-    if (document.getElementById(STYLE_ID)) return;
+    // A site whose captions we cannot name gets left alone: ours is drawn over
+    // the picture either way, and hiding the wrong element would take part of
+    // the player with it.
+    const sel = deps.selectors.nativeCaptions;
+    if (!sel || document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = `${NATIVE_CAPTIONS_SEL} { display: none !important; }`;
+    style.textContent = `${sel} { display: none !important; }`;
     document.head.appendChild(style);
   }
 

@@ -1,5 +1,6 @@
-const CONTROLS_SEL = '.ytp-right-controls';
-const BTN_CLASS = 'bt-yt-subs-button';
+import type { SiteButtonStyle } from './site';
+
+const BTN_CLASS = 'bt-subs-button';
 
 interface ToggleButton extends HTMLButtonElement {
   _btOnToggle?: () => void;
@@ -18,27 +19,38 @@ export interface SubsButtonHandle {
 }
 
 /**
- * Remove the subtitle button from the control bar. Used when a SPA navigation lands
- * on a video with no translatable (manual) caption track — the control bar persists
- * across navigations, so a button from the previous video would otherwise linger.
+ * Remove the subtitle button from the control bar. Used when a navigation lands
+ * on media with no translatable caption track — a control bar often persists
+ * across navigation, so a button from the previous video would otherwise linger.
  */
 export function removeSubsButton(): void {
   document.querySelector(`.${BTN_CLASS}`)?.remove();
 }
 
-export function mountSubsButton(deps: SubsButtonDeps): SubsButtonHandle {
-  const controls = document.querySelector(CONTROLS_SEL);
+/**
+ * Put the toggle in the site's own control bar.
+ *
+ * It borrows the site's button class so it inherits that bar's sizing, spacing
+ * and hover, and takes its colours from the same place: a control bar's idea of
+ * "this control is on" belongs to the site, and ours standing out from its
+ * neighbours would read as a fault rather than as a feature.
+ */
+export function mountSubsButton(style: SiteButtonStyle, deps: SubsButtonDeps): SubsButtonHandle {
+  const controls = document.querySelector(style.container);
   if (!controls) return { mounted: false, setActive: () => {}, remove: () => {} };
+
+  const idle = style.idleColor ?? '#fff';
+  const active = style.activeColor ?? '#3ea6ff';
 
   const existing = controls.querySelector<ToggleButton>(`.${BTN_CLASS}`);
   const btn = (existing ?? document.createElement('button')) as ToggleButton;
   btn.type = 'button';
-  btn.className = `ytp-button ${BTN_CLASS}`;
+  btn.className = style.className ? `${style.className} ${BTN_CLASS}` : BTN_CLASS;
   btn.title = deps.titleOff;
   btn.setAttribute('aria-pressed', 'false');
   // BrowserTranslate "Languages" glyph as inline SVG. Uses currentColor so the
-  // button's color drives it (white normally, accent blue when active), matching
-  // YouTube's monochrome control-bar icons. Static string — no XSS surface.
+  // button's color drives it, matching the monochrome icons a video control bar
+  // tends to use. Static string — no XSS surface.
   btn.innerHTML =
     '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" ' +
     'stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
@@ -49,28 +61,29 @@ export function mountSubsButton(deps: SubsButtonDeps): SubsButtonHandle {
     'display:inline-flex',
     'align-items:center',
     'justify-content:center',
-    'width:48px',
+    `width:${style.width ?? '48px'}`,
     'height:100%',
     'vertical-align:top',
-    'color:#fff',
+    `color:${idle}`,
     'opacity:0.9',
     'cursor:pointer',
   ].join(';');
   // Always point the (single) listener at the current handler, so a remount on
-  // SPA navigation with a fresh onToggle is honored instead of the stale one.
+  // navigation with a fresh onToggle is honored instead of the stale one.
   btn._btOnToggle = deps.onToggle;
   if (!existing) {
     btn.addEventListener('click', () => btn._btOnToggle?.());
-    controls.insertBefore(btn, controls.firstChild);
+    if (style.place === 'end') controls.appendChild(btn);
+    else controls.insertBefore(btn, controls.firstChild);
   }
 
   return {
     mounted: true,
-    setActive(active) {
-      btn.title = active ? deps.titleOn : deps.titleOff;
-      btn.setAttribute('aria-pressed', String(active));
-      btn.style.color = active ? '#3ea6ff' : '#fff';
-      btn.style.opacity = active ? '1' : '0.9';
+    setActive(isActive) {
+      btn.title = isActive ? deps.titleOn : deps.titleOff;
+      btn.setAttribute('aria-pressed', String(isActive));
+      btn.style.color = isActive ? active : idle;
+      btn.style.opacity = isActive ? '1' : '0.9';
     },
     remove() { btn.remove(); },
   };

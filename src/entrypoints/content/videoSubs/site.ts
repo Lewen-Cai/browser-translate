@@ -1,0 +1,84 @@
+import type { Cue } from '~/core/subtitles/types';
+
+/**
+ * What one video site looks like to the subtitle translator.
+ *
+ * Everything the translator does — draw two lines over the picture, keep them
+ * on the playhead, translate ahead of it, hide behind a control bar — is the
+ * same wherever the video is. What differs is where the player is, how its
+ * captions are obtained, and what counts as "a different video". Those are the
+ * three things an adapter answers, and nothing else in the module names a site.
+ */
+export interface SubtitleSite {
+  /** For logs and for telling two adapters apart. Never shown to a reader. */
+  readonly id: string;
+  /** The player element the overlay attaches to, and what it must dodge. */
+  readonly selectors: SiteSelectors;
+  /** Where the toggle joins the site's own controls, if it has any. */
+  readonly button: SiteButtonStyle | null;
+  /** The media the cues are timed against. */
+  findVideo(): HTMLVideoElement | null;
+  /**
+   * Changes when the page moves to different media. The translator drops
+   * everything when it changes, so a site with one video per page can return a
+   * constant and a site that swaps videos in place must not.
+   */
+  mediaKey(): string;
+  /** Whether this page has anything worth offering to translate. */
+  probe(): Promise<SiteProbe>;
+  /** The cues for the current media, once the reader has asked for them. */
+  fetchTranscript(): Promise<Cue[]>;
+}
+
+export interface SiteSelectors {
+  /**
+   * The overlay's host. It has to contain the picture and establish a
+   * containing block, since the subtitles are positioned against it.
+   */
+  player: string;
+  /** The site's own caption layer, hidden while ours is up. */
+  nativeCaptions?: string;
+  /** The control bar, measured so the subtitles can sit clear of it. */
+  controls?: string;
+  /** Class the site puts on the player while its controls are hidden. */
+  autohideClass?: string;
+}
+
+export interface SiteButtonStyle {
+  /** The control-bar container the button is inserted into. */
+  container: string;
+  /** The site's own button class, so ours inherits its sizing and hover. */
+  className?: string;
+  /** Where among the site's buttons ours goes. */
+  place?: 'start' | 'end';
+  /** Colours, since a control bar's idea of "on" is the site's, not ours. */
+  idleColor?: string;
+  activeColor?: string;
+  width?: string;
+}
+
+export type SiteProbe =
+  /** There are captions. `languageCode` lets a needless translation be skipped. */
+  | { kind: 'ready'; languageCode?: string }
+  /** Nothing to translate — the toggle should not be offered at all. */
+  | { kind: 'none' }
+  /** A live stream: there is no transcript to look ahead in. */
+  | { kind: 'live' }
+  /** Could not tell. Offer the toggle and find out when it is pressed. */
+  | { kind: 'unknown' };
+
+/** The adapter for this page, or null where we have nothing to offer. */
+export function siteFor(
+  loc: Pick<Location, 'hostname' | 'pathname' | 'search'>,
+  sites: readonly SiteMatcher[],
+): SubtitleSite | null {
+  for (const site of sites) {
+    if (site.matches(loc)) return site.create();
+  }
+  return null;
+}
+
+export interface SiteMatcher {
+  matches(loc: Pick<Location, 'hostname' | 'pathname' | 'search'>): boolean;
+  create(): SubtitleSite;
+}

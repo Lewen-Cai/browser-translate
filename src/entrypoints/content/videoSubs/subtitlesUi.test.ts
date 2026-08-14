@@ -7,6 +7,14 @@ import {
   type SubtitleStyle,
 } from '~/core/subtitles/style';
 
+/** The selectors the UI used to hard-code; supplied by the site adapter now. */
+const YT_SELECTORS = {
+  player: '#movie_player',
+  nativeCaptions: '.ytp-caption-window-container',
+  controls: '.ytp-chrome-bottom',
+  autohideClass: 'ytp-autohide',
+};
+
 const PLAYER_HEIGHT = 400;
 
 const STRINGS: SubtitleUiStrings = {
@@ -49,6 +57,7 @@ function setup(lines: SubtitleLines | null, options: {
   const onActiveChange = vi.fn((next: boolean) => { active = next; ui.setActive(next); });
 
   const ui = createSubtitlesUi({
+    selectors: YT_SELECTORS,
     getLines: () => current,
     getTargetLang: () => options.targetLang ?? 'zh-CN',
     strings: STRINGS,
@@ -83,7 +92,7 @@ function pointer(type: string, clientY: number): PointerEvent {
 
 /** Everything lives in a shadow root, so every lookup goes through the host. */
 function inShadow<T extends HTMLElement>(selector: string): T | null {
-  const shadowHost = document.querySelector<HTMLElement>('.bt-yt-subs');
+  const shadowHost = document.querySelector<HTMLElement>('.bt-subs');
   return shadowHost?.shadowRoot?.querySelector<T>(selector) ?? null;
 }
 
@@ -123,14 +132,14 @@ describe('mounting', () => {
   it('lives in a shadow root inside the player and hides the native captions', () => {
     const { ui } = setup({ original: 'Hello', translation: '你好' });
 
-    expect(document.querySelector('#movie_player .bt-yt-subs')).not.toBeNull();
+    expect(document.querySelector('#movie_player .bt-subs')).not.toBeNull();
     expect(inShadow('.window')).not.toBeNull();
-    expect(document.getElementById('bt-yt-subs-style')?.textContent)
+    expect(document.getElementById('bt-subs-style')?.textContent)
       .toContain('.ytp-caption-window-container');
 
     ui.teardown();
-    expect(document.querySelector('.bt-yt-subs')).toBeNull();
-    expect(document.getElementById('bt-yt-subs-style')).toBeNull();
+    expect(document.querySelector('.bt-subs')).toBeNull();
+    expect(document.getElementById('bt-subs-style')).toBeNull();
   });
 
   it('gives the player a containing block so the overlay can be positioned in it', () => {
@@ -140,9 +149,9 @@ describe('mounting', () => {
 
   it('restores the native captions when translation is switched off', () => {
     const { ui } = setup({ original: 'Hello', translation: null });
-    expect(document.getElementById('bt-yt-subs-style')).not.toBeNull();
+    expect(document.getElementById('bt-subs-style')).not.toBeNull();
     ui.setActive(false);
-    expect(document.getElementById('bt-yt-subs-style')).toBeNull();
+    expect(document.getElementById('bt-subs-style')).toBeNull();
     expect(group()?.dataset.hidden).toBe('true');
   });
 });
@@ -228,6 +237,7 @@ describe('style', () => {
   it('follows a change of target language without a remount', () => {
     let lang = 'zh-CN';
     const ui = createSubtitlesUi({
+      selectors: YT_SELECTORS,
       getLines: () => ({ original: 'Hello', translation: '你好' }),
       getTargetLang: () => lang,
       strings: STRINGS,
@@ -432,7 +442,7 @@ describe('settings panel', () => {
     ui.togglePanel();
 
     // Second menu entry is the route into the style settings.
-    const entries = document.querySelector<HTMLElement>('.bt-yt-subs')!
+    const entries = document.querySelector<HTMLElement>('.bt-subs')!
       .shadowRoot!.querySelectorAll<HTMLElement>('.menu-item');
     entries[1]!.click();
 
@@ -457,7 +467,7 @@ describe('settings panel', () => {
       },
     });
     ui.togglePanel();
-    const shadow = document.querySelector<HTMLElement>('.bt-yt-subs')!.shadowRoot!;
+    const shadow = document.querySelector<HTMLElement>('.bt-subs')!.shadowRoot!;
     shadow.querySelectorAll<HTMLElement>('.menu-item')[1]!.click();
 
     const items = shadow.querySelectorAll<HTMLElement>('.menu-item');
@@ -475,7 +485,7 @@ describe('settings panel', () => {
   it('moves the block back to its default spot when everything is reset', () => {
     const { ui, onPositionChange } = setup(null, { position: { percent: 40, anchor: 'top' } });
     ui.togglePanel();
-    const shadow = document.querySelector<HTMLElement>('.bt-yt-subs')!.shadowRoot!;
+    const shadow = document.querySelector<HTMLElement>('.bt-subs')!.shadowRoot!;
     shadow.querySelectorAll<HTMLElement>('.menu-item')[1]!.click();
 
     const items = shadow.querySelectorAll<HTMLElement>('.menu-item');

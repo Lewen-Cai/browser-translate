@@ -19,13 +19,14 @@ vi.mock('./fetchTranscript', async (orig) => {
   };
 });
 
-import { createYouTubeSubTranslator, type YouTubeSubsStrings } from './index';
+import { createVideoSubTranslator, type VideoSubsStrings } from './index';
+import { createYouTubeSite } from './sites/youtube';
 import { DEFAULT_SUBTITLE_POSITION, DEFAULT_SUBTITLE_STYLE } from '~/core/subtitles/style';
 import { requestCaptionTracks } from './requestCaptionTracks';
 import { fetchTranscript } from './fetchTranscript';
 import { translateBatch } from '~/messaging/client';
 
-const STRINGS: YouTubeSubsStrings = {
+const STRINGS: VideoSubsStrings = {
   titleOff: 'off',
   titleOn: 'on',
   noCaptions: 'nc',
@@ -58,7 +59,8 @@ const STRINGS: YouTubeSubsStrings = {
 };
 
 function make(overrides: { notify?: (m: string) => void } = {}) {
-  return createYouTubeSubTranslator({
+  return createVideoSubTranslator({
+    site: createYouTubeSite(),
     getTargetLang: () => 'zh-CN',
     strings: STRINGS,
     notify: overrides.notify ?? vi.fn(),
@@ -72,14 +74,14 @@ function make(overrides: { notify?: (m: string) => void } = {}) {
 
 /** The control-bar button opens the menu; the switch inside it starts translation. */
 function subsSwitch(): HTMLElement {
-  const host = document.querySelector<HTMLElement>('.bt-yt-subs');
+  const host = document.querySelector<HTMLElement>('.bt-subs');
   const el = host?.shadowRoot?.querySelector<HTMLElement>('.switch');
   if (!el) throw new Error('subtitles switch not mounted');
   return el;
 }
 
 function openMenu(): void {
-  document.querySelector<HTMLButtonElement>('.bt-yt-subs-button')!.click();
+  document.querySelector<HTMLButtonElement>('.bt-subs-button')!.click();
 }
 
 function turnOn(): void {
@@ -97,7 +99,7 @@ const noTracks = { source: 'bt-yt-captions-response', isLive: false, tracks: [] 
 
 /** Subtitle lines live in the overlay's shadow root. */
 function subtitleLine(selector: string): string | undefined {
-  const host = document.querySelector<HTMLElement>('.bt-yt-subs');
+  const host = document.querySelector<HTMLElement>('.bt-subs');
   return host?.shadowRoot?.querySelector<HTMLElement>(selector)?.textContent ?? undefined;
 }
 
@@ -118,11 +120,11 @@ beforeEach(() => {
   vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
 });
 
-describe('createYouTubeSubTranslator', () => {
+describe('createVideoSubTranslator', () => {
   it('mounts the button (manual track present), enables, translates, injects, tears down', async () => {
     const t = make();
     await t.attachButton();
-    const btn = document.querySelector<HTMLButtonElement>('.bt-yt-subs-button');
+    const btn = document.querySelector<HTMLButtonElement>('.bt-subs-button');
     expect(btn).not.toBeNull();
     turnOn();
     await flush();
@@ -132,14 +134,14 @@ describe('createYouTubeSubTranslator', () => {
     expect(subtitleLine('.line-translation')).toBe('译:Hello');
     t.teardown();
     expect(t.isOn()).toBe(false);
-    expect(document.querySelector('.bt-yt-subs')).toBeNull();
+    expect(document.querySelector('.bt-subs')).toBeNull();
   });
 
   it('mounts the button on a video that only has auto-generated captions', async () => {
     vi.mocked(requestCaptionTracks).mockResolvedValueOnce(asrOnly as never);
     const t = make();
     await t.attachButton();
-    expect(document.querySelector('.bt-yt-subs-button')).not.toBeNull();
+    expect(document.querySelector('.bt-subs-button')).not.toBeNull();
   });
 
   it('removes a stale button left over from a previous video when the new one has no captions', async () => {
@@ -148,14 +150,14 @@ describe('createYouTubeSubTranslator', () => {
     vi.mocked(requestCaptionTracks).mockResolvedValueOnce(noTracks as never);
     const t = make();
     await t.attachButton();
-    expect(document.querySelector('.bt-yt-subs-button')).toBeNull();
+    expect(document.querySelector('.bt-subs-button')).toBeNull();
   });
 
   it('mounts the button anyway when the up-front probe fails (graceful fallback)', async () => {
     vi.mocked(requestCaptionTracks).mockRejectedValueOnce(new Error('bridge timeout'));
     const t = make();
     await t.attachButton();
-    expect(document.querySelector('.bt-yt-subs-button')).not.toBeNull();
+    expect(document.querySelector('.bt-subs-button')).not.toBeNull();
   });
 
   it('reuses the probed captions on enable instead of probing again', async () => {

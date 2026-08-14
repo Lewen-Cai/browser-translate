@@ -1,6 +1,3 @@
-import { requestCaptionTracks } from './requestCaptionTracks';
-import { fetchTranscript, pickTrack } from './fetchTranscript';
-import { fetchTranscriptText } from './transcriptBridge';
 import { createCueTranslator } from './translateCues';
 import {
   createSubtitlesUi,
@@ -8,21 +5,23 @@ import {
   type SubtitleUiStrings,
 } from './subtitlesUi';
 import { mountSubsButton, removeSubsButton, type SubsButtonHandle } from './button';
-import type { CaptionsResponse } from './bridgeProtocol';
+import type { SubtitleSite } from './site';
 import { activeCue } from '~/core/subtitles/activeCue';
 import type { Cue } from '~/core/subtitles/types';
 import type { SubtitlePosition, SubtitleStyle } from '~/core/subtitles/style';
 import { translateBatch, abortTranslate } from '~/messaging/client';
 import type { TranslateBatchRequest } from '~/messaging/types';
 
-export interface YouTubeSubsStrings extends SubtitleUiStrings {
+export interface VideoSubsStrings extends SubtitleUiStrings {
   titleOff: string; titleOn: string; noCaptions: string;
   enableCc: string; noTranslationNeeded: string; live: string; failed: string;
 }
 
-export interface YouTubeSubTranslatorDeps {
+export interface VideoSubTranslatorDeps {
+  /** Which player this is. Everything site-shaped lives behind it. */
+  site: SubtitleSite;
   getTargetLang: () => string;
-  strings: YouTubeSubsStrings;
+  strings: VideoSubsStrings;
   notify: (msg: string) => void;
   concurrency: number;
   /** Read live so a settings change reaches an already-playing video. */
@@ -32,7 +31,7 @@ export interface YouTubeSubTranslatorDeps {
   setStyle: (next: SubtitleStyle) => void;
 }
 
-export interface YouTubeSubTranslator {
+export interface VideoSubTranslator {
   attachButton: () => Promise<void>;
   disable: () => void;
   /** Stop translating and take the whole in-player UI back down. */
@@ -40,15 +39,8 @@ export interface YouTubeSubTranslator {
   isOn: () => boolean;
 }
 
-function videoEl(): HTMLVideoElement | null {
-  return document.querySelector<HTMLVideoElement>('video.html5-main-video, video');
-}
-
-function currentVideoId(): string {
-  return new URLSearchParams(location.search).get('v') ?? '';
-}
-
-export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouTubeSubTranslator {
+export function createVideoSubTranslator(deps: VideoSubTranslatorDeps): VideoSubTranslator {
+  const { site } = deps;
   let on = false;
   let button: SubsButtonHandle | null = null;
   let translator: ReturnType<typeof createCueTranslator> | null = null;
@@ -58,17 +50,10 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
   let cues: Cue[] = [];
   let rafId = 0;
   let pumpTarget: HTMLVideoElement | null = null;
-  let enabledVideoId = '';
-  // Caption tracks probed up front in attachButton(); reused by enable() so we don't
-  // round-trip the MAIN-world bridge twice. Null if the probe hasn't run / failed.
-  let probed: CaptionsResponse | null = null;
-
-  function trackPref(captions: CaptionsResponse) {
-    return { activeVssId: captions.activeVssId, activeLanguageCode: captions.activeLanguageCode };
-  }
+  let enabledMediaKey = '';
 
   function currentTimeMs(): number {
-    return Math.round((videoEl()?.currentTime ?? 0) * 1000);
+    return Math.round((site.findVideo()?.currentTime ?? 0) * 1000);
   }
 
   // The lines to draw right now, straight from the transcript's own timing.
@@ -87,6 +72,7 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
   function ensureUi(): ReturnType<typeof createSubtitlesUi> {
     if (ui) return ui;
     ui = createSubtitlesUi({
+      selectors: site.selectors,
       getLines,
       getTargetLang: deps.getTargetLang,
       strings: deps.strings,
@@ -101,9 +87,9 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
   }
 
   function tick(): void {
-    // YouTube SPA-navigated to a different video → drop everything (otherwise the
-    // previous video's cues would be shown against the new captions).
-    if (on && currentVideoId() !== enabledVideoId) {
+    // The page moved to different media → drop everything, or the previous
+    // video's cues would be drawn over the new one.
+    if (on && site.mediaKey() !== enabledMediaKey) {
       disable();
       return;
     }
@@ -114,7 +100,7 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
   async function enable(): Promise<void> {
     if (on) return;
     on = true;
-    enabledVideoId = currentVideoId();
+    enabledMediaKey = site.mediaKey();
     button?.setActive(true);
 
     // Show the subtitles immediately. Until the transcript arrives getLines()
@@ -124,39 +110,26 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     ensureUi().setActive(true);
     rafId = requestAnimationFrame(tick);
 
-    let captions = probed;
-    if (!captions) {
-      try {
-        captions = await requestCaptionTracks();
-      } catch {
-        deps.notify(deps.strings.enableCc);
-        disable();
-        return;
-      }
-      if (!on) return; // user toggled off during the await
-    }
+    const probe = await site.probe();
+    if (!on) return; // reader toggled off during the await
+    if (probe.kind === 'live') { deps.notify(deps.strings.live); disable(); return; }
+    if (probe.kind === 'none') { deps.notify(deps.strings.noCaptions); disable(); return; }
+    if (probe.kind === 'unknown') { deps.notify(deps.strings.enableCc); disable(); return; }
 
-    if (captions.isLive) { deps.notify(deps.strings.live); disable(); return; }
-    const track = pickTrack(captions.tracks, trackPref(captions));
-    if (!track) {
-      deps.notify(deps.strings.noCaptions);
-      disable();
-      return;
-    }
     const target = deps.getTargetLang();
-    if (track.languageCode && target.startsWith(track.languageCode)) {
+    if (probe.languageCode && target.startsWith(probe.languageCode)) {
       deps.notify(deps.strings.noTranslationNeeded); disable(); return;
     }
 
-    let fetched;
+    let fetched: Cue[];
     try {
-      fetched = await fetchTranscript(track.languageCode, fetchTranscriptText);
+      fetched = await site.fetchTranscript();
     } catch {
       deps.notify(deps.strings.failed);
       disable();
       return;
     }
-    if (!on) return; // user toggled off during the await
+    if (!on) return; // reader toggled off during the await
     if (fetched.length === 0) { deps.notify(deps.strings.noCaptions); disable(); return; }
     cues = fetched;
 
@@ -165,7 +138,7 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
       abortFn: abortTranslate,
       getTargetLang: deps.getTargetLang,
       getCurrentTimeMs: currentTimeMs,
-      getPlaybackRate: () => videoEl()?.playbackRate ?? 1,
+      getPlaybackRate: () => site.findVideo()?.playbackRate ?? 1,
       onUpdate: () => ui?.refresh(),
       concurrency: deps.concurrency,
     });
@@ -174,7 +147,7 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
     // Translation follows the playhead rather than draining the track, so it has
     // to be nudged as the video moves. timeupdate fires a few times a second,
     // which is plenty to keep the look-ahead window filled.
-    pumpTarget = videoEl();
+    pumpTarget = site.findVideo();
     pumpTarget?.addEventListener('timeupdate', pump);
     pumpTarget?.addEventListener('seeked', pump);
     pumpTarget?.addEventListener('ratechange', pump);
@@ -212,32 +185,26 @@ export function createYouTubeSubTranslator(deps: YouTubeSubTranslatorDeps): YouT
   }
 
   async function attachButton(): Promise<void> {
-    // Probe the caption tracks up front so we can hide the button on videos that have
-    // no translatable (manual) track — auto-generated (asr) captions render in a way
-    // that covers our injected line, so we don't translate them.
-    try {
-      probed = await requestCaptionTracks();
-    } catch {
-      probed = null; // bridge not ready / timed out
-    }
-    // Positively know there's no manual track → don't mount, and clear any button left
-    // over from a previous video (the control bar persists across SPA navigation).
-    if (probed && pickTrack(probed.tracks) === null) {
+    // Probe up front so the toggle is never offered on media that has nothing to
+    // translate. Only a definite no hides it — a site that cannot tell yet gets
+    // the button, and says so when it is pressed.
+    const probe = await site.probe();
+    if (probe.kind === 'none') {
       removeSubsButton();
       teardown();
       return;
     }
-    // Manual track present, or probe failed (mount anyway as a graceful fallback —
-    // enable() re-probes and notifies if it turns out to be unsupported).
-    button = mountSubsButton({
-      titleOff: deps.strings.titleOff,
-      titleOn: deps.strings.titleOn,
-      // The button opens the menu rather than translating outright: the same
-      // press has to reach the style settings, which are useless once the video
-      // has moved on and the reader has to hunt for them.
-      onToggle: () => ensureUi().togglePanel(),
-    });
-    button.setActive(on);
+    if (site.button) {
+      button = mountSubsButton(site.button, {
+        titleOff: deps.strings.titleOff,
+        titleOn: deps.strings.titleOn,
+        // The button opens the menu rather than translating outright: the same
+        // press has to reach the style settings, which are useless once the video
+        // has moved on and the reader has to hunt for them.
+        onToggle: () => ensureUi().togglePanel(),
+      });
+      button.setActive(on);
+    }
     ensureUi();
   }
 

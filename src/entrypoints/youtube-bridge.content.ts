@@ -6,7 +6,7 @@ import {
   type CaptionTrack,
   type TranscriptRequest,
   type TranscriptResponse,
-} from './content/youtubeSubs/bridgeProtocol';
+} from './content/videoSubs/bridgeProtocol';
 
 /**
  * MAIN-world bridge (page context). Two jobs:
