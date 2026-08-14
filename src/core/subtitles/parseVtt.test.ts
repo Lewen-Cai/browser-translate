@@ -78,3 +78,29 @@ Only this is speech.
     expect(cues.map((c) => c.id)).toEqual([0, 1]);
   });
 });
+
+describe('parseVtt speakers', () => {
+  it('takes the name from a <v> span, which says it outright', () => {
+    const cues = parseVtt('WEBVTT\n\n00:00.000 --> 00:01.000\n<v Ana>Hello there</v>\n');
+    expect(cues[0]).toMatchObject({ speaker: 'Ana', text: 'Hello there' });
+  });
+
+  it('takes a plain "Name:" label once it has seen it twice', () => {
+    // A meeting recorder writes every line this way, and translating the name
+    // gives a different rendering of it every few seconds.
+    const cues = parseVtt(
+      'WEBVTT\n\n00:00.000 --> 00:01.000\nAna Ruiz: So, you can search.\n' +
+      '\n00:01.000 --> 00:02.000\nAna Ruiz: And then filter.\n',
+    );
+    expect(cues.map((c) => [c.speaker, c.text])).toEqual([
+      ['Ana Ruiz', 'So, you can search.'],
+      ['Ana Ruiz', 'And then filter.'],
+    ]);
+  });
+
+  it('leaves a colon that is part of a sentence where it is', () => {
+    const cues = parseVtt('WEBVTT\n\n00:00.000 --> 00:01.000\nThe agenda is: three items\n');
+    expect(cues[0]!.speaker).toBeUndefined();
+    expect(cues[0]!.text).toBe('The agenda is: three items');
+  });
+});

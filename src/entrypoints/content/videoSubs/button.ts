@@ -40,7 +40,7 @@ export function mountSubsButton(
   deps: SubsButtonDeps,
   playerSelector?: string,
 ): SubsButtonHandle {
-  const controls = document.querySelector(style.container);
+  const controls = style.container ? document.querySelector(style.container) : null;
   const corner = !controls && style.fallback === 'player-corner' && playerSelector
     ? document.querySelector(playerSelector)
     : null;

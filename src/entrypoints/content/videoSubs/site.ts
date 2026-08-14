@@ -45,10 +45,15 @@ export interface SiteSelectors {
 }
 
 export interface SiteButtonStyle {
-  /** The control-bar container the button is inserted into. */
-  container: string;
   /**
-   * Where to put the button when that container is nowhere to be found. A
+   * The control-bar container the button is inserted into. Omit it where a bar
+   * exists but is not somewhere a new control can simply be appended — a bar
+   * whose right-hand group is positioned out of the flow drops an appended
+   * button in the middle of itself, which reads as a fault.
+   */
+  container?: string;
+  /**
+   * Where to put the button when there is no container, or none is found. A
    * player we do not recognise still has a picture, and a corner of it is a
    * worse home for a control than a real control bar but a far better one than
    * nothing — without it there is no way to reach the menu at all.

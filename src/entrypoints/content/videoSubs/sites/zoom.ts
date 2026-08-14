@@ -30,10 +30,11 @@ export function createZoomSite(): SubtitleSite {
       // picture, so there is nothing over the video to hide.
     },
     button: {
-      container: '.vjs-control-bar',
-      className: 'vjs-control vjs-button',
+      // Zoom's control bar lays its right-hand group out of the flow, so a
+      // control appended to the bar lands in the middle of it, between the
+      // volume slider and nothing in particular. The corner of the picture is
+      // where it goes until that bar can be joined properly.
       fallback: 'player-corner',
-      place: 'end',
       width: '40px',
     },
 

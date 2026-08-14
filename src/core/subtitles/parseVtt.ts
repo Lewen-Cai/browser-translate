@@ -1,3 +1,4 @@
+import { attachSpeakers } from './speaker';
 import type { Cue } from './types';
 
 /**
@@ -32,23 +33,35 @@ export function parseVtt(raw: string): Cue[] {
     if (at === -1) continue; // WEBVTT header, NOTE, STYLE, REGION — no cue here
 
     const timing = TIMING.exec(lines[at]!)!;
-    const text = lines
-      .slice(at + 1)
+    const body = lines.slice(at + 1);
+    const text = body
       .map(stripTags)
       .join(' ')
       .replace(/\s+/g, ' ')
       .trim();
     if (!text) continue;
 
+    // `<v Ana>` names the speaker outright, so it needs none of the guesswork
+    // the plain "Name:" form does — take it wherever it appears.
+    const tagged = voiceTag(body);
+    const split = tagged ? { speaker: tagged, text } : { text };
+
     cues.push({
       id: cues.length,
       startMs: toMs(timing[1]!),
       endMs: toMs(timing[2]!),
-      text,
+      ...split,
     });
   }
 
-  return cues;
+  // The plain form is only a speaker if the same label comes back.
+  return attachSpeakers(cues);
+}
+
+/** The name in a `<v Name>` voice span, if the cue opens with one. */
+function voiceTag(body: readonly string[]): string | undefined {
+  const match = /<v(?:\.\S+)*\s+([^>]+)>/.exec(body[0] ?? '');
+  return match ? match[1]!.trim() : undefined;
 }
 
 /**

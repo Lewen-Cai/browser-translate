@@ -84,3 +84,16 @@ describe('the corner fallback', () => {
       .toBe(false);
   });
 });
+
+describe('a site with no bar to join', () => {
+  const CORNER = { fallback: 'player-corner' as const, width: '40px' };
+
+  it('goes straight to the corner without looking for a control bar', () => {
+    // Zoom has a bar, but one whose right-hand group sits out of the flow, so
+    // an appended control lands in the middle of it.
+    document.body.innerHTML = '<div class="video-js"><div class="vjs-control-bar"></div></div>';
+    mountSubsButton(CORNER, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() }, '.video-js');
+    expect(document.querySelector('.vjs-control-bar > .bt-subs-button')).toBeNull();
+    expect(document.querySelector('.video-js > .bt-subs-button')).not.toBeNull();
+  });
+});

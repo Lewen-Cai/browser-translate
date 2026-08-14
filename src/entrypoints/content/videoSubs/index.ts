@@ -63,6 +63,7 @@ export function createVideoSubTranslator(deps: VideoSubTranslatorDeps): VideoSub
     const cue = activeCue(currentTimeMs(), cues);
     if (!cue) return null;
     return {
+      ...(cue.speaker && { speaker: cue.speaker }),
       original: cue.text,
       translation: translator?.get(cue.id) ?? null,
       failed: translator?.isFailed(cue.id) ?? false,

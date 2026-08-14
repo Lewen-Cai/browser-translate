@@ -30,6 +30,12 @@ const PANEL_GAP_OVER_CONTROLS = 18;
 const PANEL_GAP_BARE = 22;
 
 export interface SubtitleLines {
+  /**
+   * Who is speaking, where the transcript said so. Never translated, and drawn
+   * once — on whichever line is on top — so a two-line subtitle does not carry
+   * the same name twice.
+   */
+  speaker?: string;
   original: string;
   /** null while the translation for this cue is still in flight. */
   translation: string | null;
@@ -66,6 +72,11 @@ export interface SubtitlesUi {
   setActive: (on: boolean) => void;
   togglePanel: () => void;
   teardown: () => void;
+}
+
+/** Put the speaker in front of a line, where there is a line and a speaker. */
+function label(text: string, speaker: string | undefined): string {
+  return speaker && text ? `${speaker}: ${text}` : text;
 }
 
 function isTextStyleEqual(a: SubtitleTextStyle, b: SubtitleTextStyle): boolean {
@@ -442,17 +453,21 @@ export function createSubtitlesUi(deps: SubtitlesUiDeps): SubtitlesUi {
     }
     if (plate) plate.dataset.empty = 'false';
 
-    setText(originalEl, showsOriginal(style.displayMode) ? lines.original : '');
     // A cue whose translation failed shows the original alone rather than a
     // placeholder that will never resolve.
     const pending = lines.translation === null && !lines.failed;
     const translation = lines.translation ?? (pending ? deps.strings.placeholder : '');
-    setText(
-      translationEl,
-      showsTranslation(style.displayMode)
-        ? (translation || (style.displayMode === 'translationOnly' ? lines.original : ''))
-        : '',
-    );
+    const originalText = showsOriginal(style.displayMode) ? lines.original : '';
+    const translationText = showsTranslation(style.displayMode)
+      ? (translation || (style.displayMode === 'translationOnly' ? lines.original : ''))
+      : '';
+
+    // The name goes on whichever line is drawn first, so it reads as a label on
+    // the exchange rather than as part of either sentence.
+    const translationFirst = style.translationPosition === 'above';
+    const nameOn = translationFirst || !originalText ? 'translation' : 'original';
+    setText(originalEl, label(originalText, nameOn === 'original' ? lines.speaker : undefined));
+    setText(translationEl, label(translationText, nameOn === 'translation' ? lines.speaker : undefined));
     if (translationEl) translationEl.dataset.placeholder = String(pending);
   }
 

@@ -1,3 +1,4 @@
+import { attachSpeakers } from '~/core/subtitles/speaker';
 import type { Cue } from '~/core/subtitles/types';
 
 /**
@@ -46,7 +47,7 @@ export async function cuesFromTextTrack(track: TextTrack, timeoutMs = 4000): Pro
   if (previousMode === 'showing') track.mode = 'showing';
 
   if (!list) return [];
-  return [...(list as unknown as Iterable<TextTrackCue>)]
+  const cues = [...(list as unknown as Iterable<TextTrackCue>)]
     .map((cue, i) => ({
       id: i,
       startMs: Math.round(cue.startTime * 1000),
@@ -54,6 +55,7 @@ export async function cuesFromTextTrack(track: TextTrack, timeoutMs = 4000): Pro
       text: cueText(cue).trim(),
     }))
     .filter((c) => c.text.length > 0);
+  return attachSpeakers(cues);
 }
 
 function waitForCues(track: TextTrack, timeoutMs: number): Promise<TextTrackCueList | null> {
