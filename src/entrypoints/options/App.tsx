@@ -10,12 +10,12 @@ import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
 import { useApplyLocale } from '~/ui/useApplyLocale';
 
-type Tab = 'translation' | 'general' | 'video' | 'data';
+type Tab = 'general' | 'translation' | 'video' | 'data';
 
 export function App() {
   const load = useAppStore((s) => s.load);
   const loaded = useAppStore((s) => s.loaded);
-  const [tab, setTab] = useState<Tab>('translation');
+  const [tab, setTab] = useState<Tab>('general');
   const t = useT();
   useApplyTheme();
   useApplyLocale();
@@ -27,8 +27,8 @@ export function App() {
   // One page per thing being set up, rather than everything that isn't the API
   // piled into "general".
   const TABS: Array<{ id: Tab; num: string; label: string; icon: typeof Settings }> = [
-    { id: 'translation', num: '01', label: t('navTranslation'), icon: Languages },
-    { id: 'general',     num: '02', label: t('navGeneral'),     icon: Settings },
+    { id: 'general',     num: '01', label: t('navGeneral'),     icon: Settings },
+    { id: 'translation', num: '02', label: t('navTranslation'), icon: Languages },
     { id: 'video',       num: '03', label: t('navVideo'),       icon: Captions },
     { id: 'data',        num: '04', label: t('navData'),        icon: Download },
   ];
@@ -64,7 +64,7 @@ export function App() {
                     'font-mono text-2xs tracking-wider',
                     tab === tabItem.id ? 'text-ap-brand' : 'text-ap-subtle',
                   )}>{tabItem.num}</span>
-                  <tabItem.icon size={14} class={cn('shrink-0', tab === tabItem.id ? 'text-ap-fg' : 'text-ap-subtle group-hover:text-ap-muted')} />
+                  <tabItem.icon size={17} class={cn('shrink-0', tab === tabItem.id ? 'text-ap-fg' : 'text-ap-subtle group-hover:text-ap-muted')} />
                   <span class="font-mono text-2xs uppercase tracking-wider">{tabItem.label}</span>
                 </button>
               </li>

@@ -302,9 +302,9 @@ export function TranslationCard({
                     <Loader2 size={11} class="animate-spin" /> {t('loading', locale)}
                   </span>
                 ))}
-                {/* A cursor while more is still arriving, so a pause in the
+                {/* A caret while more is still arriving, so a pause in the
                     stream doesn't read as a finished translation. */}
-                {displayed && streaming && ' ●'}
+                {displayed && streaming && <span class="bt-card-caret" aria-hidden="true" />}
               </div>
             )}
           </>

@@ -173,6 +173,7 @@ html, body {
   flex-direction: column;
 }
 .bt-card-header {
+  position: relative;
   display: flex;
   align-items: stretch;
   border-bottom: 1px solid rgb(var(--ap-border));
@@ -181,13 +182,24 @@ html, body {
   user-select: none;
   -webkit-user-select: none;
 }
+/* Marks the header, and starts below the card's rounded corner rather than
+   running into it — a straight bar against a 14px radius gets sliced at the top
+   and reads as a rendering fault. It runs down to the header's rule, which is a
+   straight edge and needs no clearance, so only the top is rounded. Positioned
+   rather than laid out, so the header's own padding sets where the text sits. */
 .bt-card-strip {
+  position: absolute;
+  left: 0;
+  top: 11px;
+  bottom: 0;
   width: 3px;
+  border-radius: 999px 999px 0 0;
   background: rgb(var(--ap-brand));
+  pointer-events: none;
 }
 .bt-card-header-content {
   flex: 1;
-  padding: 8px 12px;
+  padding: 8px 12px 8px 15px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -409,6 +421,26 @@ html, body {
   line-height: 1.55;
   min-height: 1.55em;
   font-size: 14px;
+}
+/* A text caret rather than a glyph: the point is to read as the place the next
+   character will land, which a bullet does not. It blinks so a stall in the
+   stream still looks alive, and holds still for anyone who has asked the system
+   for less motion. */
+.bt-card-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: rgb(var(--ap-brand));
+  animation: bt-caret-blink 1.06s step-end infinite;
+}
+@keyframes bt-caret-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bt-card-caret { animation: none; }
 }
 .bt-card-notice {
   font-size: 14px;
