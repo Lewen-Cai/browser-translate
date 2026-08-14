@@ -51,7 +51,6 @@ describe('TranslationCard header', () => {
     expect(pair).not.toBeNull();
     expect(pair!.textContent).toContain('English');
     expect(pair!.textContent).toContain('简体中文');
-    expect(pair!.textContent).toContain('(auto)');
   });
 
   it('follows the target the reader picked on this card, not only the setting', () => {

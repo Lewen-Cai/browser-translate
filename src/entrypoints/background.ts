@@ -69,11 +69,7 @@ async function handleTranslate(
   activeAborts: Map<string, AbortController>,
 ): Promise<void> {
   const data = await client.loadAppData();
-  const tabId = sender.tab?.id;
-  const send = (payload: object) => {
-    if (tabId !== undefined) chrome.tabs.sendMessage(tabId, payload).catch(() => {});
-    else chrome.runtime.sendMessage(payload).catch(() => {});
-  };
+  const send = replyTo(sender);
 
   try {
     // Routing decides unless the request named someone — the card can send a
@@ -181,11 +177,7 @@ async function handleTranslateBatch(
   activeAborts: Map<string, AbortController>,
 ): Promise<void> {
   const data = await client.loadAppData();
-  const tabId = sender.tab?.id;
-  const send = (payload: object) => {
-    if (tabId !== undefined) chrome.tabs.sendMessage(tabId, payload).catch(() => {});
-    else chrome.runtime.sendMessage(payload).catch(() => {});
-  };
+  const send = replyTo(sender);
 
   try {
     const engine: ProviderId = data.settings.engines[msg.surface];
@@ -292,6 +284,28 @@ async function handleTranslateBatch(
     const kind = e instanceof TranslationProviderError ? e.info.kind : 'unknown';
     send({ type: 'translate:batch:error', requestId: msg.requestId, message, kind });
   }
+}
+
+/**
+ * Send back to whoever asked.
+ *
+ * The frame matters now that subtitle translation runs in subframes: a tab
+ * message with no frame named is delivered to every frame in the tab, so one
+ * Canvas page with two recordings would have each frame sifting the other's
+ * chunks out of its own stream. Naming the frame keeps each conversation to the
+ * two ends that are having it.
+ */
+function replyTo(sender: chrome.runtime.MessageSender): (payload: object) => void {
+  const tabId = sender.tab?.id;
+  const frameId = sender.frameId;
+  return (payload: object) => {
+    if (tabId === undefined) {
+      chrome.runtime.sendMessage(payload).catch(() => {});
+      return;
+    }
+    const options = frameId === undefined ? undefined : { frameId };
+    chrome.tabs.sendMessage(tabId, payload, options).catch(() => {});
+  };
 }
 
 async function handlePing(

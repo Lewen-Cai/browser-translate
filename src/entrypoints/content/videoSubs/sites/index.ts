@@ -1,5 +1,6 @@
 import { youtubeMatcher } from './youtube';
 import { zoomMatcher } from './zoom';
+import { canvasMatcher } from './canvas';
 import { genericMatcher } from './generic';
 import { siteFor, type SiteMatcher, type SubtitleSite } from '../site';
 
@@ -8,7 +9,7 @@ import { siteFor, type SiteMatcher, type SubtitleSite } from '../site';
  * everything else. Generic must stay last — it matches every page, and its job
  * is to catch what nothing above it claimed.
  */
-export const SITES: readonly SiteMatcher[] = [youtubeMatcher, zoomMatcher, genericMatcher];
+export const SITES: readonly SiteMatcher[] = [youtubeMatcher, zoomMatcher, canvasMatcher, genericMatcher];
 
 export function subtitleSiteFor(loc: Pick<Location, 'hostname' | 'pathname' | 'search'>): SubtitleSite | null {
   return siteFor(loc, SITES);

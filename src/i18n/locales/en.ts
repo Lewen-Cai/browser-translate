@@ -107,7 +107,6 @@ export const en = {
   cardTargetLanguage: 'Translate into…',
   cardProvider: 'Answer with…',
   cardSearchLanguages: 'Search languages…',
-  cardAutoDetected: '(auto)',
   // Errors
   noProfileError: 'API not configured. Open settings to add your key.',
   // YouTube subtitles

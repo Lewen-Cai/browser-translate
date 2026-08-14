@@ -358,7 +358,6 @@ export function TranslationCard({
         <span class="bt-card-grip-bar" />
       </div>
       <div class="bt-card-header">
-        <div class="bt-card-strip" />
         <div class="bt-card-header-content">
           {/* What is being translated into what. The source is detected here
               rather than reported by the provider: it has to be on the card
@@ -369,7 +368,6 @@ export function TranslationCard({
             {sourceLang ? (
               <span class="bt-card-pair">
                 <span class="bt-card-pair-lang">{sourceLanguageEndonym(sourceLang)}</span>
-                <span class="bt-card-pair-auto">{t('cardAutoDetected', locale)}</span>
                 <span class="bt-card-pair-arrow" aria-hidden="true">→</span>
                 <span class="bt-card-pair-lang">{languageEndonym(targetLang)}</span>
               </span>

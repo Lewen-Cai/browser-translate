@@ -107,7 +107,6 @@ export const ja: Record<StringKey, string> = {
   cardTargetLanguage: 'この言語に翻訳…',
   cardProvider: '別のプロバイダーで…',
   cardSearchLanguages: '言語を検索…',
-  cardAutoDetected: '（自動）',
   // Errors
   noProfileError: 'API が未設定です。設定を開いてキーを追加してください。',
   // YouTube subtitles

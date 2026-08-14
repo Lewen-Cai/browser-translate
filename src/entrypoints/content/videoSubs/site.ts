@@ -19,6 +19,17 @@ export interface SubtitleSite {
   /** The media the cues are timed against. */
   findVideo(): HTMLVideoElement | null;
   /**
+   * Whether there is any point asking `probe` yet.
+   *
+   * A player appears before its captions do: Canvas renders the `<video>` a
+   * second before it renders the `<track>` inside it. Probing in that gap gets
+   * "nothing to translate" — a wrong answer that is then believed for good, so
+   * the toggle never appears on a recording that has perfectly good captions.
+   * Sites whose captions do not come from the page have nothing extra to wait
+   * for and can leave this out; the default is simply that a video exists.
+   */
+  readyToProbe?(): boolean;
+  /**
    * Changes when the page moves to different media. The translator drops
    * everything when it changes, so a site with one video per page can return a
    * constant and a site that swaps videos in place must not.

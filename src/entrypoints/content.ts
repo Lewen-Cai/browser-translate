@@ -5,38 +5,15 @@ import { createHotkeyWatcher, type HotkeyWatcher } from './content/hotkeyWatcher
 import { TriggerIcon } from './content/TriggerIcon';
 import { TranslationCard } from './content/TranslationCard';
 import { createPageTranslator, type PageTranslator } from './content/pageTranslate';
-import { createVideoSubTranslator, type VideoSubTranslator } from './content/videoSubs';
-import { subtitleSiteFor } from './content/videoSubs/sites';
-import type { SubtitleSite } from './content/videoSubs/site';
 import { StorageClient } from '~/storage/client';
 import { resolveEffectiveTheme } from '~/ui/themeResolver';
 import { isLikelyPassage } from '~/core/selection/isLikelyPassage';
 import { isSameLanguageAsTarget } from '~/core/language/sameLanguage';
-import {
-  DEFAULT_SUBTITLE_POSITION,
-  DEFAULT_SUBTITLE_STYLE,
-  type SubtitlePosition,
-  type SubtitleStyle,
-} from '~/core/subtitles/style';
 import { createDefaultProviders } from '~/storage/defaults';
 import { resolveLocale, t } from '~/i18n';
 import type { Locale } from '~/i18n/strings';
-import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
+import type { ProviderId } from '~/core/providers/registry';
 import type { AppData, GlobalSettings, ProvidersConfig } from '~/storage/schema';
-
-/**
- * How many subtitle batches to keep in flight, by who is answering them.
- *
- * A free service answers in well under a second and costs nothing per call, so
- * it takes the widest fan-out. A cloud model fans out across its fleet. A
- * self-hosted one uses 2 as a one-deep pipeline: a batch processing while the
- * next is queued, so the model never idles between batches — a local MLX server
- * queues rather than splitting, so this does not slow individual batches.
- */
-function subtitleConcurrency(provider: ProviderId): number {
-  if (PROVIDERS[provider].kind === 'service') return 6;
-  return provider === 'local' ? 2 : 4;
-}
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -63,10 +40,7 @@ export default defineContentScript({
     let hotkey: HotkeyWatcher | null = null;
     let pageTranslator: PageTranslator | null = null;
     let targetLanguage = 'zh-CN';
-    let subtitlePosition: SubtitlePosition = DEFAULT_SUBTITLE_POSITION;
-    let subtitleStyle: SubtitleStyle = DEFAULT_SUBTITLE_STYLE;
     let fullPageHotkey: HotkeyWatcher | null = null;
-    let subs: VideoSubTranslator | null = null;
     // The card offers a reader every provider that is switched on, so it needs
     // the rows rather than a finished credit line.
     let providersConfig: ProvidersConfig = createDefaultProviders();
@@ -150,8 +124,6 @@ export default defineContentScript({
       locale = resolveLocale(data.settings.uiLanguage, navigator.language);
       mount.setLang(locale);
       targetLanguage = data.settings.targetLanguage;
-      subtitlePosition = data.settings.subtitlePosition;
-      subtitleStyle = data.settings.subtitleStyle;
       providersConfig = data.providers;
       selectionProvider = data.settings.engines.selection;
       applyTheme();
@@ -194,60 +166,6 @@ export default defineContentScript({
       });
       if (wasOn) pageTranslator.enable();
 
-      // Subtitle translation, on whichever player this page turns out to be.
-      subs?.teardown();
-      subs = null;
-      const site = subtitleSiteFor(location);
-      if (site) {
-        subs = createVideoSubTranslator({
-          site,
-          getTargetLang: () => targetLanguage,
-          concurrency: subtitleConcurrency(data.settings.engines.subtitle),
-          getPosition: () => subtitlePosition,
-          setPosition: (next) => {
-            subtitlePosition = next;
-            void client.patchSettings({ subtitlePosition: next });
-          },
-          getStyle: () => subtitleStyle,
-          setStyle: (next) => {
-            subtitleStyle = next;
-            void client.patchSettings({ subtitleStyle: next });
-          },
-          strings: {
-            titleOff: t('ytSubsButtonTitle', locale),
-            titleOn: t('ytSubsButtonTitleOn', locale),
-            noCaptions: t('ytSubsNoCaptions', locale),
-            enableCc: t('ytSubsEnableCc', locale),
-            noTranslationNeeded: t('ytSubsNoTranslationNeeded', locale),
-            live: t('ytSubsLive', locale),
-            failed: t('ytSubsFailed', locale),
-            placeholder: t('ytSubsTranslating', locale),
-            dragHint: t('ytSubsDragHint', locale),
-            subtitlesToggle: t('ytSubsToggleLabel', locale),
-            styleTitle: t('subtitleStyle', locale),
-            general: t('subtitleGeneral', locale),
-            displayMode: t('subtitleDisplayMode', locale),
-            displayBilingual: t('subtitleDisplayBilingual', locale),
-            displayOriginalOnly: t('subtitleDisplayOriginalOnly', locale),
-            displayTranslationOnly: t('subtitleDisplayTranslationOnly', locale),
-            translationPosition: t('subtitleTranslationPosition', locale),
-            positionAbove: t('subtitlePositionAbove', locale),
-            positionBelow: t('subtitlePositionBelow', locale),
-            backgroundOpacity: t('subtitleBackgroundOpacity', locale),
-            mainSubtitle: t('subtitleMainLine', locale),
-            translationSubtitle: t('subtitleTranslationLine', locale),
-            fontScale: t('subtitleFontScale', locale),
-            color: t('subtitleColor', locale),
-            fontFamily: t('subtitleFontFamily', locale),
-            fontWeight: t('subtitleFontWeight', locale),
-            reset: t('subtitleReset', locale),
-            resetAll: t('subtitleResetAll', locale),
-            back: t('back', locale),
-          },
-          notify: (msg) => console.info('[BrowserTranslate]', msg),
-        });
-        attachWhenPlayerReady(subs, site);
-      }
     }
 
     function togglePageTranslation() {
@@ -268,16 +186,10 @@ export default defineContentScript({
       const change = changes['app:data'];
       if (!change) return;
       const next = change.newValue as AppData | undefined;
-      // Moving or restyling the subtitles writes to storage, and this listener
-      // fires on our own write. Rebuilding the watchers for it would take the
-      // YouTube translator down mid-video — the drag would end with the
-      // subtitles gone. These two are read live by the running UI, so applying
-      // them here is the whole job.
-      if (next && onlySubtitleAppearanceChanged(change.oldValue as AppData | undefined, next)) {
-        subtitlePosition = next.settings.subtitlePosition;
-        subtitleStyle = next.settings.subtitleStyle;
-        return;
-      }
+      // Dragging or restyling the subtitles writes to storage from the subtitle
+      // script, which may be in another frame. Nothing here reads those, and
+      // rebuilding the watchers for them would close an open card for nothing.
+      if (next && onlySubtitleAppearanceChanged(change.oldValue as AppData | undefined, next)) return;
       void reattach();
     });
 
@@ -321,37 +233,6 @@ function onlySubtitleAppearanceChanged(
   const blank = { subtitlePosition: null, subtitleStyle: null };
   return JSON.stringify({ ...before, settings: { ...before.settings, ...blank } })
     === JSON.stringify({ ...after, settings: { ...after.settings, ...blank } });
-}
-
-/**
- * Wait for the player to exist before offering the toggle, then offer it
- * regardless.
- *
- * The wait is the whole point. A recording page builds its player after
- * authenticating and asking for the media, which is long after the document
- * settles — so the first look finds no video, and a translator that took that
- * for an answer would decide the page has nothing to translate and never look
- * again. That is exactly what it used to do.
- *
- * Running out of looks is not a reason to give up either: the last attempt goes
- * ahead, and the probe behind it gives the honest answer for a page that really
- * has no video.
- */
-const PLAYER_WAIT_TRIES = 40;
-const PLAYER_WAIT_MS = 500;
-
-function attachWhenPlayerReady(subs: VideoSubTranslator, site: SubtitleSite): void {
-  const container = site.button?.container;
-  const attempt = (n: number) => {
-    const ready = site.findVideo() !== null
-      && (!container || document.querySelector(container) !== null);
-    if (ready || n <= 0) {
-      void subs.attachButton();
-      return;
-    }
-    setTimeout(() => attempt(n - 1), PLAYER_WAIT_MS);
-  };
-  attempt(PLAYER_WAIT_TRIES);
 }
 
 function getSelectionInfo(): SelectionInfo | null {

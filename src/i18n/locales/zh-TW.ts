@@ -107,7 +107,6 @@ export const zhTW: Record<StringKey, string> = {
   cardTargetLanguage: '翻譯為…',
   cardProvider: '改用其他服務商…',
   cardSearchLanguages: '搜尋語言…',
-  cardAutoDetected: '（自動）',
   // Errors
   noProfileError: '尚未設定 API，請到設定中填入 Key。',
   // YouTube subtitles

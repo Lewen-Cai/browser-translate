@@ -53,6 +53,14 @@ export function createGenericSite(): SubtitleSite {
     // say so.
     mediaKey: () => location.pathname + location.search,
 
+    // A player builds its captions after its video, so waiting for the video
+    // alone would probe into the gap between the two and get a "no" that is
+    // then believed for good.
+    readyToProbe: () => {
+      const video = findVideo();
+      return Boolean(video && (video.textTracks.length > 0 || video.querySelector('track')));
+    },
+
     async probe(): Promise<SiteProbe> {
       const video = findVideo();
       if (!video) return { kind: 'none' };

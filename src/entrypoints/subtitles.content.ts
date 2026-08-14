@@ -1,0 +1,202 @@
+import { createVideoSubTranslator, type VideoSubTranslator } from './content/videoSubs';
+import { subtitleSiteFor } from './content/videoSubs/sites';
+import type { SubtitleSite } from './content/videoSubs/site';
+import { StorageClient } from '~/storage/client';
+import {
+  DEFAULT_SUBTITLE_POSITION,
+  DEFAULT_SUBTITLE_STYLE,
+  type SubtitlePosition,
+  type SubtitleStyle,
+} from '~/core/subtitles/style';
+import { resolveLocale, t } from '~/i18n';
+import type { Locale } from '~/i18n/strings';
+import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
+import type { AppData } from '~/storage/schema';
+
+/**
+ * Subtitle translation, in every frame.
+ *
+ * Its own entrypoint because it is the one feature that has to run inside
+ * subframes: a learning platform serves its player from an iframe (Canvas does,
+ * as do most embeds), and a content script confined to the top frame never sees
+ * the video at all. The selection card and full-page translation stay where
+ * they were — a card in every ad slot on a page is not a feature — so this file
+ * carries the part that travels and `content.ts` keeps the part that does not.
+ */
+
+/**
+ * How many subtitle batches to keep in flight, by who is answering them.
+ *
+ * A free service answers in well under a second and costs nothing per call, so
+ * it takes the widest fan-out. A cloud model fans out across its fleet. A
+ * self-hosted one uses 2 as a one-deep pipeline: a batch processing while the
+ * next is queued, so the model never idles between batches — a local MLX server
+ * queues rather than splitting, so this does not slow individual batches.
+ */
+function subtitleConcurrency(provider: ProviderId): number {
+  if (PROVIDERS[provider].kind === 'service') return 6;
+  return provider === 'local' ? 2 : 4;
+}
+
+/**
+ * Frames too small to be showing a video to anybody. Running in every frame
+ * means running in tracking pixels, consent shims and ad slots, and none of
+ * them are worth waiting twenty seconds for a player in.
+ */
+const MIN_FRAME_WIDTH = 200;
+const MIN_FRAME_HEIGHT = 140;
+
+function frameCouldHoldAPlayer(): boolean {
+  if (window.top === window) return true;
+  if (location.href === 'about:blank') return false;
+  return window.innerWidth >= MIN_FRAME_WIDTH && window.innerHeight >= MIN_FRAME_HEIGHT;
+}
+
+/**
+ * Wait for the player to exist before offering the toggle, then offer it
+ * regardless.
+ *
+ * The wait is the whole point. A recording page builds its player after
+ * authenticating and asking for the media, which is long after the document
+ * settles — so the first look finds no video, and a translator that took that
+ * for an answer would decide the page has nothing to translate and never look
+ * again.
+ *
+ * Running out of looks is not a reason to give up either: the last attempt goes
+ * ahead, and the probe behind it gives the honest answer for a page that really
+ * has no video.
+ */
+const PLAYER_WAIT_TRIES = 40;
+const PLAYER_WAIT_MS = 500;
+
+function attachWhenPlayerReady(subs: VideoSubTranslator, site: SubtitleSite): void {
+  const container = site.button?.container;
+  const attempt = (n: number) => {
+    const ready = (site.readyToProbe?.() ?? site.findVideo() !== null)
+      && (!container || document.querySelector(container) !== null);
+    if (ready || n <= 0) {
+      void subs.attachButton();
+      return;
+    }
+    setTimeout(() => attempt(n - 1), PLAYER_WAIT_MS);
+  };
+  attempt(PLAYER_WAIT_TRIES);
+}
+
+export default defineContentScript({
+  matches: ['<all_urls>'],
+  allFrames: true,
+  runAt: 'document_idle',
+  async main() {
+    if (!frameCouldHoldAPlayer()) return;
+
+    const client = new StorageClient();
+    let locale: Locale = 'en';
+    let targetLanguage = 'zh-CN';
+    let subtitlePosition: SubtitlePosition = DEFAULT_SUBTITLE_POSITION;
+    let subtitleStyle: SubtitleStyle = DEFAULT_SUBTITLE_STYLE;
+    let subs: VideoSubTranslator | null = null;
+
+    async function reattach() {
+      subs?.teardown();
+      subs = null;
+
+      const site = subtitleSiteFor(location);
+      if (!site) return;
+
+      const data = await client.loadAppData();
+      locale = resolveLocale(data.settings.uiLanguage, navigator.language);
+      targetLanguage = data.settings.targetLanguage;
+      subtitlePosition = data.settings.subtitlePosition;
+      subtitleStyle = data.settings.subtitleStyle;
+
+      subs = createVideoSubTranslator({
+        site,
+        getTargetLang: () => targetLanguage,
+        concurrency: subtitleConcurrency(data.settings.engines.subtitle),
+        getPosition: () => subtitlePosition,
+        setPosition: (next) => {
+          subtitlePosition = next;
+          void client.patchSettings({ subtitlePosition: next });
+        },
+        getStyle: () => subtitleStyle,
+        setStyle: (next) => {
+          subtitleStyle = next;
+          void client.patchSettings({ subtitleStyle: next });
+        },
+        strings: {
+          titleOff: t('ytSubsButtonTitle', locale),
+          titleOn: t('ytSubsButtonTitleOn', locale),
+          noCaptions: t('ytSubsNoCaptions', locale),
+          enableCc: t('ytSubsEnableCc', locale),
+          noTranslationNeeded: t('ytSubsNoTranslationNeeded', locale),
+          live: t('ytSubsLive', locale),
+          failed: t('ytSubsFailed', locale),
+          placeholder: t('ytSubsTranslating', locale),
+          dragHint: t('ytSubsDragHint', locale),
+          subtitlesToggle: t('ytSubsToggleLabel', locale),
+          styleTitle: t('subtitleStyle', locale),
+          general: t('subtitleGeneral', locale),
+          displayMode: t('subtitleDisplayMode', locale),
+          displayBilingual: t('subtitleDisplayBilingual', locale),
+          displayOriginalOnly: t('subtitleDisplayOriginalOnly', locale),
+          displayTranslationOnly: t('subtitleDisplayTranslationOnly', locale),
+          translationPosition: t('subtitleTranslationPosition', locale),
+          positionAbove: t('subtitlePositionAbove', locale),
+          positionBelow: t('subtitlePositionBelow', locale),
+          backgroundOpacity: t('subtitleBackgroundOpacity', locale),
+          mainSubtitle: t('subtitleMainLine', locale),
+          translationSubtitle: t('subtitleTranslationLine', locale),
+          fontScale: t('subtitleFontScale', locale),
+          color: t('subtitleColor', locale),
+          fontFamily: t('subtitleFontFamily', locale),
+          fontWeight: t('subtitleFontWeight', locale),
+          reset: t('subtitleReset', locale),
+          resetAll: t('subtitleResetAll', locale),
+          back: t('back', locale),
+        },
+        notify: (msg) => console.info('[BrowserTranslate]', msg),
+      });
+      attachWhenPlayerReady(subs, site);
+    }
+
+    await reattach();
+
+    // YouTube's own SPA-navigation event. No other site we handle needs one,
+    // and listening for it elsewhere costs nothing.
+    window.addEventListener('yt-navigate-finish', () => { void reattach(); });
+
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local') return;
+      const change = changes['app:data'];
+      if (!change) return;
+      const next = change.newValue as AppData | undefined;
+      // Moving or restyling the subtitles writes to storage, and this listener
+      // fires on our own write — and on the write of a sibling frame showing
+      // the other video on the same page. Rebuilding for it would take the
+      // translator down mid-video, so these two are applied in place, which is
+      // also what makes a change in one frame reach the other.
+      if (next && onlySubtitleAppearanceChanged(change.oldValue as AppData | undefined, next)) {
+        subtitlePosition = next.settings.subtitlePosition;
+        subtitleStyle = next.settings.subtitleStyle;
+        return;
+      }
+      void reattach();
+    });
+  },
+});
+
+/**
+ * True when a stored-data change touched nothing but the subtitle position and
+ * style. Both are read live by whatever is already running, so they need no
+ * rebuild; everything else does.
+ */
+function onlySubtitleAppearanceChanged(
+  before: AppData | undefined,
+  after: AppData,
+): boolean {
+  if (!before) return false;
+  const blank = { subtitlePosition: null, subtitleStyle: null };
+  return JSON.stringify({ ...before, settings: { ...before.settings, ...blank } })
+    === JSON.stringify({ ...after, settings: { ...after.settings, ...blank } });
+}

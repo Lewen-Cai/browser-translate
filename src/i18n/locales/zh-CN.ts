@@ -107,7 +107,6 @@ export const zhCN: Record<StringKey, string> = {
   cardTargetLanguage: '翻译为…',
   cardProvider: '改用其他服务商…',
   cardSearchLanguages: '搜索语言…',
-  cardAutoDetected: '（自动）',
   // Errors
   noProfileError: '尚未配置 API，请到设置中填入 Key。',
   // YouTube subtitles
