@@ -2,6 +2,113 @@
 
 All notable changes will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.9] — 2026-08-14
+
+### Added
+- Translate without an API key. A new translation-engine choice (Settings →
+  API, and in the popup) picks between Microsoft, Google, and your own
+  model. The two free engines need no key and no configuration, so a fresh
+  install translates the moment it is loaded; selection, full-page and
+  YouTube subtitles all go through whichever engine is selected. Your own
+  API remains the only engine that does dictionary lookups, since those
+  depend on the model deciding what a selection is. **These free options
+  call public endpoints rather than official APIs — this project is not
+  affiliated with Microsoft or Google, the endpoints may change or stop
+  working without notice, and text you translate is sent to those services
+  under their terms. See "A note on the free engines" in the README.**
+- Auto-generated (ASR) YouTube captions are now translated. They used to be
+  skipped for two reasons, both fixed: they render as a rolling window that
+  covered the injected line, and they arrive a couple of words at a time,
+  which is not enough context to translate. The subtitles are now drawn by
+  the extension rather than injected into YouTube's caption markup, and ASR
+  words are regrouped into sentences — split on punctuation, on a pause, or
+  on length — before being sent.
+- A settings menu inside the YouTube player, on the extension's button in the
+  control bar: a switch for the subtitles, and a style page with display mode
+  (bilingual, original only, translation only), which line sits on top,
+  backdrop opacity, and size, colour, font and weight for each line
+  separately. The same settings are on the options page.
+- The subtitle block can be dragged by the grip above it, to either half of
+  the picture — dragged past the middle it anchors to the top and stays there
+  when the player grows. The position is kept as a percentage of the player's
+  height, so it means the same thing inline as in fullscreen, and the block
+  lifts clear of the control bar while that is on screen.
+- The translation card can be moved by its grip and pinned. A pinned card
+  holds its place on screen while you scroll, survives a click elsewhere, and
+  translates the next selection without moving.
+- The card shows the source text above the translation, clamped to three
+  lines with a chevron to open it, and names whatever produced the
+  translation — the model for an LLM, the service otherwise.
+- Each provider shows its own mark in the picker, from Lobe Icons (MIT).
+
+### Changed
+- The theme system is deferred. Four palettes with uploadable variants, two
+  token-injection points and a service worker that recoloured the toolbar
+  icon pixel by pixel was a lot of machinery to carry through every new
+  surface. It may come back in a form that costs less to carry; for now one
+  palette remains, in light and dark, still following the system or your
+  choice. Latin text is now set in JetBrains Mono (SIL OFL, bundled) and CJK
+  in Source Han Serif — the family Google also publishes as Noto Serif CJK,
+  SIL OFL. Like every CJK face here it is named rather than shipped: they are
+  megabytes each. Corners are rounder throughout.
+- The engine picker separates translation services from LLM providers rather
+  than listing all three as peers, and the API fields are hidden — not just
+  dimmed — when a service is selected.
+- The provider dropdown is a real list showing each vendor's mark. A native
+  select can only hold text.
+- The settings page is one page per subject instead of everything that was not
+  the API key piling up under "general": Translation (engine, target language,
+  cache), General (trigger, shortcuts, appearance), Video (subtitles) and Data
+  (import/export). Type is a notch larger throughout, section headings most of
+  all.
+- YouTube subtitles are set in the player's own caption font by default, so the
+  translated line reads as a pair with the caption above it. Nothing is bundled
+  — the family is named, and resolves to whatever the page and the system
+  already provide.
+- YouTube subtitles are translated around the playhead — roughly the next
+  30 seconds, widened when the video plays faster — instead of the whole
+  transcript up front. Subtitles start appearing within a second or two on a
+  long video instead of after the entire track has been processed, scrubbing
+  lands on the new position immediately, and nothing is spent on parts of
+  the video that are never watched.
+- YouTube subtitles are positioned and sized from the player rather than
+  from YouTube's caption elements, so theater mode, fullscreen and resizing
+  need no special handling.
+
+### Fixed
+- Dragging the subtitles could close the translation, for three separate
+  reasons. Releasing a drag writes the new position, and the content script
+  rebuilt every watcher on any stored change — so the drag tore the
+  translator down mid-video. The drag also leaked a click onto the player,
+  which pauses the video and, over an end screen, navigates away. And the
+  overlay took YouTube's styles and event delegation, so it now lives in a
+  shadow root.
+- The translation card closed when you pressed its own pin, grip or source
+  expander. Its outside-click check compared the event target against the
+  shadow root, but a document listener sees that target retargeted to the
+  host — so every press inside the card read as a press outside it.
+- A subtitle line whose translation request failed used to stay on
+  "translating…" for the rest of the video. Each cue now gets one retry and
+  is then shown as the original alone.
+- The button at the foot of the in-player style page reset only the block's
+  position, so changing the subtitle size and colour and then pressing it
+  appeared to do nothing. It resets every setting on the page. Its scroll track
+  also ran into the panel's rounded corner and was clipped by it.
+- Japanese and Korean had no font of their own anywhere in the extension.
+  Korean fell through to the monospace tail of the stack, and Japanese Han
+  characters were drawn with Chinese shapes — 直 and 骨 are not the same
+  glyph in the two languages. The font stack now follows the language of the
+  text: the interface language for the extension's own surfaces, the target
+  language for the on-video subtitles.
+
+### Note on upgrading
+- The manifest now requests access to `edge.microsoft.com` and
+  `translate-pa.googleapis.com`, the two free translation endpoints. Chrome
+  asks you to approve the new permission when the extension updates.
+- Cached translations from earlier versions are ignored (the cache key now
+  includes which engine produced the entry, so results from different
+  engines can't collide). They expire on the usual schedule.
+
 ## [0.1.8] — 2026-08-13
 
 ### Added

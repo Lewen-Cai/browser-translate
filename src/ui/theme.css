@@ -182,24 +182,23 @@ html, body {
   user-select: none;
   -webkit-user-select: none;
 }
-/* Marks the header, and starts below the card's rounded corner rather than
-   running into it — a straight bar against a 14px radius gets sliced at the top
-   and reads as a rendering fault. It runs down to the header's rule, which is a
-   straight edge and needs no clearance, so only the top is rounded. Positioned
-   rather than laid out, so the header's own padding sets where the text sits. */
+/* A bookmark hanging from the top edge, notched at the foot. It sits inboard of
+   the corner rather than against it: a shape flush to the left edge would be cut
+   by the 14px radius, and a sliced bookmark reads as a rendering fault. The
+   header's left padding is set to clear it. */
 .bt-card-strip {
   position: absolute;
-  left: 0;
-  top: 11px;
-  bottom: 0;
-  width: 3px;
-  border-radius: 999px 999px 0 0;
+  left: 13px;
+  top: 0;
+  width: 8px;
+  height: 22px;
   background: rgb(var(--ap-brand));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 62%, 0 100%);
   pointer-events: none;
 }
 .bt-card-header-content {
   flex: 1;
-  padding: 8px 12px 8px 15px;
+  padding: 8px 12px 8px 30px;
   display: flex;
   align-items: center;
   justify-content: space-between;
