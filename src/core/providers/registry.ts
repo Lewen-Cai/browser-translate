@@ -203,7 +203,17 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
     label: 'opencode',
     kind: 'llm',
     capabilities: LLM_CAPABILITIES,
-    endpoints: one('https://opencode.ai/zen/v1'),
+    // Two products behind one account, and picking the wrong one fails in a way
+    // that reads like a billing problem rather than a wrong address: Zen bills
+    // per request against a credit balance, Go is a flat subscription, and the
+    // pools are separate. A Go subscriber pointed at Zen is told their balance
+    // is insufficient while their plan sits unused. They also serve different
+    // model catalogues — Zen has the Claude and GPT families, Go has MiniMax,
+    // Kimi, GLM and Qwen — so the endpoint decides what `model` may name.
+    endpoints: [
+      { label: 'Zen', baseUrl: 'https://opencode.ai/zen/v1' },
+      { label: 'Go', baseUrl: 'https://opencode.ai/zen/go/v1' },
+    ],
     needsKey: true,
     // The endpoint answers from a server (a bad key returns 401 AuthError) but
     // sends no CORS headers, so a browser request is refused before it can be

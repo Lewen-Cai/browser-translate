@@ -90,9 +90,27 @@ describe('keys and endpoints', () => {
     }
   });
 
+  it('offers both opencode products, which bill separately', () => {
+    // Sending a Go subscriber to Zen reports an insufficient balance rather
+    // than a wrong address, so both have to be reachable from the picker.
+    expect(PROVIDERS.opencode.endpoints).toEqual([
+      { label: 'Zen', baseUrl: 'https://opencode.ai/zen/v1' },
+      { label: 'Go', baseUrl: 'https://opencode.ai/zen/go/v1' },
+    ]);
+  });
+
+  it('covers every opencode endpoint with the one host grant', () => {
+    const pattern = PROVIDERS.opencode.hostPermission!;
+    const host = pattern.replace(/^https:\/\//, '').replace(/\/\*$/, '');
+    for (const e of PROVIDERS.opencode.endpoints) {
+      expect(new URL(e.baseUrl).host).toBe(host);
+    }
+  });
+
   it('matches a stored base URL back to its provider', () => {
     expect(inferProvider('https://api.anthropic.com/v1')).toBe('anthropic');
     expect(inferProvider('https://api.moonshot.ai/v1')).toBe('moonshot');
+    expect(inferProvider('https://opencode.ai/zen/go/v1')).toBe('opencode');
     expect(inferProvider('http://localhost:1234/v1')).toBe('custom');
   });
 });

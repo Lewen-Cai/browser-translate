@@ -133,8 +133,9 @@ export function App() {
       </section>
 
       {/* 02 Routing. Setting a provider up is a page of its own now — fifteen
-          of them will not fit in a popup — so the gear above leads there and
-          this only chooses between the ones already switched on. */}
+          of them will not fit in a popup — so this only chooses between the
+          ones already switched on. The gear above is the way to the rest; a
+          second link to the same page would only be clutter. */}
       <section class="px-4 pt-3 pb-4">
         <SectionHeader number="02" label={t('sectionRouting').toUpperCase()} />
         <EngineRoutingPicker
@@ -143,12 +144,6 @@ export function App() {
           onChange={(next) => updateSettings({ engines: next })}
           compact
         />
-        <button
-          onClick={openOptions}
-          class="mt-3 text-2xs font-mono uppercase tracking-wider text-ap-muted transition-colors hover:text-ap-fg"
-        >
-          {t('sectionProviders')} →
-        </button>
       </section>
     </div>
   );
