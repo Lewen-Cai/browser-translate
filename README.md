@@ -16,28 +16,26 @@
 
 Existing translation extensions either lock LLM access behind paywalls, route your text through their servers, or hide the prompts that drive translation quality. BrowserTranslate is the opposite of all three.
 
-- **Bring your own key** — works with any OpenAI-compatible API. Built-in presets: OpenAI, DeepSeek, Moonshot, Zhipu, Qwen, SiliconFlow, OpenRouter, Mistral. Local runtimes: LM Studio, Ollama, llama.cpp, vLLM
-  - Need Anthropic or Gemini? Run any OpenAI-compatible proxy (LiteLLM, OpenRouter, etc.) and point Base URL at it.
+- **Bring your own key** — works with any OpenAI-compatible API. Built in: OpenAI, Claude, Gemini, DeepSeek, Moonshot, Zhipu, Qwen, SiliconFlow, OpenRouter, Mistral, opencode. Local runtimes: LM Studio, Ollama, llama.cpp, vLLM. Anything else goes in as a custom endpoint.
 - **Zero relay** — your text goes directly from your browser to the provider you configured. We have no server.
 - **Zero telemetry** — no analytics, no error reporting, no remote logging
 - **Open prompts** — the translation prompt is fixed but fully open source; the model judges register and topic on its own
-- **Auto status check on popup open** — endpoint + model reachability is pinged automatically and shown as a status indicator
 
 ## Features
 
-- **Works with no API key** — choose Microsoft or Google as the translation engine and everything (selection, full page, subtitles) translates immediately, at no cost. Switch to your own LLM whenever you want dictionary lookups or better prose. See the [note on the free engines](#a-note-on-the-free-engines) below.
-- Selection-based translation with floating icon (or hotkey-only mode); the result card shows the source above the translation, can be pinned so it keeps its place on screen while you scroll and clicks elsewhere don't dismiss it, drags by its grip when it lands on top of what you were reading, and names the model or service that produced the result
+- **Works with no API key** — Microsoft and Google are on out of the box, so a fresh install translates the moment it is loaded, at no cost. Add your own model whenever you want dictionary lookups or better prose. See the [note on the free engines](#a-note-on-the-free-engines) below.
+- **Many providers at once, one per job** — configure as many as you like, then route each surface independently: the selection card, full-page translation and video subtitles can each use a different one. A free service for a whole page, your best model for the paragraph you care about.
+- Selection-based translation with floating icon (or hotkey-only mode). The card names the languages it is working between, shows the source above the translation, and carries its own controls: switch provider or target language for that card alone, copy the result, or ask again. Those choices last as long as the card and are never written back to your settings. It can be pinned so it keeps its place while you scroll and clicks elsewhere don't dismiss it, and drags by its grip when it lands on top of what you were reading.
 - Full-page bilingual translation — translates the main content of a page in place (navigation, headers and footers are left as-is), keeping the original above each translated block; renders progressively as you scroll (only the visible part is translated); blocks already in your target language are skipped; toggle from the popup ("Translate page" / "Show original"), or with the **Alt+A** hotkey in Hotkey trigger mode
 - Streaming output via Server-Sent Events
-- Cloud / Local provider modes — pick a preset (OpenAI, DeepSeek, Moonshot, Zhipu GLM, Qwen, SiliconFlow, OpenRouter, Mistral; China / International endpoints where applicable) or enter a custom OpenAI-compatible endpoint; local servers need no API key
-- Remembers each provider's key + model — switching providers restores them, no re-typing
-- Model thinking off by default — hybrid reasoning models (e.g. DeepSeek V4) reply fast without billing hidden reasoning tokens; a per-provider control turns thinking back on at five effort levels (Low / Medium / High / XHigh / Max), mapped to each provider's native parameter (DeepSeek, Zhipu, Qwen, SiliconFlow, OpenRouter)
-- Auto status check on popup open (pings endpoint and model availability)
+- Providers are a searchable panel in Settings → Translation: switch one on, open it to fill in endpoint, key and model, and it reports its own latency from that row. Vendors with more than one region or plan offer those as a choice of endpoint — including opencode, whose Zen and Go plans are separate products with separate model catalogues. Local runtimes need no API key.
+- Model thinking off by default — hybrid reasoning models (e.g. DeepSeek V4) reply fast without billing hidden reasoning tokens; a per-provider control turns thinking back on at five effort levels (Low / Medium / High / XHigh / Max), mapped to each vendor's native parameter (Claude, Gemini, DeepSeek, Zhipu, Qwen, SiliconFlow, OpenRouter, opencode)
 - Dictionary mode — the model automatically decides whether a selection is a word/term to define or text to translate, in one streaming pass; dictionary results show the term's formal translation, pronunciation, part of speech, senses, and an example
 - Settings export / import (Settings → Data) — save your config as JSON, import it on another device; API keys excluded by default (opt-in to include them)
-- **YouTube subtitle translation** — On YouTube watch pages, click the translate button (the languages icon) in the player controls to open the subtitle menu, and turn on the switch to translate the video's existing captions. Both lines are drawn over the player — original on top, translation below — and the grip above them drags the block anywhere in the picture; dragged past the middle it anchors to the top. The position is remembered, including in fullscreen, and the block lifts clear of the control bar while it is showing. Auto-generated (ASR) captions work as well as creator-provided tracks: ASR arrives a couple of words at a time, so those fragments are regrouped into sentences before translating. Only the cues around the playhead are translated, so subtitles start appearing within a second or two even on a long video, and scrubbing lands on the new position immediately. Turn captions (CC) on first so YouTube loads the track. Subtitle style — display mode (bilingual, original only, translation only), which line sits on top, backdrop opacity, and size, colour, font and weight for each line — is on the menu's "Subtitle style" page, and in Settings → Video. (YouTube only; no audio speech-recognition.)
+- **Video subtitle translation** — Click the translate button (the languages icon) in the player's controls to open the subtitle menu, and turn on the switch to translate the video's existing captions. It works on YouTube, on Zoom cloud recordings, on Canvas course recordings, and on any player that ships its captions the standard way with a `<track>` element; where a player has no control bar we can join, the button takes a corner of the picture instead. Both lines are drawn over the player — original on top, translation below — and the grip above them drags the block anywhere in the picture; dragged past the middle it anchors to the top. The position is remembered, including in fullscreen, and the block lifts clear of the control bar while it is showing. Auto-generated (ASR) captions work as well as creator-provided tracks: ASR arrives a couple of words at a time, so those fragments are regrouped into sentences before translating. Only the cues around the playhead are translated, so subtitles start appearing within a second or two even on a long video, and scrubbing lands on the new position immediately. On YouTube, turn captions (CC) on first so the player loads the track; elsewhere nothing needs switching on. Where a transcript labels who is speaking, the name is kept out of the translation and put back verbatim — a model renders a transliterated name differently almost every time, and the same person arriving under a new name every few seconds is harder to follow than no names at all. Subtitle style — display mode (bilingual, original only, translation only), which line sits on top, backdrop opacity, and size, colour, font and weight for each line — is on the menu's "Subtitle style" page, and in Settings → Video. (Existing captions only — there is no audio speech-recognition.)
 - Translation cache (configurable TTL)
 - Light / dark appearance following the system or your choice; Latin text is set in JetBrains Mono, and CJK in Source Han Serif with a fallback stack chosen per language — Chinese, Japanese and Korean each get a face of their own rather than sharing one
+- 34 target languages, chosen separately from the interface language — what you read in and what the extension speaks to you in are different questions
 - UI available in 8 languages (Simplified/Traditional Chinese, English, Japanese, Korean, Spanish, French, German); auto-detects browser locale
 
 ## Architecture
@@ -56,21 +54,16 @@ The background service worker is the **only** place that makes network calls —
 2. Unzip
 3. Open `chrome://extensions` → enable Developer mode → "Load unpacked" → select the unzipped folder
 
-Chrome Web Store listing pending.
-
 ## Configure
 
-A fresh install already translates — the engine defaults to Microsoft, so you can select text and go. Everything below is for switching to your own model.
+A fresh install already translates — everything is routed to Microsoft, so you can select text and go. Everything below is for adding your own model.
 
-1. Click the extension icon — the popup opens as the quick config panel.
-2. Pick a **translation engine**: **Microsoft** or **Google** (free, no key) or **Your API** (your own OpenAI-compatible model). Only the last one supports dictionary lookups.
-3. If you chose **Your API**, choose a **provider type**:
-   - **Cloud** — pick a provider preset (presets auto-fill the Base URL; multi-region providers offer a China / International endpoint choice) or **Custom** to enter any OpenAI-compatible Base URL, then fill **API Key** and **Model**.
-   - **Local** — enter your local **Base URL** (e.g. `http://localhost:11434/v1`) and **Model**. No API key needed.
-4. Click **Apply config** to apply. The status indicator auto-pings on popup open and after Apply — green means endpoint and model are reachable.
-5. Select text on any webpage → click the blue icon → see the translation. (Prefer a keyboard shortcut? Set the trigger mode to **Hotkey** in settings — then your shortcut works instead of the icon.)
+1. Click the extension icon, then the settings button at its top-right.
+2. Under **Translation → Providers**, find the vendor you want and switch it on. Open its row to fill in **Model** and **API Key** (a local runtime needs no key), and pick an endpoint if that vendor offers more than one region or plan. The row reports its own latency once it is on.
+3. Under **General → Routing**, choose which provider answers for each surface: the **selection card**, **full-page translation**, and **subtitles**. They are independent — a free service is instant and costs nothing, which is what a whole page or an hour of subtitles wants, while a model reads context and is the only kind of provider that can answer a single word with a dictionary entry.
+4. Select text on any webpage → click the blue icon → see the translation. (Prefer a keyboard shortcut? Set the trigger mode to **Hotkey** in settings — then your shortcut works instead of the icon.)
 
-Advanced settings (UI language, cache, subtitle appearance, data export) live in the full settings page — accessible via the ⚙ icon at the top-right of the popup.
+The popup keeps what you change often: target language, trigger mode, the page-translation toggle, and routing. Everything else — UI language, cache, subtitle appearance, data export — lives in the full settings page.
 
 ### A note on the free engines
 
@@ -82,7 +75,7 @@ The Microsoft and Google options call public translation endpoints (`edge.micros
 - **Text you translate is sent to those services**, subject to their terms and privacy policies, not this project's. If that matters for what you are translating, use your own endpoint instead.
 - **No warranty.** These options are provided as-is, and you use them at your own risk. If your use is commercial or high-volume, use the vendors' official, licensed APIs.
 
-The engine defaults to Microsoft only so a fresh install does something useful. Switching to **Your API** at any point removes all of the above.
+Routing defaults to Microsoft only so a fresh install does something useful. Routing a surface to your own provider removes all of the above for that surface.
 
 ## Develop
 
