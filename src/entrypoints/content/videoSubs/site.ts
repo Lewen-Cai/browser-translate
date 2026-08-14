@@ -47,6 +47,13 @@ export interface SiteSelectors {
 export interface SiteButtonStyle {
   /** The control-bar container the button is inserted into. */
   container: string;
+  /**
+   * Where to put the button when that container is nowhere to be found. A
+   * player we do not recognise still has a picture, and a corner of it is a
+   * worse home for a control than a real control bar but a far better one than
+   * nothing — without it there is no way to reach the menu at all.
+   */
+  fallback?: 'player-corner';
   /** The site's own button class, so ours inherits its sizing and hover. */
   className?: string;
   /** Where among the site's buttons ours goes. */

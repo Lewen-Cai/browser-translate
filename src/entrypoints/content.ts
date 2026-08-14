@@ -323,19 +323,21 @@ function onlySubtitleAppearanceChanged(
 }
 
 /**
- * Wait for the player's control bar before offering the toggle. Players build
- * their controls after the page settles, and a site with no bar to join gets
- * the attempt straight away — the translator mounts its overlay either way, and
- * its own menu is the way in.
+ * Wait for the player's control bar before offering the toggle, then offer it
+ * regardless.
+ *
+ * Players build their controls after the page settles, so the first look is
+ * usually too early — but running out of looks is not a reason to give up. A
+ * player we do not recognise has no bar we will ever find, and the toggle knows
+ * how to sit in the corner of the picture instead.
  */
 function attachButtonSoon(subs: VideoSubTranslator, container: string | undefined, tries = 10): void {
   if (!container) { void subs.attachButton(); return; }
   const attempt = (n: number) => {
-    if (document.querySelector(container)) {
+    if (document.querySelector(container) || n <= 0) {
       void subs.attachButton();
       return;
     }
-    if (n <= 0) return;
     setTimeout(() => attempt(n - 1), 400);
   };
   attempt(tries);

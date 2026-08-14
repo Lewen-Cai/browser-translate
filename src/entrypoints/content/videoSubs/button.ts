@@ -35,14 +35,22 @@ export function removeSubsButton(): void {
  * "this control is on" belongs to the site, and ours standing out from its
  * neighbours would read as a fault rather than as a feature.
  */
-export function mountSubsButton(style: SiteButtonStyle, deps: SubsButtonDeps): SubsButtonHandle {
+export function mountSubsButton(
+  style: SiteButtonStyle,
+  deps: SubsButtonDeps,
+  playerSelector?: string,
+): SubsButtonHandle {
   const controls = document.querySelector(style.container);
-  if (!controls) return { mounted: false, setActive: () => {}, remove: () => {} };
+  const corner = !controls && style.fallback === 'player-corner' && playerSelector
+    ? document.querySelector(playerSelector)
+    : null;
+  const host = controls ?? corner;
+  if (!host) return { mounted: false, setActive: () => {}, remove: () => {} };
 
   const idle = style.idleColor ?? '#fff';
   const active = style.activeColor ?? '#3ea6ff';
 
-  const existing = controls.querySelector<ToggleButton>(`.${BTN_CLASS}`);
+  const existing = host.querySelector<ToggleButton>(`.${BTN_CLASS}`);
   const btn = (existing ?? document.createElement('button')) as ToggleButton;
   btn.type = 'button';
   btn.className = style.className ? `${style.className} ${BTN_CLASS}` : BTN_CLASS;
@@ -62,19 +70,27 @@ export function mountSubsButton(style: SiteButtonStyle, deps: SubsButtonDeps): S
     'align-items:center',
     'justify-content:center',
     `width:${style.width ?? '48px'}`,
-    'height:100%',
     'vertical-align:top',
     `color:${idle}`,
-    'opacity:0.9',
     'cursor:pointer',
+    // In a control bar the button fills the bar's height and inherits its
+    // background. Over the picture it has to carry its own, or a white glyph
+    // lands on a white frame and disappears.
+    ...(corner
+      ? [
+          'position:absolute', 'top:12px', 'right:12px', 'z-index:2147483000',
+          'height:34px', 'border:none', 'border-radius:8px',
+          'background:rgb(0 0 0 / 0.55)', 'backdrop-filter:blur(4px)', 'opacity:1',
+        ]
+      : ['height:100%', 'opacity:0.9']),
   ].join(';');
   // Always point the (single) listener at the current handler, so a remount on
   // navigation with a fresh onToggle is honored instead of the stale one.
   btn._btOnToggle = deps.onToggle;
   if (!existing) {
     btn.addEventListener('click', () => btn._btOnToggle?.());
-    if (style.place === 'end') controls.appendChild(btn);
-    else controls.insertBefore(btn, controls.firstChild);
+    if (corner || style.place === 'end') host.appendChild(btn);
+    else host.insertBefore(btn, host.firstChild);
   }
 
   return {
@@ -83,7 +99,7 @@ export function mountSubsButton(style: SiteButtonStyle, deps: SubsButtonDeps): S
       btn.title = isActive ? deps.titleOn : deps.titleOff;
       btn.setAttribute('aria-pressed', String(isActive));
       btn.style.color = isActive ? active : idle;
-      btn.style.opacity = isActive ? '1' : '0.9';
+      if (!corner) btn.style.opacity = isActive ? '1' : '0.9';
     },
     remove() { btn.remove(); },
   };

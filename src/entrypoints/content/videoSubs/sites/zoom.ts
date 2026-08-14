@@ -32,6 +32,7 @@ export function createZoomSite(): SubtitleSite {
     button: {
       container: '.vjs-control-bar',
       className: 'vjs-control vjs-button',
+      fallback: 'player-corner',
       place: 'end',
       width: '40px',
     },

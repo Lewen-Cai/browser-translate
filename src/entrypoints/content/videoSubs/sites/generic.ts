@@ -32,6 +32,10 @@ export function createGenericSite(): SubtitleSite {
     },
     button: {
       container: '.vjs-control-bar, .plyr__controls, .jw-controlbar',
+      // A player we do not recognise has no bar to join, and the menu is only
+      // reachable through this button — so it goes in the corner of the picture
+      // rather than nowhere.
+      fallback: 'player-corner',
       place: 'end',
       width: '40px',
     },

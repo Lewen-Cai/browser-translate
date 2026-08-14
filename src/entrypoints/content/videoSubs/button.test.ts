@@ -49,3 +49,38 @@ describe('mountSubsButton', () => {
     expect(second).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('the corner fallback', () => {
+  const GENERIC = {
+    container: '.vjs-control-bar',
+    fallback: 'player-corner' as const,
+    place: 'end' as const,
+    width: '40px',
+  };
+
+  it('sits in the corner of the picture when there is no control bar to join', () => {
+    // Without this there is no way into the menu at all on a player we do not
+    // recognise, which is most of them.
+    document.body.innerHTML = '<div class="player"><video></video></div>';
+    const handle = mountSubsButton(GENERIC, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() }, '.player');
+    expect(handle.mounted).toBe(true);
+    const btn = document.querySelector<HTMLElement>('.player > .bt-subs-button');
+    expect(btn).not.toBeNull();
+    expect(btn!.style.position).toBe('absolute');
+    // Over the picture it must carry its own background, or a white glyph on a
+    // white frame is invisible.
+    expect(btn!.style.background).not.toBe('');
+  });
+
+  it('still prefers a real control bar when the page has one', () => {
+    document.body.innerHTML = '<div class="player"><div class="vjs-control-bar"></div></div>';
+    mountSubsButton(GENERIC, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() }, '.player');
+    expect(document.querySelector('.vjs-control-bar > .bt-subs-button')).not.toBeNull();
+    expect(document.querySelector('.player > .bt-subs-button')).toBeNull();
+  });
+
+  it('reports false when neither the bar nor the player is there', () => {
+    expect(mountSubsButton(GENERIC, { titleOff: 'x', titleOn: 'y', onToggle: vi.fn() }, '.player').mounted)
+      .toBe(false);
+  });
+});
