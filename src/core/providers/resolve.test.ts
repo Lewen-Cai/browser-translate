@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { enabledProviders, isProviderReady, llmRequestConfig } from './resolve';
+import {
+  enabledProviders,
+  isProviderReady,
+  llmRequestConfig,
+  resolveRequestedProvider,
+} from './resolve';
 import { createDefaultProviders } from '~/storage/defaults';
 import type { ProviderConfig } from '~/storage/schema';
 
@@ -97,5 +102,34 @@ describe('enabledProviders', () => {
 
   it('starts with only the free services', () => {
     expect(enabledProviders(createDefaultProviders())).toEqual(['microsoft', 'google']);
+  });
+});
+
+describe('resolveRequestedProvider', () => {
+  const providers = createDefaultProviders();
+  providers.anthropic.enabled = true;
+
+  it('uses routing when the request named nobody', () => {
+    expect(resolveRequestedProvider(undefined, 'microsoft', providers)).toBe('microsoft');
+  });
+
+  it('honours a provider that is switched on', () => {
+    expect(resolveRequestedProvider('anthropic', 'microsoft', providers)).toBe('anthropic');
+  });
+
+  it('falls back to routing for one that has since been switched off', () => {
+    expect(resolveRequestedProvider('deepseek', 'microsoft', providers)).toBe('microsoft');
+  });
+
+  it('ignores a name the registry does not know', () => {
+    expect(resolveRequestedProvider('yahoo-babelfish', 'google', providers)).toBe('google');
+  });
+
+  it('keeps the routed provider even when it is not separately enabled', () => {
+    // Routing may point at something the Providers page has since switched off;
+    // that is routing's problem to report, not a reason to swap providers here.
+    const off = createDefaultProviders();
+    off.microsoft.enabled = false;
+    expect(resolveRequestedProvider('microsoft', 'microsoft', off)).toBe('microsoft');
   });
 });

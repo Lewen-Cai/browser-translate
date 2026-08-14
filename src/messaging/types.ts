@@ -6,6 +6,19 @@ export interface TranslateRequest {
   requestId: string;
   text: string;
   targetLang?: string;           // omit → use global setting
+  /**
+   * Answer with this provider instead of the one routing chose. The card lets a
+   * reader try another one on the spot; it is a property of the request and is
+   * never written back to settings, which is what keeps that choice from
+   * following them to the next page.
+   */
+  provider?: ProviderId;
+  /**
+   * Ignore any cached answer. Asking again is only worth a button if it can
+   * actually produce a different answer, and a cache hit would return the same
+   * words instantly. The result is still cached.
+   */
+  refresh?: boolean;
 }
 
 export type TranslateResponse =

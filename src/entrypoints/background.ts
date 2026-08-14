@@ -1,7 +1,11 @@
 import { StorageClient } from '~/storage/client';
 import { CacheStore } from '~/storage/cacheStore';
 import { OpenAICompatibleProvider } from '~/core/providers/openai';
-import { llmRequestConfig, isProviderReady } from '~/core/providers/resolve';
+import {
+  llmRequestConfig,
+  isProviderReady,
+  resolveRequestedProvider,
+} from '~/core/providers/resolve';
 import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
 import { TranslationProviderError } from '~/core/providers/types';
 import { computeCacheKey } from '~/core/cache/key';
@@ -72,7 +76,13 @@ async function handleTranslate(
   };
 
   try {
-    const engine: ProviderId = data.settings.engines.selection;
+    // Routing decides unless the request named someone — the card can send a
+    // reader's on-the-spot choice, which lasts exactly as long as that card.
+    const engine: ProviderId = resolveRequestedProvider(
+      msg.provider,
+      data.settings.engines.selection,
+      data.providers,
+    );
     const cfg = data.providers[engine];
     // The guard, not a `kind` comparison: this one narrows `engine` to an
     // MtEngineId for the getMtEngine calls below. The registry lists exactly
@@ -99,7 +109,11 @@ async function handleTranslate(
         text: msg.text, engine, model: cfg.model,
         mode: 'selection', targetLang,
       });
-      const cached = await new CacheStore(client, data.settings.cacheTTLDays).get(cacheKey);
+      // A refresh still writes its result back — it is asking past the cache,
+      // not asking for the answer to go unremembered.
+      const cached = msg.refresh
+        ? undefined
+        : await new CacheStore(client, data.settings.cacheTTLDays).get(cacheKey);
       if (cached !== undefined) {
         send({ type: 'translate:chunk', requestId: msg.requestId, delta: cached });
         send({ type: 'translate:done', requestId: msg.requestId, full: cached, cached: true });
