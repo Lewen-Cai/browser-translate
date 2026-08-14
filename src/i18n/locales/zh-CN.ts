@@ -101,6 +101,12 @@ export const zhCN: Record<StringKey, string> = {
   cardDrag: '拖动可移动',
   cardExpandSource: '展开原文',
   cardCollapseSource: '收起原文',
+  cardRetranslate: '重新翻译',
+  cardCopy: '复制译文',
+  cardCopied: '已复制',
+  cardTargetLanguage: '翻译为…',
+  cardProvider: '改用其他服务商…',
+  cardSearchLanguages: '搜索语言…',
   // Errors
   noProfileError: '尚未配置 API，请到设置中填入 Key。',
   // YouTube subtitles

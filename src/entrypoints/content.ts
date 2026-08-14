@@ -16,11 +16,11 @@ import {
   type SubtitlePosition,
   type SubtitleStyle,
 } from '~/core/subtitles/style';
-import { translationAttribution, type TranslationAttribution } from '~/ui/attribution';
+import { createDefaultProviders } from '~/storage/defaults';
 import { resolveLocale, t } from '~/i18n';
 import type { Locale } from '~/i18n/strings';
 import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
-import type { AppData, GlobalSettings } from '~/storage/schema';
+import type { AppData, GlobalSettings, ProvidersConfig } from '~/storage/schema';
 
 /**
  * How many subtitle batches to keep in flight, by who is answering them.
@@ -65,7 +65,10 @@ export default defineContentScript({
     let subtitleStyle: SubtitleStyle = DEFAULT_SUBTITLE_STYLE;
     let fullPageHotkey: HotkeyWatcher | null = null;
     let ytSubs: YouTubeSubTranslator | null = null;
-    let attribution: TranslationAttribution = { iconId: 'custom', label: '' };
+    // The card offers a reader every provider that is switched on, so it needs
+    // the rows rather than a finished credit line.
+    let providersConfig: ProvidersConfig = createDefaultProviders();
+    let selectionProvider: ProviderId = 'microsoft';
     // A pinned card survives clicks elsewhere on the page, and keeps the spot
     // the reader dragged it to when they translate something else.
     let cardPinned = false;
@@ -107,7 +110,9 @@ export default defineContentScript({
         text: info.text,
         rect,
         locale,
-        attribution,
+        providers: providersConfig,
+        defaultProvider: selectionProvider,
+        defaultTargetLang: targetLanguage,
         notice: skip ? t('noTranslationNeeded', locale) : undefined,
         onPinChange: (next: boolean) => {
           cardPinned = next;
@@ -143,8 +148,8 @@ export default defineContentScript({
       targetLanguage = data.settings.targetLanguage;
       subtitlePosition = data.settings.subtitlePosition;
       subtitleStyle = data.settings.subtitleStyle;
-      const selectionProvider = data.settings.engines.selection;
-      attribution = translationAttribution(selectionProvider, data.providers[selectionProvider]);
+      providersConfig = data.providers;
+      selectionProvider = data.settings.engines.selection;
       applyTheme();
 
       if (data.settings.triggerMode === 'icon') {

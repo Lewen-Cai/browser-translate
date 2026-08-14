@@ -101,6 +101,12 @@ export const zhTW: Record<StringKey, string> = {
   cardDrag: '拖曳可移動',
   cardExpandSource: '展開原文',
   cardCollapseSource: '收合原文',
+  cardRetranslate: '重新翻譯',
+  cardCopy: '複製譯文',
+  cardCopied: '已複製',
+  cardTargetLanguage: '翻譯為…',
+  cardProvider: '改用其他服務商…',
+  cardSearchLanguages: '搜尋語言…',
   // Errors
   noProfileError: '尚未設定 API，請到設定中填入 Key。',
   // YouTube subtitles

@@ -101,6 +101,12 @@ export const de: Record<StringKey, string> = {
   cardDrag: 'Zum Verschieben ziehen',
   cardExpandSource: 'Original ganz anzeigen',
   cardCollapseSource: 'Original einklappen',
+  cardRetranslate: 'Erneut übersetzen',
+  cardCopy: 'Übersetzung kopieren',
+  cardCopied: 'Kopiert',
+  cardTargetLanguage: 'Übersetzen nach…',
+  cardProvider: 'Antworten mit…',
+  cardSearchLanguages: 'Sprachen suchen…',
   // Errors
   noProfileError: 'API nicht konfiguriert. Öffne die Einstellungen, um deinen Schlüssel hinzuzufügen.',
   // YouTube subtitles

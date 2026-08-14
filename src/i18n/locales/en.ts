@@ -101,6 +101,12 @@ export const en = {
   cardDrag: 'Drag to move',
   cardExpandSource: 'Show full original',
   cardCollapseSource: 'Collapse original',
+  cardRetranslate: 'Translate again',
+  cardCopy: 'Copy translation',
+  cardCopied: 'Copied',
+  cardTargetLanguage: 'Translate into…',
+  cardProvider: 'Answer with…',
+  cardSearchLanguages: 'Search languages…',
   // Errors
   noProfileError: 'API not configured. Open settings to add your key.',
   // YouTube subtitles

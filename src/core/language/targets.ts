@@ -90,6 +90,14 @@ export function languageName(code: string): string {
 }
 
 /**
+ * The language's own name, for a control a reader reads rather than a model.
+ * Unknown codes pass through for the same reason as above.
+ */
+export function languageEndonym(code: string): string {
+  return BY_CODE.get(code)?.endonym ?? code;
+}
+
+/**
  * `{ value, label }` pairs for a Select. The endonym leads, because a reader
  * looking for their own language scans for its own name; the English name
  * follows so the list stays searchable from a keyboard that cannot type the

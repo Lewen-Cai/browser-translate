@@ -101,6 +101,12 @@ export const ja: Record<StringKey, string> = {
   cardDrag: 'ドラッグで移動',
   cardExpandSource: '原文をすべて表示',
   cardCollapseSource: '原文を折りたたむ',
+  cardRetranslate: '翻訳し直す',
+  cardCopy: '訳文をコピー',
+  cardCopied: 'コピーしました',
+  cardTargetLanguage: 'この言語に翻訳…',
+  cardProvider: '別のプロバイダーで…',
+  cardSearchLanguages: '言語を検索…',
   // Errors
   noProfileError: 'API が未設定です。設定を開いてキーを追加してください。',
   // YouTube subtitles
