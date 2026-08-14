@@ -11,6 +11,7 @@ export const zhCN: Record<StringKey, string> = {
   ready: '已就绪',
   notConfigured: '尚未配置',
   // Sections
+  providerPermissionDenied: '未授予访问该端点的权限，此服务商无法使用。',
   providerNoKey: '无需密钥',
   sectionRouting: '路由策略',
   sectionProviders: '服务商',

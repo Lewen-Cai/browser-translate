@@ -11,6 +11,7 @@ export const en = {
   ready: 'Ready',
   notConfigured: 'Not configured',
   // Sections
+  providerPermissionDenied: 'Cannot be used without permission to reach its endpoint.',
   providerNoKey: 'No key needed',
   sectionRouting: 'Routing',
   sectionProviders: 'Providers',

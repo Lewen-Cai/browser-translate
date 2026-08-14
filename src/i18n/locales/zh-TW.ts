@@ -11,6 +11,7 @@ export const zhTW: Record<StringKey, string> = {
   ready: '已就緒',
   notConfigured: '尚未設定',
   // Sections
+  providerPermissionDenied: '未授予存取該端點的權限，此服務商無法使用。',
   providerNoKey: '無需金鑰',
   sectionRouting: '路由策略',
   sectionProviders: '服務商',

@@ -11,6 +11,7 @@ export const ko: Record<StringKey, string> = {
   ready: '준비됨',
   notConfigured: '설정되지 않음',
   // Sections
+  providerPermissionDenied: '엔드포인트 접근 권한이 없어 사용할 수 없습니다.',
   providerNoKey: '키 불필요',
   sectionRouting: '라우팅',
   sectionProviders: '제공업체',

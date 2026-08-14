@@ -1,3 +1,4 @@
+import { useState } from 'preact/hooks';
 import { Input } from '~/ui/components/Input';
 import { Select } from '~/ui/components/Select';
 import { Switch } from '~/ui/components/Switch';
@@ -5,6 +6,7 @@ import { ApiStatusIndicator } from '~/ui/components/ApiStatusIndicator';
 import { ProviderIcon } from '~/ui/ProviderIcon';
 import { ChevronDown, Eye, EyeOff } from '~/ui/icons';
 import { thinkingOptions } from '~/ui/thinkingOptions';
+import { ensureHostPermission } from '~/ui/hostPermission';
 import { useT } from '~/i18n';
 import { cn } from '~/lib/cn';
 import { PROVIDERS, supportsThinkingToggle, type ProviderId } from '~/core/providers/registry';
@@ -38,9 +40,27 @@ export function ProviderRow({
   onChange,
 }: Props) {
   const t = useT();
+  const [denied, setDenied] = useState(false);
   const def = PROVIDERS[id];
   const isService = def.kind === 'service';
   const summary = isService ? t('providerNoKey') : config.model || t('notConfigured');
+
+  /**
+   * Switching a provider on can require a host grant first — the request has to
+   * go out from inside this click, so nothing is awaited before it. Turning one
+   * off never asks for anything.
+   */
+  function onToggleEnabled(enabled: boolean) {
+    if (!enabled) {
+      setDenied(false);
+      onChange({ enabled: false });
+      return;
+    }
+    void ensureHostPermission(id).then((granted) => {
+      setDenied(!granted);
+      if (granted) onChange({ enabled: true });
+    });
+  }
 
   return (
     <div
@@ -71,12 +91,14 @@ export function ProviderRow({
           </button>
         )}
 
-        <Switch
-          checked={config.enabled}
-          onChange={(enabled) => onChange({ enabled })}
-          label=""
-        />
+        <Switch checked={config.enabled} onChange={onToggleEnabled} label="" />
       </div>
+
+      {denied && (
+        <p class="border-t border-ap-border px-3 py-2 text-2xs leading-relaxed text-ap-danger">
+          {t('providerPermissionDenied')}
+        </p>
+      )}
 
       {expanded && !isService && (
         <div class="space-y-4 border-t border-ap-border px-3 py-3">
