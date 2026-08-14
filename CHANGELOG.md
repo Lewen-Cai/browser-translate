@@ -6,7 +6,7 @@ All notable changes will be documented here. Format follows [Keep a Changelog](h
 
 ### Added
 - Translate without an API key. A new translation-engine choice (Settings →
-  API, and in the popup) picks between Microsoft, Google, and your own
+  Translation, and in the popup) picks between Microsoft, Google, and your own
   model. The two free engines need no key and no configuration, so a fresh
   install translates the moment it is loaded; selection, full-page and
   YouTube subtitles all go through whichever engine is selected. Your own
