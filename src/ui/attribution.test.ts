@@ -1,45 +1,44 @@
 import { describe, it, expect } from 'vitest';
 import { translationAttribution } from './attribution';
-import { createDefaultAppData } from '~/storage/defaults';
-import type { ApiSettings } from '~/storage/schema';
+import type { ProviderConfig } from '~/storage/schema';
 
-function api(over: Partial<ApiSettings> = {}): ApiSettings {
-  return { ...createDefaultAppData().api, ...over };
-}
+const cfg = (patch: Partial<ProviderConfig> = {}): ProviderConfig => ({
+  baseUrl: 'https://api.deepseek.com/v1',
+  apiKey: 'k',
+  model: 'deepseek-chat',
+  enabled: true,
+  ...patch,
+});
 
 describe('translationAttribution', () => {
-  it('names the service when a free engine did the work', () => {
-    expect(translationAttribution('microsoft', api())).toEqual({
-      iconId: 'microsoft', label: 'Microsoft',
+  it('credits a free service by its own name — it has no model to name', () => {
+    expect(translationAttribution('microsoft', cfg())).toEqual({
+      iconId: 'microsoft',
+      label: 'Microsoft Translator',
     });
-    expect(translationAttribution('google', api())).toEqual({
-      iconId: 'google', label: 'Google',
+    expect(translationAttribution('google', cfg()).label).toBe('Google Translate');
+  });
+
+  it('credits a model by the model name, which is what the reader chose', () => {
+    expect(translationAttribution('anthropic', cfg({ model: 'claude-opus-5' }))).toEqual({
+      iconId: 'anthropic',
+      label: 'claude-opus-5',
     });
   });
 
-  it('names the model when an LLM did the work', () => {
-    const result = translationAttribution('llm', api({
-      providerType: 'cloud', cloudProvider: 'deepseek', model: 'deepseek-v4-flash',
-    }));
-    expect(result).toEqual({ iconId: 'deepseek', label: 'deepseek-v4-flash' });
+  it('falls back to the vendor when a model name is missing', () => {
+    expect(translationAttribution('gemini', cfg({ model: '' })).label).toBe('Gemini');
   });
 
-  it('falls back to the provider brand when no model is set', () => {
-    const result = translationAttribution('llm', api({
-      providerType: 'cloud', cloudProvider: 'mistral', model: '',
-    }));
-    expect(result).toEqual({ iconId: 'mistral', label: 'Mistral' });
+  it('names nothing for a runtime or an endpoint with no brand behind it', () => {
+    expect(translationAttribution('local', cfg({ model: '' })).label).toBe('');
+    expect(translationAttribution('custom', cfg({ model: '' })).label).toBe('');
+    // A model name is still the better answer when there is one.
+    expect(translationAttribution('local', cfg({ model: 'qwen3-8b' })).label).toBe('qwen3-8b');
   });
 
-  it('has no brand to fall back to for a local runtime or a custom endpoint', () => {
-    expect(translationAttribution('llm', api({ providerType: 'local', model: '' })))
-      .toEqual({ iconId: 'local', label: '' });
-    expect(translationAttribution('llm', api({ providerType: 'cloud', cloudProvider: 'custom', model: '' })))
-      .toEqual({ iconId: 'custom', label: '' });
-  });
-
-  it('still reports the model for a local runtime', () => {
-    expect(translationAttribution('llm', api({ providerType: 'local', model: 'qwen3-8b' })))
-      .toEqual({ iconId: 'local', label: 'qwen3-8b' });
+  it('survives a provider with no stored row at all', () => {
+    expect(translationAttribution('openai', undefined).label).toBe('OpenAI');
+    expect(translationAttribution('microsoft', undefined).label).toBe('Microsoft Translator');
   });
 });

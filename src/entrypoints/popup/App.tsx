@@ -1,58 +1,29 @@
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { useAppStore } from '~/storage/store';
-import { Input } from '~/ui/components/Input';
 import { Select } from '~/ui/components/Select';
 import { SectionHeader } from '~/ui/components/SectionHeader';
-import { SegmentedControl } from '~/ui/components/SegmentedControl';
 import { ApiStatusIndicator } from '~/ui/components/ApiStatusIndicator';
 import { Button } from '~/ui/components/Button';
-import { Settings, Eye, EyeOff } from '~/ui/icons';
+import { Settings } from '~/ui/icons';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
 import { useApplyLocale } from '~/ui/useApplyLocale';
-import {
-  CLOUD_PRESETS,
-  supportsThinkingToggle,
-  type CloudProvider,
-} from '~/core/providers/presets';
-import { activeSlot, applySlot, rememberActive } from '~/core/providers/providerSlots';
-import { thinkingOptions } from '~/ui/thinkingOptions';
-import { EnginePicker } from '~/ui/components/EnginePicker';
-import { ProviderSelect } from '~/ui/components/ProviderSelect';
-import { MT_ENGINES } from '~/core/mt';
-import type { MtEngineId } from '~/core/mt/types';
+import { EngineRoutingPicker } from '~/ui/components/EngineRoutingPicker';
 import { TARGET_LANGUAGE_OPTIONS } from '~/core/language/targets';
-import type { ApiSettings, ThinkingSetting } from '~/storage/schema';
-
-function apiEqual(a: ApiSettings, b: ApiSettings): boolean {
-  return (
-    a.baseUrl === b.baseUrl &&
-    a.apiKey === b.apiKey &&
-    a.model === b.model &&
-    a.providerType === b.providerType &&
-    a.cloudProvider === b.cloudProvider &&
-    (a.thinking ?? 'off') === (b.thinking ?? 'off') &&
-    JSON.stringify(a.savedConfigs ?? {}) === JSON.stringify(b.savedConfigs ?? {})
-  );
-}
+import { translationAttribution } from '~/ui/attribution';
 
 export function App() {
   const load = useAppStore((s) => s.load);
   const loaded = useAppStore((s) => s.loaded);
-  const api = useAppStore((s) => s.data.api);
+  const providers = useAppStore((s) => s.data.providers);
   const settings = useAppStore((s) => s.data.settings);
-  const updateApi = useAppStore((s) => s.updateApi);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const t = useT();
   useApplyTheme();
   useApplyLocale();
 
-  const [showKey, setShowKey] = useState(false);
-  const [draft, setDraft] = useState<ApiSettings>(api);
-  const [pingNonce, setPingNonce] = useState(0);
   const [pageOn, setPageOn] = useState(false);
 
-  // Initial load
   useEffect(() => {
     void load();
   }, [load]);
@@ -68,11 +39,6 @@ export function App() {
       });
     });
   }, []);
-
-  // Sync draft whenever the underlying api object changes (e.g. on first load).
-  useEffect(() => {
-    setDraft(api);
-  }, [api]);
 
   function openOptions() {
     chrome.runtime.openOptionsPage();
@@ -94,38 +60,10 @@ export function App() {
     return <div class="p-4 text-2xs font-mono text-ap-subtle">{t('loading').toUpperCase()}</div>;
   }
 
-  const dirty = !apiEqual(draft, api);
-  const cloudProvider = draft.cloudProvider;
-  const isCloud = draft.providerType === 'cloud';
-  const usesApi = settings.engine === 'llm';
-  const baseUrlLocked = isCloud && cloudProvider !== 'custom';
-
-  function setDraftField<K extends keyof ApiSettings>(key: K, value: ApiSettings[K]) {
-    setDraft((d) => ({ ...d, [key]: value }));
-  }
-
-  function onProviderTypeChange(next: 'cloud' | 'local') {
-    // Stash current (even unsaved) edits, then restore the target slot.
-    setDraft((d) => applySlot(rememberActive(d), next === 'local' ? 'local' : d.cloudProvider));
-  }
-
-  function onCloudProviderChange(next: CloudProvider) {
-    setDraft((d) => applySlot(rememberActive(d), next));
-  }
-
-  async function onApply() {
-    await updateApi(rememberActive(draft));
-    setPingNonce((n) => n + 1);
-  }
-
-  // The status indicator should not waste a ping during initial load — only
-  // ping once the saved api state has the required fields. The indicator
-  // itself handles further triggering via pingNonce.
-  // A free engine has nothing to fill in, so its probe should run right away.
-  const initiallySkip = useMemo(
-    () => pingNonce === 0 && settings.engine === 'llm' && !apiHasRequired(api),
-    [pingNonce, api, settings.engine],
-  );
+  // The status strip reports on whatever answers a selection — the surface the
+  // popup itself is closest to.
+  const probed = settings.engines.selection;
+  const credit = translationAttribution(probed, providers[probed]);
 
   return (
     <div class="bg-ap-bg text-ap-fg">
@@ -153,11 +91,10 @@ export function App() {
 
       {/* Status strip */}
       <div class="px-4 py-2 flex items-center gap-2 border-b border-ap-border bg-ap-surface">
-        <ApiStatusIndicator pingNonce={pingNonce} skip={initiallySkip} />
-        {/* What is actually translating right now — the model only when one is in use. */}
-        {(usesApi ? api.model : MT_ENGINES[settings.engine as MtEngineId].shortLabel) && (
+        <ApiStatusIndicator provider={probed} />
+        {credit.label && (
           <span class="ml-auto text-2xs font-mono text-ap-subtle truncate max-w-[160px]">
-            {usesApi ? api.model : MT_ENGINES[settings.engine as MtEngineId].shortLabel}
+            {credit.label}
           </span>
         )}
       </div>
@@ -195,119 +132,24 @@ export function App() {
         </div>
       </section>
 
-      {/* 02 API */}
+      {/* 02 Routing. Setting a provider up is a page of its own now — fifteen
+          of them will not fit in a popup — so the gear above leads there and
+          this only chooses between the ones already switched on. */}
       <section class="px-4 pt-3 pb-4">
-        <SectionHeader number="02" label={t('sectionApi').toUpperCase()} />
-        <div class="space-y-2.5">
-          <EnginePicker
-            value={settings.engine}
-            onChange={(next) => updateSettings({ engine: next })}
-            compact
-          />
-
-          {usesApi && (
-            <>
-              <SegmentedControl<'cloud' | 'local'>
-                label={t('providerType')}
-                value={draft.providerType}
-                fullWidth
-                options={[
-                  { value: 'cloud', label: t('providerTypeCloud') },
-                  { value: 'local', label: t('providerTypeLocal') },
-                ]}
-                onChange={onProviderTypeChange}
-              />
-
-              {isCloud && (
-                <ProviderSelect
-                  label={t('cloudProvider')}
-                  value={draft.cloudProvider}
-                  options={(Object.keys(CLOUD_PRESETS) as CloudProvider[]).map((k) => ({
-                    value: k,
-                    label: k === 'custom' ? t('cloudProviderCustom') : CLOUD_PRESETS[k].label,
-                    iconId: k,
-                  }))}
-                  onChange={(next) => onCloudProviderChange(next as CloudProvider)}
-                />
-              )}
-
-              {isCloud && CLOUD_PRESETS[cloudProvider].endpoints.length > 1 && (
-                <Select
-                  label={t('cloudEndpoint')}
-                  value={draft.baseUrl}
-                  options={CLOUD_PRESETS[cloudProvider].endpoints.map((ep) => ({
-                    value: ep.baseUrl,
-                    label: ep.label,
-                  }))}
-                  onChange={(e) => setDraftField('baseUrl', (e.target as HTMLSelectElement).value)}
-                />
-              )}
-
-              <Input
-                label={t('baseUrl')}
-                value={draft.baseUrl}
-                disabled={baseUrlLocked}
-                mono
-                onInput={(e) => setDraftField('baseUrl', (e.target as HTMLInputElement).value)}
-              />
-
-              {isCloud && (
-                <div class="flex gap-2 items-end">
-                  <div class="flex-1">
-                    <Input
-                      label={t('apiKey')}
-                      type={showKey ? 'text' : 'password'}
-                      value={draft.apiKey}
-                      mono
-                      onInput={(e) => setDraftField('apiKey', (e.target as HTMLInputElement).value)}
-                    />
-                  </div>
-                  <button
-                    onClick={() => setShowKey((s) => !s)}
-                    class="h-8 w-8 flex items-center justify-center rounded-md border border-ap-border bg-ap-surface text-ap-muted hover:text-ap-fg hover:border-ap-border-strong transition-colors"
-                    aria-label={showKey ? 'Hide key' : 'Show key'}
-                  >
-                    {showKey ? <EyeOff size={12} /> : <Eye size={12} />}
-                  </button>
-                </div>
-              )}
-
-              <Input
-                label={t('model')}
-                value={draft.model}
-                mono
-                onInput={(e) => setDraftField('model', (e.target as HTMLInputElement).value)}
-              />
-
-              {supportsThinkingToggle(activeSlot(draft)) && (
-                <Select
-                  label={t('thinkingLabel')}
-                  value={draft.thinking ?? 'off'}
-                  options={thinkingOptions(t('thinkingOff'))}
-                  onChange={(e) =>
-                    setDraftField(
-                      'thinking',
-                      (e.target as HTMLSelectElement).value as ThinkingSetting,
-                    )
-                  }
-                />
-              )}
-
-              <div class="pt-1">
-                <Button variant="primary" size="sm" onClick={onApply} disabled={!dirty}>
-                  {t('applyConfig')}
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
+        <SectionHeader number="02" label={t('sectionRouting').toUpperCase()} />
+        <EngineRoutingPicker
+          engines={settings.engines}
+          providers={providers}
+          onChange={(next) => updateSettings({ engines: next })}
+          compact
+        />
+        <button
+          onClick={openOptions}
+          class="mt-3 text-2xs font-mono uppercase tracking-wider text-ap-muted transition-colors hover:text-ap-fg"
+        >
+          {t('sectionProviders')} →
+        </button>
       </section>
     </div>
   );
-}
-
-function apiHasRequired(api: ApiSettings): boolean {
-  if (!api.baseUrl || !api.model) return false;
-  if (api.providerType === 'cloud' && !api.apiKey) return false;
-  return true;
 }

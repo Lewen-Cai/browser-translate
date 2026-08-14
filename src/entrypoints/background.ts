@@ -1,7 +1,8 @@
 import { StorageClient } from '~/storage/client';
 import { CacheStore } from '~/storage/cacheStore';
 import { OpenAICompatibleProvider } from '~/core/providers/openai';
-import { providerConfigFromApi } from '~/core/providers/providerSlots';
+import { llmRequestConfig, isProviderReady } from '~/core/providers/resolve';
+import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
 import { TranslationProviderError } from '~/core/providers/types';
 import { computeCacheKey } from '~/core/cache/key';
 import { getMtEngine, isMtEngineId, mtTranslateAll, type MtEngineId } from '~/core/mt';
@@ -39,7 +40,7 @@ export default defineBackground(() => {
       return false;
     }
     if (msg.type === 'ping') {
-      void handlePing(msg.requestId, client);
+      void handlePing(msg.requestId, msg.provider, client);
       sendResponse({ ok: true });
       return false;
     }
@@ -71,11 +72,13 @@ async function handleTranslate(
   };
 
   try {
-    const api = data.api;
-    const engine = data.settings.engine;
+    const engine: ProviderId = data.settings.engines.selection;
+    const cfg = data.providers[engine];
+    // The guard, not a `kind` comparison: this one narrows `engine` to an
+    // MtEngineId for the getMtEngine calls below. The registry lists exactly
+    // the free engines as services, and a test holds the two lists together.
     const useMt = isMtEngineId(engine);
-    const missingKey = api.providerType === 'cloud' && !api.apiKey;
-    if (!useMt && (!api.baseUrl || missingKey || !api.model)) {
+    if (!isProviderReady(engine, cfg)) {
       const locale = resolveLocale(
         data.settings.uiLanguage,
         typeof navigator !== 'undefined' ? navigator.language : 'en',
@@ -93,7 +96,7 @@ async function handleTranslate(
     let cacheKey: string | undefined;
     if (data.settings.cacheEnabled) {
       cacheKey = await computeCacheKey({
-        text: msg.text, engine, model: api.model,
+        text: msg.text, engine, model: cfg.model,
         mode: 'selection', targetLang,
       });
       const cached = await new CacheStore(client, data.settings.cacheTTLDays).get(cacheKey);
@@ -122,16 +125,15 @@ async function handleTranslate(
         });
         if (full) send({ type: 'translate:chunk', requestId: msg.requestId, delta: full });
       } else {
-        const provider = new OpenAICompatibleProvider(providerConfigFromApi(api));
+        const provider = new OpenAICompatibleProvider(llmRequestConfig(engine, cfg));
         await withRetry(async () => {
           full = '';
           for await (const chunk of provider.translate({
             systemPrompt: autoSystemPrompt(),
             // The model gets the language's English name, not its code: "pt-BR"
-          // and "nb" mean nothing to it, while the cache key and the MT engines
-          // keep the code, which is the stable identity.
-          userPrompt: selectionUserPrompt(msg.text, languageName(targetLang)),
-            maxTokens: api.maxTokens,
+            // and "nb" mean nothing to it, while the cache key and the free
+            // services keep the code, which is the stable identity.
+            userPrompt: selectionUserPrompt(msg.text, languageName(targetLang)),
             stream: true,
             signal: abortCtl.signal,
           })) {
@@ -172,11 +174,13 @@ async function handleTranslateBatch(
   };
 
   try {
-    const api = data.api;
-    const engine = data.settings.engine;
+    const engine: ProviderId = data.settings.engines[msg.surface];
+    const cfg = data.providers[engine];
+    // The guard, not a `kind` comparison: this one narrows `engine` to an
+    // MtEngineId for the getMtEngine calls below. The registry lists exactly
+    // the free engines as services, and a test holds the two lists together.
     const useMt = isMtEngineId(engine);
-    const missingKey = api.providerType === 'cloud' && !api.apiKey;
-    if (!useMt && (!api.baseUrl || missingKey || !api.model)) {
+    if (!isProviderReady(engine, cfg)) {
       const locale = resolveLocale(
         data.settings.uiLanguage,
         typeof navigator !== 'undefined' ? navigator.language : 'en',
@@ -214,7 +218,7 @@ async function handleTranslateBatch(
         }
       : (() => {
           const systemPrompt = batchSystemPrompt();
-          const provider = new OpenAICompatibleProvider(providerConfigFromApi(api));
+          const provider = new OpenAICompatibleProvider(llmRequestConfig(engine, cfg));
           return async (segments: string[]) => {
             let raw = '';
             await withRetry(async () => {
@@ -222,7 +226,6 @@ async function handleTranslateBatch(
               for await (const chunk of provider.translate({
                 systemPrompt,
                 userPrompt: batchUserPrompt(segments, languageName(targetLang)),
-                maxTokens: api.maxTokens,
                 stream: false,
                 signal: abortCtl.signal,
               })) {
@@ -242,7 +245,7 @@ async function handleTranslateBatch(
         const key = await computeCacheKey({
           text: segment,
           engine,
-          model: api.model,
+          model: cfg.model,
           mode: 'fullpage',
           targetLang,
         });
@@ -253,7 +256,7 @@ async function handleTranslateBatch(
         const key = await computeCacheKey({
           text: segment,
           engine,
-          model: api.model,
+          model: cfg.model,
           mode: 'fullpage',
           targetLang,
         });
@@ -277,37 +280,43 @@ async function handleTranslateBatch(
   }
 }
 
-async function handlePing(requestId: string, client: StorageClient): Promise<void> {
+async function handlePing(
+  requestId: string,
+  provider: ProviderId,
+  client: StorageClient,
+): Promise<void> {
   const data = await client.loadAppData();
-  const api = data.api;
+  const cfg = data.providers[provider];
   const send = (payload: object) => {
     chrome.runtime.sendMessage(payload).catch(() => {});
   };
 
-  const engine = data.settings.engine;
-  if (isMtEngineId(engine)) {
-    await pingMtEngine(engine, requestId, send);
+  // The caller names what to probe. With a provider per surface there is no
+  // single "the API" left to guess at, and each row on the Providers page
+  // reports on itself.
+  if (isMtEngineId(provider)) {
+    await pingMtEngine(provider, requestId, send);
     return;
   }
 
-  if (!api.baseUrl) {
+  if (!cfg.baseUrl) {
     send({ type: 'ping:error', requestId, message: 'Base URL is empty' });
     return;
   }
-  if (api.providerType === 'cloud' && !api.apiKey) {
+  if (PROVIDERS[provider].needsKey && !cfg.apiKey) {
     send({ type: 'ping:error', requestId, message: 'API Key is empty' });
     return;
   }
 
-  const endpoint = api.baseUrl.replace(/\/+$/, '') + '/models';
+  const endpoint = cfg.baseUrl.replace(/\/+$/, '') + '/models';
   const ctl = new AbortController();
   const timeout = setTimeout(() => ctl.abort(), 10000);
   const startedAt = Date.now();
 
   try {
-    const headers: Record<string, string> = { ...api.customHeaders };
-    if (api.apiKey) {
-      headers['Authorization'] = `Bearer ${api.apiKey}`;
+    const headers: Record<string, string> = { ...PROVIDERS[provider].requiredHeaders };
+    if (cfg.apiKey) {
+      headers['Authorization'] = `Bearer ${cfg.apiKey}`;
     }
     const response = await fetch(endpoint, {
       method: 'GET',
@@ -339,9 +348,9 @@ async function handlePing(requestId: string, client: StorageClient): Promise<voi
     }
 
     let modelInList: boolean | null = null;
-    if (api.model) {
+    if (cfg.model) {
       if (availableModels.length > 0) {
-        const wanted = api.model.toLowerCase();
+        const wanted = cfg.model.toLowerCase();
         modelInList = availableModels.some((id) => id.toLowerCase() === wanted);
       }
       // else: list empty / unparseable → null (can't determine)
@@ -353,7 +362,7 @@ async function handlePing(requestId: string, client: StorageClient): Promise<voi
       latencyMs,
       availableModels,
       modelInList,
-      configuredModel: api.model,
+      configuredModel: cfg.model,
     });
   } catch (e) {
     clearTimeout(timeout);

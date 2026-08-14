@@ -1,42 +1,35 @@
-import { MT_ENGINE_IDS, type MtEngineId } from '~/core/mt/types';
+import type { ProviderId } from '~/core/providers/registry';
 import type { SubtitlePosition, SubtitleStyle } from '~/core/subtitles/style';
 
 export const APP_DATA_VERSION = 1 as const;
 
 export interface AppData {
   version: typeof APP_DATA_VERSION;
-  api: ApiSettings;
+  providers: ProvidersConfig;
   settings: GlobalSettings;
 }
 
-export interface ApiSettings {
+/**
+ * What we hold for one provider.
+ *
+ * Every provider in the registry gets a row, configured or not, so that turning
+ * one on is an edit to an existing row rather than a creation. The free
+ * services leave the credential fields empty — they have none.
+ */
+export interface ProviderConfig {
   baseUrl: string;
   apiKey: string;
   model: string;
-  maxTokens?: number;
   /**
-   * Reasoning/thinking control for hybrid models. undefined ≡ 'off' (the
-   * default: translation doesn't need billed reasoning tokens). The effort
-   * tiers are mapped per provider to its native parameter.
+   * Reasoning control. undefined ≡ 'off' — translation does not need billed
+   * reasoning tokens. Mapped per provider to its own parameter.
    */
   thinking?: ThinkingSetting;
-  customHeaders?: Record<string, string>;
-  providerType: 'cloud' | 'local';
-  cloudProvider:
-    | 'openai'
-    | 'deepseek'
-    | 'moonshot'
-    | 'zhipu'
-    | 'dashscope'
-    | 'siliconflow'
-    | 'openrouter'
-    | 'mistral'
-    | 'custom';
-  savedConfigs?: Partial<Record<ProviderSlot, ProviderConfig>>;
+  /** Whether routing may pick it. */
+  enabled: boolean;
 }
 
-/** Identity of a remembered config bucket. */
-export type ProviderSlot = ApiSettings['cloudProvider'] | 'local';
+export type ProvidersConfig = Record<ProviderId, ProviderConfig>;
 
 /** Thinking control: off, or one of five effort tiers (mapped per provider). */
 export const THINKING_SETTINGS = ['off', 'low', 'medium', 'high', 'xhigh', 'max'] as const;
@@ -47,28 +40,20 @@ export function isThinkingSetting(value: unknown): value is ThinkingSetting {
   return typeof value === 'string' && (THINKING_SETTINGS as readonly string[]).includes(value);
 }
 
-/** The remembered config for one provider slot. */
-export interface ProviderConfig {
-  baseUrl: string;
-  apiKey: string;
-  model: string;
-  thinking?: ThinkingSetting;
-}
-
 /**
- * Which backend performs a translation. 'llm' uses the user's configured
- * OpenAI-compatible API; the rest are the free, key-less services in
- * `~/core/mt` (derived from that list so the two can't drift apart).
+ * The three places a translation happens. They are worth routing separately:
+ * a free service is fast and costs nothing, which suits a whole page or an
+ * hour of subtitles, while a model reads context and is the only kind of
+ * provider that can answer a single word with a dictionary entry.
  */
-export const TRANSLATION_ENGINES = ['llm', ...MT_ENGINE_IDS] as const;
-export type TranslationEngine = 'llm' | MtEngineId;
+export const TRANSLATION_SURFACES = ['selection', 'fullPage', 'subtitle'] as const;
+export type TranslationSurface = (typeof TRANSLATION_SURFACES)[number];
 
-export function isTranslationEngine(value: unknown): value is TranslationEngine {
-  return typeof value === 'string' && (TRANSLATION_ENGINES as readonly string[]).includes(value);
-}
+/** Which provider serves each surface, by registry id. */
+export type EngineRouting = Record<TranslationSurface, ProviderId>;
 
 export interface GlobalSettings {
-  engine: TranslationEngine;
+  engines: EngineRouting;
   targetLanguage: string;
   triggerMode: 'icon' | 'hotkey';
   hotkey: string;

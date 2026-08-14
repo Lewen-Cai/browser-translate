@@ -11,7 +11,9 @@ export const ja: Record<StringKey, string> = {
   ready: '準備完了',
   notConfigured: '未設定',
   // Sections
-  sectionApi: 'API',
+  providerNoKey: 'キー不要',
+  sectionRouting: 'ルーティング',
+  sectionProviders: 'プロバイダー',
   sectionTranslation: '翻訳',
   sectionRecent: '最近の翻訳',
   sectionApiEndpoint: 'API エンドポイント',
@@ -26,10 +28,12 @@ export const ja: Record<StringKey, string> = {
   navGeneral: '一般',
   sectionTrigger: '起動方法',
   // Translation engine
-  engine: '翻訳エンジン',
-  engineKindService: '翻訳サービス',
-  engineKindLlm: 'モデル提供元',
-  engineHint: '無料エンジンはキー不要ですが、訳文のみを返します。自分の API なら単語の辞書引きも使えます。',
+  surfaceSelection: '選択カード',
+  surfaceFullPage: 'ページ全体',
+  surfaceSubtitle: '動画字幕',
+  engineGroupServices: '翻訳サービス',
+  engineGroupModel: '自分のモデル',
+  dictionaryNeedsModel: '単語の辞書項目は自分のモデルから得られます。サービスを選ぶと、選択範囲は常に翻訳されます。',
   engineFreeDisclaimer: 'Microsoft と Google の翻訳は公開エンドポイントを利用しており、公式 API ではなく、両社の承認も受けていません。予告なく変更・停止される可能性があり、現状のまま無保証で提供されます。無料サービスが止まったときに備えて、自分のモデル API を用意しておくことをおすすめします。キーを設定しておけば切り替えるだけで済みます。',
   // Provider type + presets
   providerType: 'プロバイダー種別',

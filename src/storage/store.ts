@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { AppData, ApiSettings, GlobalSettings } from './schema';
+import type { AppData, GlobalSettings, ProviderConfig } from './schema';
+import type { ProviderId } from '~/core/providers/registry';
 import { StorageClient } from './client';
 import { createDefaultAppData } from './defaults';
 
@@ -8,7 +9,8 @@ interface AppStore {
   loaded: boolean;
 
   load: () => Promise<void>;
-  updateApi: (patch: Partial<ApiSettings>) => Promise<void>;
+  /** Patch one provider's row. Every provider has a row, so this never creates one. */
+  updateProvider: (id: ProviderId, patch: Partial<ProviderConfig>) => Promise<void>;
   updateSettings: (patch: Partial<GlobalSettings>) => Promise<void>;
   replaceAll: (data: AppData) => Promise<void>;
 }
@@ -24,8 +26,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set({ data, loaded: true });
   },
 
-  async updateApi(patch) {
-    const data = { ...get().data, api: { ...get().data.api, ...patch } };
+  async updateProvider(id, patch) {
+    const current = get().data;
+    const data = {
+      ...current,
+      providers: { ...current.providers, [id]: { ...current.providers[id], ...patch } },
+    };
     await client.saveAppData(data);
     set({ data });
   },

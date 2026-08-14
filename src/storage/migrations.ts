@@ -1,9 +1,11 @@
-import { APP_DATA_VERSION, isThinkingSetting, isTranslationEngine, type AppData } from './schema';
-import type { ProviderConfig, ProviderSlot } from './schema';
-import { inferCloudProvider, isCloudProvider } from '~/core/providers/presets';
-import { activeSlot } from '~/core/providers/providerSlots';
-import { normalizeSubtitlePosition, normalizeSubtitleStyle } from '~/core/subtitles/style';
+import { APP_DATA_VERSION, isThinkingSetting, type AppData } from './schema';
+import type { GlobalSettings, ProviderConfig, ProvidersConfig } from './schema';
+import { createDefaultProviders, defaultProviderConfig } from './defaults';
+import { PROVIDER_IDS, isProviderId, type ProviderId } from '~/core/providers/registry';
+import { isProviderReady } from '~/core/providers/resolve';
+import { DEFAULT_PROVIDER, normalizeEngineRouting } from '~/core/engines/routing';
 import { DEFAULT_TARGET_LANGUAGE, isTargetLanguage } from '~/core/language/targets';
+import { normalizeSubtitlePosition, normalizeSubtitleStyle } from '~/core/subtitles/style';
 
 /**
  * Integrity repairs applied to AppData on every load.
@@ -17,20 +19,10 @@ export function migrateAppData(input: AppData): AppData {
   }
 
   let data = input;
-  data = stripLegacyTemplateFields(data);
-  data = fillApiProviderDefaults(data);
-  data = normalizeThinking(data);
-  data = seedSavedConfigs(data);
+  data = stripLegacyFields(data);
+  data = adoptProviders(data);
   data = fillSettingsDefaults(data);
   return data;
-}
-
-/** Drop an invalid api.thinking value (absent ≡ 'off'). Idempotent. */
-function normalizeThinking(data: AppData): AppData {
-  const value = (data.api as { thinking?: unknown }).thinking;
-  if (value === undefined || isThinkingSetting(value)) return data;
-  const { thinking: _invalid, ...api } = data.api as AppData['api'] & { thinking?: unknown };
-  return { ...data, api };
 }
 
 /** Settings keys replaced by `subtitlePosition` / `subtitleStyle` in v0.1.9. */
@@ -46,37 +38,151 @@ const LEGACY_SUBTITLE_KEYS = [
  * (< v0.1.8), the theme system and the flat subtitle settings (< v0.1.9).
  * Idempotent.
  */
-function stripLegacyTemplateFields(data: AppData): AppData {
+function stripLegacyFields(data: AppData): AppData {
   const d = data as AppData & {
     promptTemplates?: unknown;
-    api: AppData['api'] & { promptTemplateId?: unknown };
-    settings: AppData['settings'] & { themeId?: unknown; customThemes?: unknown };
+    settings: GlobalSettings & { themeId?: unknown; customThemes?: unknown };
   };
   const hasTemplates = 'promptTemplates' in d;
-  const hasRef = 'promptTemplateId' in d.api;
   const hasThemeFields = 'themeId' in d.settings || 'customThemes' in d.settings;
   const staleSubtitleKeys = LEGACY_SUBTITLE_KEYS.filter((k) => k in d.settings);
-  if (!hasTemplates && !hasRef && !hasThemeFields && staleSubtitleKeys.length === 0) return data;
+  if (!hasTemplates && !hasThemeFields && staleSubtitleKeys.length === 0) return data;
   const { promptTemplates: _templates, ...rest } = d;
-  const { promptTemplateId: _ref, ...api } = d.api;
   const { themeId: _themeId, customThemes: _customThemes, ...settings } = d.settings;
   for (const key of staleSubtitleKeys) delete (settings as Record<string, unknown>)[key];
-  return { ...rest, api, settings };
+  return { ...rest, settings };
+}
+
+/** The single `api` object a store held before v0.2.0. */
+interface LegacyApi {
+  baseUrl?: unknown;
+  apiKey?: unknown;
+  model?: unknown;
+  thinking?: unknown;
+  providerType?: unknown;
+  cloudProvider?: unknown;
+  savedConfigs?: unknown;
+}
+
+function str(value: unknown, fallback: string): string {
+  return typeof value === 'string' ? value : fallback;
+}
+
+/** Which provider a pre-v0.2.0 store was actively translating through. */
+function legacyActiveProvider(api: LegacyApi): ProviderId {
+  if (api.providerType === 'local') return 'local';
+  return isProviderId(api.cloudProvider) ? api.cloudProvider : 'custom';
+}
+
+/** Repair one row, returning the same reference when it is already sound. */
+function normalizeRow(id: ProviderId, value: unknown): ProviderConfig {
+  const fallback = defaultProviderConfig(id);
+  if (value === null || typeof value !== 'object') return fallback;
+  const row = value as Partial<ProviderConfig> & { thinking?: unknown };
+  const thinkingOk = row.thinking === undefined || isThinkingSetting(row.thinking);
+  const clean =
+    typeof row.baseUrl === 'string' &&
+    typeof row.apiKey === 'string' &&
+    typeof row.model === 'string' &&
+    typeof row.enabled === 'boolean' &&
+    thinkingOk &&
+    Object.keys(row).length === (row.thinking === undefined ? 4 : 5);
+  if (clean) return value as ProviderConfig;
+  return {
+    baseUrl: str(row.baseUrl, fallback.baseUrl),
+    apiKey: str(row.apiKey, ''),
+    model: str(row.model, ''),
+    ...(isThinkingSetting(row.thinking) && { thinking: row.thinking }),
+    enabled: typeof row.enabled === 'boolean' ? row.enabled : fallback.enabled,
+  };
+}
+
+/**
+ * Build the provider table.
+ *
+ * Before v0.2.0 a store held one active `api` plus a bag of remembered
+ * per-vendor configs. Those remembered configs become rows directly, the active
+ * one wins for its own row, and it is switched on only if it was actually
+ * usable — enabling a half-filled row would put a provider into routing that
+ * cannot answer. The free services were always available, so they stay on.
+ */
+function providersFromLegacy(api: LegacyApi): ProvidersConfig {
+  const out = createDefaultProviders();
+
+  const saved = api.savedConfigs;
+  if (saved && typeof saved === 'object') {
+    for (const [slot, cfg] of Object.entries(saved as Record<string, unknown>)) {
+      if (!isProviderId(slot) || !cfg || typeof cfg !== 'object') continue;
+      const c = cfg as Record<string, unknown>;
+      out[slot] = {
+        baseUrl: str(c.baseUrl, out[slot].baseUrl),
+        apiKey: str(c.apiKey, ''),
+        model: str(c.model, ''),
+        ...(isThinkingSetting(c.thinking) && { thinking: c.thinking }),
+        enabled: false,
+      };
+    }
+  }
+
+  const active = legacyActiveProvider(api);
+  const live: ProviderConfig = {
+    baseUrl: str(api.baseUrl, out[active].baseUrl),
+    apiKey: str(api.apiKey, out[active].apiKey),
+    model: str(api.model, out[active].model),
+    ...(isThinkingSetting(api.thinking) && { thinking: api.thinking }),
+    enabled: false,
+  };
+  out[active] = { ...live, enabled: isProviderReady(active, live) };
+  return out;
+}
+
+function adoptProviders(data: AppData): AppData {
+  const d = data as AppData & { api?: LegacyApi };
+  const hasLegacyApi = 'api' in d;
+
+  if (!hasLegacyApi) {
+    const stored = data.providers as unknown;
+    if (stored && typeof stored === 'object') {
+      let clean = Object.keys(stored).length === PROVIDER_IDS.length;
+      const out = {} as ProvidersConfig;
+      for (const id of PROVIDER_IDS) {
+        const row = normalizeRow(id, (stored as Record<string, unknown>)[id]);
+        if (row !== (stored as Record<string, unknown>)[id]) clean = false;
+        out[id] = row;
+      }
+      return clean ? data : { ...data, providers: out };
+    }
+    return { ...data, providers: createDefaultProviders() };
+  }
+
+  const { api, ...rest } = d;
+  const providers = providersFromLegacy(api ?? {});
+  const active = legacyActiveProvider(api ?? {});
+
+  // Routing spoke of "the model" abstractly; now it names one. Whatever the
+  // store was actually using is the only honest answer.
+  const settings = data.settings as GlobalSettings & { engine?: unknown; engines?: unknown };
+  const remap = (value: unknown) => (value === 'llm' ? active : value);
+  const engines =
+    settings.engines && typeof settings.engines === 'object'
+      ? Object.fromEntries(
+          Object.entries(settings.engines as Record<string, unknown>).map(([k, v]) => [k, remap(v)]),
+        )
+      : remap(settings.engine);
+
+  return { ...rest, providers, settings: { ...settings, engines } as GlobalSettings };
 }
 
 function fillSettingsDefaults(data: AppData): AppData {
-  const s = data.settings;
+  const s = data.settings as GlobalSettings & { engine?: unknown };
   const fullPageHotkey = typeof s.fullPageHotkey === 'string' ? s.fullPageHotkey : 'Alt+A';
-  // Stores written before engines existed keep translating through their API;
-  // only a store with nothing configured falls to the free default.
-  const engine = isTranslationEngine(s.engine)
-    ? s.engine
-    : data.api.baseUrl && data.api.model
-      ? 'llm'
-      : 'microsoft';
+  // A store with nothing configured falls to the free default; one that already
+  // named a provider for everything keeps it.
+  const seed: ProviderId = isProviderId(s.engines) ? s.engines : DEFAULT_PROVIDER;
+  const engines = normalizeEngineRouting(s.engines, seed);
   const subtitlePosition = normalizeSubtitlePosition(s.subtitlePosition);
   const subtitleStyle = normalizeSubtitleStyle(s.subtitleStyle);
-  // A target language we no longer offer would be sent to the engines verbatim
+  // A target language we no longer offer would be sent to the providers verbatim
   // and answered with something arbitrary, so it falls back rather than passes
   // through. Every language the picker has ever offered is still on the list.
   const targetLanguage = isTargetLanguage(s.targetLanguage)
@@ -84,54 +190,18 @@ function fillSettingsDefaults(data: AppData): AppData {
     : DEFAULT_TARGET_LANGUAGE;
   const unchanged =
     fullPageHotkey === s.fullPageHotkey &&
-    engine === s.engine &&
+    engines === s.engines &&
     targetLanguage === s.targetLanguage &&
     subtitlePosition === s.subtitlePosition &&
-    subtitleStyle === s.subtitleStyle;
+    subtitleStyle === s.subtitleStyle &&
+    !('engine' in s);
   if (unchanged) return data;
 
+  // `engine` is dropped here rather than in stripLegacyFields: that pass runs
+  // first, and adoptProviders still needs to read the old value.
+  const { engine: _legacy, ...rest } = s;
   return {
     ...data,
-    settings: { ...s, engine, fullPageHotkey, targetLanguage, subtitlePosition, subtitleStyle },
+    settings: { ...rest, engines, fullPageHotkey, targetLanguage, subtitlePosition, subtitleStyle },
   };
-}
-
-function fillApiProviderDefaults(data: AppData): AppData {
-  const api = data.api;
-  const providerTypeValid = api.providerType === 'cloud' || api.providerType === 'local';
-  const cloudProviderValid = isCloudProvider(api.cloudProvider ?? '');
-  if (providerTypeValid && cloudProviderValid) return data;
-  return {
-    ...data,
-    api: {
-      ...api,
-      providerType: api.providerType === 'local' ? 'local' : 'cloud',
-      cloudProvider: isCloudProvider(api.cloudProvider ?? '')
-        ? api.cloudProvider
-        : inferCloudProvider(api.baseUrl),
-    },
-  };
-}
-
-function seedSavedConfigs(data: AppData): AppData {
-  const api = data.api;
-  const raw = api.savedConfigs && typeof api.savedConfigs === 'object' ? api.savedConfigs : {};
-  const clean: Partial<Record<ProviderSlot, ProviderConfig>> = {};
-  for (const [slot, cfg] of Object.entries(raw)) {
-    if (cfg && typeof cfg.baseUrl === 'string' && typeof cfg.apiKey === 'string' && typeof cfg.model === 'string') {
-      clean[slot as ProviderSlot] = {
-        baseUrl: cfg.baseUrl,
-        apiKey: cfg.apiKey,
-        model: cfg.model,
-        // Preserve a valid thinking value; anything else is dropped (≡ 'off').
-        ...(isThinkingSetting(cfg.thinking) && { thinking: cfg.thinking }),
-      };
-    }
-  }
-  const slot = activeSlot(api);
-  if (!(slot in clean)) {
-    clean[slot] = { baseUrl: api.baseUrl, apiKey: api.apiKey, model: api.model };
-  }
-  if (JSON.stringify(api.savedConfigs ?? null) === JSON.stringify(clean)) return data;
-  return { ...data, api: { ...api, savedConfigs: clean } };
 }

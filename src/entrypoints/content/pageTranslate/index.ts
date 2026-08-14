@@ -92,6 +92,7 @@ export function createPageTranslator(deps: PageTranslatorDeps): PageTranslator {
         requestId,
         segments,
         targetLang: deps.getTargetLang(),
+        surface: 'fullPage',
       });
       if (myEpoch !== epoch) return; // session was torn down (and maybe restarted) — drop stale result
       blocks.forEach((b, i) => injector.setTranslation(b, translations[i] ?? ''));

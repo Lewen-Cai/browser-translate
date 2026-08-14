@@ -11,7 +11,9 @@ export const de: Record<StringKey, string> = {
   ready: 'Bereit',
   notConfigured: 'Nicht konfiguriert',
   // Sections
-  sectionApi: 'API',
+  providerNoKey: 'Kein Schlüssel nötig',
+  sectionRouting: 'Routing',
+  sectionProviders: 'Anbieter',
   sectionTranslation: 'Übersetzung',
   sectionRecent: 'Zuletzt',
   sectionApiEndpoint: 'API-Endpunkt',
@@ -26,10 +28,12 @@ export const de: Record<StringKey, string> = {
   navGeneral: 'ALLGEMEIN',
   sectionTrigger: 'Auslösen',
   // Translation engine
-  engine: 'Übersetzungsdienst',
-  engineKindService: 'Übersetzungsdienst',
-  engineKindLlm: 'LLM-Anbieter',
-  engineHint: 'Die kostenlosen Dienste brauchen keinen Schlüssel, liefern aber nur reine Übersetzungen. Mit eigener API kommen Wörterbucheinträge für einzelne Wörter hinzu.',
+  surfaceSelection: 'Auswahlkarte',
+  surfaceFullPage: 'Ganze Seite',
+  surfaceSubtitle: 'Videountertitel',
+  engineGroupServices: 'Übersetzungsdienste',
+  engineGroupModel: 'Ihr Modell',
+  dictionaryNeedsModel: 'Wörterbucheinträge für einzelne Wörter stammen aus Ihrem eigenen Modell. Mit einem ausgewählten Dienst wird die Auswahl immer übersetzt.',
   engineFreeDisclaimer: 'Die Übersetzungen von Microsoft und Google laufen über öffentliche Endpunkte, die keine offiziellen APIs sind und weder mit den Unternehmen verbunden noch von ihnen freigegeben wurden. Sie können sich jederzeit ändern oder ausfallen und werden ohne Gewähr bereitgestellt. Falls ein kostenloser Dienst ausfällt, wechseln Sie zu Ihrem eigenen Modell — ein hinterlegter API-Schlüssel ist die Absicherung.',
   // Provider type + presets
   providerType: 'Anbietertyp',

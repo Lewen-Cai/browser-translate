@@ -42,19 +42,22 @@ describe('StorageClient', () => {
   it('initializes with default AppData when empty', async () => {
     const data = await client.loadAppData();
     expect(data.version).toBe(1);
-    expect(data.api.baseUrl).toBe('');
-    expect(data.api.apiKey).toBe('');
-    expect(data.api.model).toBe('');
+    expect(data.providers.deepseek.baseUrl).toBe('https://api.deepseek.com/v1');
+    expect(data.providers.deepseek.apiKey).toBe('');
+    expect(data.providers.deepseek.model).toBe('');
+    // Only the key-less services start switched on.
+    expect(data.providers.microsoft.enabled).toBe(true);
+    expect(data.providers.deepseek.enabled).toBe(false);
   });
 
   it('persists writes', async () => {
     const data = await client.loadAppData();
     data.settings.targetLanguage = 'en';
-    data.api.model = 'gpt-4o-mini';
+    data.providers.openai.model = 'gpt-4o-mini';
     await client.saveAppData(data);
     const reloaded = await client.loadAppData();
     expect(reloaded.settings.targetLanguage).toBe('en');
-    expect(reloaded.api.model).toBe('gpt-4o-mini');
+    expect(reloaded.providers.openai.model).toBe('gpt-4o-mini');
   });
 
   it('cache entries are stored independently', async () => {

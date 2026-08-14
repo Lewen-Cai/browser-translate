@@ -6,6 +6,7 @@ import type {
   TranslateRequest,
   TranslateResponse,
 } from './types';
+import type { ProviderId } from '~/core/providers/registry';
 
 /**
  * After an extension reload/update, content scripts already running in open tabs
@@ -81,7 +82,7 @@ export function abortTranslate(requestId: string): void {
  * Tests connectivity to the configured OpenAI-compatible endpoint
  * by calling GET {baseUrl}/models. Returns success or error info.
  */
-export function pingApi(): Promise<PingResponse> {
+export function pingApi(provider: ProviderId): Promise<PingResponse> {
   const requestId = `ping-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   return new Promise((resolve) => {
     try {
@@ -99,7 +100,7 @@ export function pingApi(): Promise<PingResponse> {
       }
     };
     chrome.runtime.onMessage.addListener(listener);
-    sendRequest({ type: 'ping', requestId });
+    sendRequest({ type: 'ping', requestId, provider });
     // Safety timeout (15s)
     setTimeout(() => {
       chrome.runtime.onMessage.removeListener(listener);

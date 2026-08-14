@@ -11,7 +11,9 @@ export const zhCN: Record<StringKey, string> = {
   ready: '已就绪',
   notConfigured: '尚未配置',
   // Sections
-  sectionApi: 'API',
+  providerNoKey: '无需密钥',
+  sectionRouting: '路由策略',
+  sectionProviders: '服务商',
   sectionTranslation: '翻译',
   sectionRecent: '最近翻译',
   sectionApiEndpoint: '接口地址',
@@ -26,10 +28,12 @@ export const zhCN: Record<StringKey, string> = {
   navGeneral: '通用',
   sectionTrigger: '触发方式',
   // Translation engine
-  engine: '翻译引擎',
-  engineKindService: '翻译服务',
-  engineKindLlm: '模型提供商',
-  engineHint: '免费引擎无需密钥，但只提供纯翻译；使用自有 API 还能对单词进行词典查询。',
+  surfaceSelection: '划词卡片',
+  surfaceFullPage: '整页翻译',
+  surfaceSubtitle: '视频字幕',
+  engineGroupServices: '翻译服务',
+  engineGroupModel: '你的模型',
+  dictionaryNeedsModel: '单词的词典释义来自你自己的模型。选择翻译服务时，划词一律按翻译处理。',
   engineFreeDisclaimer: '微软和谷歌翻译使用的是公开端点，并非官方 API，也未获得两家公司的授权或背书。它们可能随时变更或失效，按现状提供，不作任何担保。为防免费服务失效后无法使用，建议自备模型 API：配置好自己的 Key，服务出问题时切过去即可。',
   // Provider type + presets
   providerType: '服务类型',

@@ -11,7 +11,9 @@ export const fr: Record<StringKey, string> = {
   ready: 'Prêt',
   notConfigured: 'Non configuré',
   // Sections
-  sectionApi: 'API',
+  providerNoKey: 'Sans clé',
+  sectionRouting: 'Routage',
+  sectionProviders: 'Fournisseurs',
   sectionTranslation: 'Traduction',
   sectionRecent: 'Récents',
   sectionApiEndpoint: 'Point de terminaison API',
@@ -26,10 +28,12 @@ export const fr: Record<StringKey, string> = {
   navGeneral: 'GÉNÉRAL',
   sectionTrigger: 'Déclenchement',
   // Translation engine
-  engine: 'Moteur de traduction',
-  engineKindService: 'Service de traduction',
-  engineKindLlm: 'Fournisseurs de LLM',
-  engineHint: 'Les moteurs gratuits ne demandent pas de clé, mais ne font que traduire. Votre propre API ajoute la recherche de mots dans le dictionnaire.',
+  surfaceSelection: 'Carte de sélection',
+  surfaceFullPage: 'Page entière',
+  surfaceSubtitle: 'Sous-titres vidéo',
+  engineGroupServices: 'Services de traduction',
+  engineGroupModel: 'Votre modèle',
+  dictionaryNeedsModel: 'Les entrées de dictionnaire pour un mot isolé viennent de votre propre modèle. Avec un service sélectionné, la sélection est toujours traduite.',
   engineFreeDisclaimer: 'Les traductions Microsoft et Google passent par des endpoints publics qui ne sont pas des API officielles et ne sont ni affiliés ni approuvés par ces entreprises. Ils peuvent changer ou cesser de fonctionner à tout moment et sont fournis en l’état, sans garantie. Si un service gratuit cesse de fonctionner, basculez sur votre propre modèle : garder une clé d’API configurée est ce qui vous met à l’abri.',
   // Provider type + presets
   providerType: 'Type de fournisseur',

@@ -5,23 +5,29 @@ import { pingApi } from '~/messaging/client';
 import type { PingResponse } from '~/messaging/types';
 import { deriveStatus, type PingValue, type StatusState } from '~/ui/statusDerivation';
 import { useT } from '~/i18n';
+import type { ProviderId } from '~/core/providers/registry';
 import type { StringKey } from '~/i18n/strings';
 
 type TFn = (key: StringKey) => string;
 
 interface Props {
+  /** Which provider this reports on. Each is probed on its own. */
+  provider: ProviderId;
   /**
-   * Increment to trigger a fresh ping. Popup increments after Save commits.
-   * Options page increments after a debounced edit.
+   * Increment to trigger a fresh ping. Left at its default the indicator still
+   * probes once when it appears, which is what a row being opened wants.
    */
-  pingNonce: number;
+  pingNonce?: number;
   /** Skip the auto-ping (used during initial popup load when fields are still empty). */
   skip?: boolean;
 }
 
-export function ApiStatusIndicator({ pingNonce, skip = false }: Props): JSX.Element {
-  const api = useAppStore((s) => s.data.api);
-  const engine = useAppStore((s) => s.data.settings.engine);
+export function ApiStatusIndicator({
+  provider,
+  pingNonce = 0,
+  skip = false,
+}: Props): JSX.Element {
+  const cfg = useAppStore((s) => s.data.providers[provider]);
   const t = useT();
   const [ping, setPing] = useState<PingValue>(null);
   const seq = useRef(0);
@@ -33,13 +39,13 @@ export function ApiStatusIndicator({ pingNonce, skip = false }: Props): JSX.Elem
     }
     const mine = ++seq.current;
     setPing('pending');
-    pingApi().then((r: PingResponse) => {
+    pingApi(provider).then((r: PingResponse) => {
       if (mine !== seq.current) return;
       setPing(r);
     });
-  }, [pingNonce, skip, engine]);
+  }, [pingNonce, skip, provider]);
 
-  const state = deriveStatus(api, ping, engine);
+  const state = deriveStatus(provider, cfg, ping);
   const { dotClass, label } = render(state, t);
 
   return (

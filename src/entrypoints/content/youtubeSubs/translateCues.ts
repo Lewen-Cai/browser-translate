@@ -23,6 +23,7 @@ export interface CueTranslatorDeps {
     requestId: string;
     segments: string[];
     targetLang: string;
+    surface: 'subtitle';
   }) => Promise<string[]>;
   abortFn: (requestId: string) => void;
   getTargetLang: () => string;
@@ -118,6 +119,7 @@ export function createCueTranslator(deps: CueTranslatorDeps): CueTranslator {
             requestId,
             segments: batch.map((c) => c.text),
             targetLang: deps.getTargetLang(),
+            surface: 'subtitle',
           });
           if (myEpoch !== epoch) return; // torn down — drop stale result
           batch.forEach((c, j) => {

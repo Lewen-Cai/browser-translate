@@ -1,3 +1,4 @@
+import { Fragment } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { ChevronDown, Check } from '~/ui/icons';
 import { ProviderIcon, type ProviderIconId } from '~/ui/ProviderIcon';
@@ -7,13 +8,21 @@ export interface ProviderOption {
   value: string;
   label: string;
   iconId: ProviderIconId;
+  /**
+   * Optional heading this option sits under. Options are rendered in the order
+   * given and a heading is drawn wherever the group changes, so callers group
+   * by ordering rather than by nesting — which keeps the list one flat run for
+   * keyboard and screen-reader purposes.
+   */
+  group?: string;
 }
 
 interface Props {
   label?: string;
   value: string;
-  options: ProviderOption[];
+  options: readonly ProviderOption[];
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
 /**
@@ -23,7 +32,7 @@ interface Props {
  * is a listbox built from buttons. It stays keyboard- and screen-reader-usable
  * through the listbox roles, and closes on Escape or a click elsewhere.
  */
-export function ProviderSelect({ label, value, options, onChange }: Props) {
+export function ProviderSelect({ label, value, options, onChange, disabled = false }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const selected = options.find((o) => o.value === value);
@@ -56,10 +65,12 @@ export function ProviderSelect({ label, value, options, onChange }: Props) {
           type="button"
           aria-haspopup="listbox"
           aria-expanded={open}
+          disabled={disabled}
           onClick={() => setOpen((v) => !v)}
           class={cn(
             'flex h-8 w-full items-center gap-2 rounded-md border bg-ap-surface pl-2.5 pr-8 text-sm text-ap-fg',
             'transition-colors focus:outline-none',
+            disabled && 'opacity-50',
             open ? 'border-ap-brand' : 'border-ap-border hover:border-ap-border-strong',
           )}
         >
@@ -79,27 +90,41 @@ export function ProviderSelect({ label, value, options, onChange }: Props) {
               'border border-ap-border bg-ap-surface py-1 shadow-lg',
             )}
           >
-            {options.map((option) => {
+            {options.map((option, i) => {
               const isSelected = option.value === value;
+              const heading = option.group && option.group !== options[i - 1]?.group;
               return (
-                <li key={option.value} role="option" aria-selected={isSelected}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onChange(option.value);
-                      setOpen(false);
-                    }}
-                    class={cn(
-                      'flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-sm transition-colors',
-                      isSelected ? 'text-ap-fg' : 'text-ap-muted hover:text-ap-fg',
-                      'hover:bg-ap-fg/5',
-                    )}
-                  >
-                    <ProviderIcon id={option.iconId} size={16} />
-                    <span class="flex-1 truncate">{option.label}</span>
-                    {isSelected && <Check size={12} class="text-ap-brand" />}
-                  </button>
-                </li>
+                <Fragment key={option.value}>
+                  {heading && (
+                    <li
+                      role="presentation"
+                      class={cn(
+                        'px-2.5 pb-1 text-2xs font-mono uppercase tracking-wider text-ap-subtle',
+                        i === 0 ? 'pt-1' : 'pt-2',
+                      )}
+                    >
+                      {option.group}
+                    </li>
+                  )}
+                  <li role="option" aria-selected={isSelected}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onChange(option.value);
+                        setOpen(false);
+                      }}
+                      class={cn(
+                        'flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-sm transition-colors',
+                        isSelected ? 'text-ap-fg' : 'text-ap-muted hover:text-ap-fg',
+                        'hover:bg-ap-fg/5',
+                      )}
+                    >
+                      <ProviderIcon id={option.iconId} size={16} />
+                      <span class="flex-1 truncate">{option.label}</span>
+                      {isSelected && <Check size={12} class="text-ap-brand" />}
+                    </button>
+                  </li>
+                </Fragment>
               );
             })}
           </ul>

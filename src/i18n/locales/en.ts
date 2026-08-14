@@ -11,7 +11,9 @@ export const en = {
   ready: 'Ready',
   notConfigured: 'Not configured',
   // Sections
-  sectionApi: 'API',
+  providerNoKey: 'No key needed',
+  sectionRouting: 'Routing',
+  sectionProviders: 'Providers',
   sectionTranslation: 'Translation',
   sectionRecent: 'Recent',
   sectionApiEndpoint: 'API Endpoint',
@@ -26,10 +28,12 @@ export const en = {
   navGeneral: 'GENERAL',
   sectionTrigger: 'Trigger',
   // Translation engine
-  engine: 'Translation engine',
-  engineKindService: 'Translation service',
-  engineKindLlm: 'LLM providers',
-  engineHint: 'Free engines need no key, but only produce plain translations. Your own API also gives dictionary lookups for single words.',
+  surfaceSelection: 'Selection card',
+  surfaceFullPage: 'Full page',
+  surfaceSubtitle: 'Video subtitles',
+  engineGroupServices: 'Translation services',
+  engineGroupModel: 'Your model',
+  dictionaryNeedsModel: 'Dictionary entries for single words come from your own model. With a service selected, a selection is always translated.',
   engineFreeDisclaimer: 'Microsoft and Google translation go through public endpoints that are not official APIs, and are not affiliated with or endorsed by either company. They may change or stop working at any time, and are provided as-is without warranty. If a free service stops working, switch to your own model — keeping an API key configured is the way to stay unaffected.',
   // Provider type + presets
   providerType: 'Provider type',

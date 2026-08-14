@@ -11,7 +11,6 @@ import {
   supportsThinkingToggle,
   thinkingPatch,
 } from './registry';
-import { CLOUD_PRESETS } from './presets';
 import { MT_ENGINE_IDS } from '~/core/mt/types';
 import { THINKING_SETTINGS } from '~/storage/schema';
 
@@ -35,14 +34,6 @@ describe('the registry', () => {
     }
   });
 
-  it('keeps the endpoints it inherited from CLOUD_PRESETS identical', () => {
-    // The registry supersedes CLOUD_PRESETS; until the storage layer moves over,
-    // both exist and must not drift.
-    for (const [key, preset] of Object.entries(CLOUD_PRESETS)) {
-      if (!isProviderId(key)) continue;
-      expect(PROVIDERS[key].endpoints).toEqual(preset.endpoints);
-    }
-  });
 });
 
 describe('capabilities', () => {

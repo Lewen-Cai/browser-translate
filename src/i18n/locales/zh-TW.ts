@@ -11,7 +11,9 @@ export const zhTW: Record<StringKey, string> = {
   ready: '已就緒',
   notConfigured: '尚未設定',
   // Sections
-  sectionApi: 'API',
+  providerNoKey: '無需金鑰',
+  sectionRouting: '路由策略',
+  sectionProviders: '服務商',
   sectionTranslation: '翻譯',
   sectionRecent: '最近翻譯',
   sectionApiEndpoint: '端點位址',
@@ -26,10 +28,12 @@ export const zhTW: Record<StringKey, string> = {
   navGeneral: '一般',
   sectionTrigger: '觸發方式',
   // Translation engine
-  engine: '翻譯引擎',
-  engineKindService: '翻譯服務',
-  engineKindLlm: '模型提供商',
-  engineHint: '免費引擎無需金鑰，但只提供純翻譯；使用自有 API 還能對單字進行辭典查詢。',
+  surfaceSelection: '劃詞卡片',
+  surfaceFullPage: '整頁翻譯',
+  surfaceSubtitle: '影片字幕',
+  engineGroupServices: '翻譯服務',
+  engineGroupModel: '你的模型',
+  dictionaryNeedsModel: '單字的詞典釋義來自你自己的模型。選擇翻譯服務時，劃詞一律按翻譯處理。',
   engineFreeDisclaimer: '微軟與 Google 翻譯使用的是公開端點，並非官方 API，也未獲得兩家公司的授權或背書。它們可能隨時變更或失效，按現狀提供，不作任何擔保。為防免費服務失效後無法使用，建議自備模型 API：設定好自己的金鑰，服務出問題時切過去即可。',
   // Provider type + presets
   providerType: '服務類型',

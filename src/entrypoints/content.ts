@@ -19,7 +19,22 @@ import {
 import { translationAttribution, type TranslationAttribution } from '~/ui/attribution';
 import { resolveLocale, t } from '~/i18n';
 import type { Locale } from '~/i18n/strings';
+import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
 import type { AppData, GlobalSettings } from '~/storage/schema';
+
+/**
+ * How many subtitle batches to keep in flight, by who is answering them.
+ *
+ * A free service answers in well under a second and costs nothing per call, so
+ * it takes the widest fan-out. A cloud model fans out across its fleet. A
+ * self-hosted one uses 2 as a one-deep pipeline: a batch processing while the
+ * next is queued, so the model never idles between batches — a local MLX server
+ * queues rather than splitting, so this does not slow individual batches.
+ */
+function subtitleConcurrency(provider: ProviderId): number {
+  if (PROVIDERS[provider].kind === 'service') return 6;
+  return provider === 'local' ? 2 : 4;
+}
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -128,7 +143,8 @@ export default defineContentScript({
       targetLanguage = data.settings.targetLanguage;
       subtitlePosition = data.settings.subtitlePosition;
       subtitleStyle = data.settings.subtitleStyle;
-      attribution = translationAttribution(data.settings.engine, data.api);
+      const selectionProvider = data.settings.engines.selection;
+      attribution = translationAttribution(selectionProvider, data.providers[selectionProvider]);
       applyTheme();
 
       if (data.settings.triggerMode === 'icon') {
@@ -175,15 +191,7 @@ export default defineContentScript({
       if (isYouTubeWatch()) {
         ytSubs = createYouTubeSubTranslator({
           getTargetLang: () => targetLanguage,
-          // A free MT service answers in well under a second and has no per-token
-          // cost, so it takes the widest fan-out. Cloud LLMs fan out across their
-          // fleet (4). Local uses 2 as a 1-deep pipeline: one batch processing
-          // while the next is queued, so the model never idles between batches.
-          // (A local MLX server queues rather than splitting, so this doesn't
-          // slow individual batches.)
-          concurrency: data.settings.engine !== 'llm' ? 6
-            : data.api.providerType === 'cloud' ? 4
-            : 2,
+          concurrency: subtitleConcurrency(data.settings.engines.subtitle),
           getPosition: () => subtitlePosition,
           setPosition: (next) => {
             subtitlePosition = next;

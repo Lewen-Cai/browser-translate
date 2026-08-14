@@ -1,4 +1,6 @@
-import type { ApiSettings, TranslationEngine } from '~/storage/schema';
+import { isProviderReady } from '~/core/providers/resolve';
+import type { ProviderId } from '~/core/providers/registry';
+import type { ProviderConfig } from '~/storage/schema';
 import type { PingResponse } from '~/messaging/types';
 
 export type StatusState =
@@ -11,26 +13,16 @@ export type StatusState =
 export type PingValue = PingResponse | 'pending' | null;
 
 /**
- * Required fields depend on providerType:
- *  - cloud: baseUrl + apiKey + model
- *  - local: baseUrl + model (key not required)
- */
-function hasRequiredFields(api: ApiSettings): boolean {
-  if (!api.baseUrl || !api.model) return false;
-  if (api.providerType === 'cloud' && !api.apiKey) return false;
-  return true;
-}
-
-/**
- * The free engines need no credentials, so they are never 'not-configured' —
+ * The free services need no credentials, so they are never 'not-configured' —
  * their probe still runs, because reachability is the thing worth reporting.
+ * `isProviderReady` knows which fields each kind of provider requires.
  */
 export function deriveStatus(
-  api: ApiSettings,
-  ping: PingValue,
-  engine: TranslationEngine = 'llm',
+  id: ProviderId,
+  cfg: ProviderConfig | undefined,
+  ping: PingValue = null,
 ): StatusState {
-  if (engine === 'llm' && !hasRequiredFields(api)) return { kind: 'not-configured' };
+  if (!isProviderReady(id, cfg)) return { kind: 'not-configured' };
   if (ping === null || ping === 'pending') return { kind: 'checking' };
   if (ping.type === 'ping:error') {
     return { kind: 'offline', message: ping.message, status: ping.status };

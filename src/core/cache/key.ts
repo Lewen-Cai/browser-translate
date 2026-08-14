@@ -1,9 +1,10 @@
 export interface CacheKeyInput {
   text: string;
   /**
-   * Which backend produced the translation ('llm' or a free MT engine).
-   * Free engines have no model name, so without this every engine's results
-   * would collide under the same empty-model key.
+   * Which provider produced the translation, by registry id. Free services
+   * have no model name, so without this every service's results would collide
+   * under the same empty-model key — and two vendors serving the same model
+   * name would collide with each other.
    */
   engine: string;
   model: string;

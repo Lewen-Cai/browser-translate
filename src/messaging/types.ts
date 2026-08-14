@@ -1,3 +1,6 @@
+import type { TranslationSurface } from '~/storage/schema';
+import type { ProviderId } from '~/core/providers/registry';
+
 export interface TranslateRequest {
   type: 'translate';
   requestId: string;
@@ -18,6 +21,12 @@ export interface AbortRequest {
 export interface PingRequest {
   type: 'ping';
   requestId: string;
+  /**
+   * Which provider to probe. With a provider per surface there is no single
+   * "the API" to infer, so the caller says — each row on the Providers page
+   * reports on itself.
+   */
+  provider: ProviderId;
 }
 
 
@@ -37,6 +46,12 @@ export interface TranslateBatchRequest {
   requestId: string;
   segments: string[];
   targetLang?: string; // omit → use global setting
+  /**
+   * Which caller this is. Both full-page translation and video subtitles batch
+   * their segments through here, and the two route to their own engines, so the
+   * request has to say which one it is — the shape alone can't tell them apart.
+   */
+  surface: Extract<TranslationSurface, 'fullPage' | 'subtitle'>;
 }
 
 export type TranslateBatchResponse =

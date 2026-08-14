@@ -11,7 +11,9 @@ export const ko: Record<StringKey, string> = {
   ready: '준비됨',
   notConfigured: '설정되지 않음',
   // Sections
-  sectionApi: 'API',
+  providerNoKey: '키 불필요',
+  sectionRouting: '라우팅',
+  sectionProviders: '제공업체',
   sectionTranslation: '번역',
   sectionRecent: '최근 번역',
   sectionApiEndpoint: 'API 엔드포인트',
@@ -26,10 +28,12 @@ export const ko: Record<StringKey, string> = {
   navGeneral: '일반',
   sectionTrigger: '실행 방식',
   // Translation engine
-  engine: '번역 엔진',
-  engineKindService: '번역 서비스',
-  engineKindLlm: '모델 제공자',
-  engineHint: '무료 엔진은 키가 필요 없지만 번역문만 제공합니다. 내 API를 쓰면 단어 사전 조회도 가능합니다.',
+  surfaceSelection: '선택 카드',
+  surfaceFullPage: '전체 페이지',
+  surfaceSubtitle: '동영상 자막',
+  engineGroupServices: '번역 서비스',
+  engineGroupModel: '내 모델',
+  dictionaryNeedsModel: '단어의 사전 항목은 내 모델에서 나옵니다. 서비스를 선택하면 선택 영역은 항상 번역됩니다.',
   engineFreeDisclaimer: 'Microsoft와 Google 번역은 공개 엔드포인트를 사용하며 공식 API가 아니고 두 회사의 승인을 받지도 않았습니다. 언제든 변경되거나 중단될 수 있으며 보증 없이 있는 그대로 제공됩니다. 무료 서비스가 중단될 때를 대비해 자신의 모델 API를 준비해 두는 것을 권합니다. 키를 설정해 두면 전환만 하면 됩니다.',
   // Provider type + presets
   providerType: '제공자 유형',

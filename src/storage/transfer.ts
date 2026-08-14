@@ -1,4 +1,5 @@
-import type { AppData, ApiSettings, GlobalSettings, ProviderSlot } from './schema';
+import type { AppData, GlobalSettings, ProvidersConfig } from './schema';
+import type { ProviderId } from '~/core/providers/registry';
 import { createDefaultAppData } from './defaults';
 import { migrateAppData } from './migrations';
 
@@ -10,9 +11,11 @@ export interface ExportFile {
   version: typeof EXPORT_VERSION;
   exportedAt: number;
   data: {
-    api: ApiSettings;
+    providers: ProvidersConfig;
     settings: GlobalSettings;
-    // Pre-v0.1.8 exports also carried `promptTemplates` — ignored on import.
+    // Older exports carried `api` (< v0.2.0) and `promptTemplates` (< v0.1.8).
+    // Both still import: `api` is handed to the same migration pass a stored
+    // v0.1.9 profile goes through, and templates are ignored.
   };
 }
 
@@ -33,24 +36,16 @@ export function exportAppData(
   opts: { includeKeys: boolean },
   exportedAt: number,
 ): ExportFile {
-  const api: ApiSettings = { ...data.api };
-  if (!opts.includeKeys) {
-    api.apiKey = '';
-    api.customHeaders = undefined;
-    if (api.savedConfigs) {
-      const stripped: NonNullable<ApiSettings['savedConfigs']> = {};
-      for (const [slot, cfg] of Object.entries(api.savedConfigs)) {
-        if (cfg) stripped[slot as ProviderSlot] = { ...cfg, apiKey: '' };
-      }
-      api.savedConfigs = stripped;
-    }
+  const providers = {} as ProvidersConfig;
+  for (const [id, cfg] of Object.entries(data.providers)) {
+    providers[id as ProviderId] = opts.includeKeys ? { ...cfg } : { ...cfg, apiKey: '' };
   }
   return {
     format: EXPORT_FORMAT,
     version: EXPORT_VERSION,
     exportedAt,
     data: {
-      api,
+      providers,
       settings: { ...data.settings },
     },
   };
@@ -77,16 +72,29 @@ export function importAppData(parsed: unknown): AppData {
   }
 
   const base = createDefaultAppData();
-  const candidate: AppData = {
-    version: base.version,
-    // Legacy exports may smuggle api.promptTemplateId in via this spread;
-    // migrateAppData's stripLegacyTemplateFields pass removes it.
-    api: { ...base.api, ...(file.data.api ?? {}) },
-    settings: { ...base.settings, ...(file.data.settings ?? {}) },
-  };
+  const legacy = file.data as { api?: unknown };
+  const fileSettings = (file.data.settings ?? {}) as unknown as Record<string, unknown>;
+  const settings: Record<string, unknown> = { ...base.settings, ...fileSettings };
+  // A file old enough to name the single pre-v0.2.0 `engine` has no routing
+  // table of its own. Leaving the default one in place would shadow it, and the
+  // import would silently land on the free default instead of what the file
+  // said — the one case where a stored profile and an exported file differ,
+  // because only the file gets defaults merged underneath it.
+  if ('engine' in fileSettings && !('engines' in fileSettings)) delete settings.engines;
 
-  // Reuse the integrity-repair pass: strips legacy fields, fills provider
-  // defaults, seeds savedConfigs.
+  const candidate = {
+    version: base.version,
+    // A pre-v0.2.0 file carries `api` instead of `providers`. Passing it
+    // through untouched lets the migration below turn it into rows, exactly as
+    // it does for a stored profile of that vintage — no second code path.
+    ...(legacy.api !== undefined
+      ? { api: legacy.api, providers: base.providers }
+      : { providers: { ...base.providers, ...(file.data.providers ?? {}) } }),
+    settings,
+  } as unknown as AppData;
+
+  // Reuse the integrity-repair pass: strips legacy fields, adopts providers,
+  // fills settings defaults.
   try {
     return migrateAppData(candidate);
   } catch (e) {

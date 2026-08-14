@@ -1,41 +1,35 @@
 import { describe, it, expect } from 'vitest';
 import { migrateAppData } from './migrations';
 import { APP_DATA_VERSION } from './schema';
-import type { AppData, ApiSettings, GlobalSettings } from './schema';
+import type { AppData, GlobalSettings } from './schema';
 import { createDefaultAppData } from './defaults';
+import { PROVIDER_IDS } from '~/core/providers/registry';
 
-const baseSettings = {
-  engine: 'llm' as const,
-  targetLanguage: 'en',
-  triggerMode: 'icon' as const,
-  hotkey: 'Alt+T',
-  fullPageHotkey: 'Alt+A',
-  cacheEnabled: true,
-  cacheTTLDays: 30,
-  subtitlePosition: { percent: 6, anchor: 'bottom' as const },
-  subtitleStyle: {
-    displayMode: 'bilingual' as const,
-    translationPosition: 'below' as const,
-    backgroundOpacity: 78,
-    main: { fontScale: 100, color: '#FFFFFF', fontFamily: 'youtube' as const, fontWeight: 400 },
-    translation: { fontScale: 100, color: '#FFFFFF', fontFamily: 'youtube' as const, fontWeight: 400 },
-  },
-  theme: 'auto' as const,
-  uiLanguage: 'auto' as const,
-};
+/**
+ * A store shaped the way v0.1.9 wrote one: a single `api` plus per-vendor
+ * `savedConfigs`, and one `engine` for every surface.
+ */
+function legacyStore(api: Record<string, unknown> = {}, settings: Record<string, unknown> = {}) {
+  const base = createDefaultAppData();
+  const { providers: _providers, ...rest } = base;
+  const { engines: _engines, ...restSettings } = base.settings;
+  return {
+    ...rest,
+    api: {
+      baseUrl: '',
+      apiKey: '',
+      model: '',
+      providerType: 'cloud',
+      cloudProvider: 'custom',
+      ...api,
+    },
+    settings: { ...restSettings, ...settings },
+  } as unknown as AppData;
+}
 
 describe('migrateAppData', () => {
   it('returns data unchanged (same reference) when shape is valid', () => {
-    const input: AppData = {
-      version: APP_DATA_VERSION,
-      api: {
-        baseUrl: 'http://x', apiKey: 'k', model: 'm',
-        providerType: 'cloud',
-        cloudProvider: 'custom',
-        savedConfigs: { custom: { baseUrl: 'http://x', apiKey: 'k', model: 'm' } },
-      },
-      settings: baseSettings,
-    };
+    const input = createDefaultAppData();
     // Identity matters: loadAppData writes storage back when the reference changes.
     expect(migrateAppData(input)).toBe(input);
   });
@@ -43,204 +37,223 @@ describe('migrateAppData', () => {
   it('throws on unknown future version', () => {
     expect(() => migrateAppData({ version: 99 } as never)).toThrow();
   });
+});
 
-  it('fills providerType and cloudProvider defaults when missing', () => {
-    const input = {
-      version: APP_DATA_VERSION,
-      api: {
-        baseUrl: 'http://x', apiKey: 'k', model: 'm',
-        // providerType and cloudProvider absent (v0.1.0 data shape)
-      } as unknown as AppData['api'],
-      settings: baseSettings,
-    } as AppData;
-    const out = migrateAppData(input);
-    expect(out.api.providerType).toBe('cloud');
-    expect(out.api.cloudProvider).toBe('custom');
+describe('adopting the provider table', () => {
+  it('gives every registered provider a row', () => {
+    const out = migrateAppData(legacyStore());
+    expect(Object.keys(out.providers).sort()).toEqual([...PROVIDER_IDS].sort());
   });
 
-  it('infers cloudProvider from baseUrl on v0.1.0 upgrade', () => {
-    const input = {
-      version: APP_DATA_VERSION,
-      api: {
-        baseUrl: 'https://api.openai.com/v1', apiKey: 'k', model: 'm',
-        // providerType + cloudProvider absent
-      } as unknown as AppData['api'],
-      settings: baseSettings,
-    } as AppData;
-    const out = migrateAppData(input);
-    expect(out.api.providerType).toBe('cloud');
-    expect(out.api.cloudProvider).toBe('openai');
+  it('drops the legacy api object once it has been read', () => {
+    const out = migrateAppData(legacyStore({ model: 'm', baseUrl: 'b', apiKey: 'k' }));
+    expect('api' in out).toBe(false);
   });
 
-  it('preserves a new-provider cloudProvider value (e.g. moonshot)', () => {
-    const input: AppData = {
-      version: APP_DATA_VERSION,
-      api: {
-        baseUrl: 'https://api.moonshot.cn/v1', apiKey: 'k', model: 'm',
-        providerType: 'cloud',
-        cloudProvider: 'moonshot',
-      },
-      settings: baseSettings,
-    };
-    expect(migrateAppData(input).api.cloudProvider).toBe('moonshot');
+  it("moves the active vendor's live fields into its own row", () => {
+    const out = migrateAppData(
+      legacyStore({
+        cloudProvider: 'deepseek',
+        baseUrl: 'https://api.deepseek.com/v1',
+        apiKey: 'sk-x',
+        model: 'deepseek-chat',
+        thinking: 'xhigh',
+      }),
+    );
+    expect(out.providers.deepseek).toEqual({
+      baseUrl: 'https://api.deepseek.com/v1',
+      apiKey: 'sk-x',
+      model: 'deepseek-chat',
+      thinking: 'xhigh',
+      enabled: true,
+    });
   });
 
-  it('keeps a new-provider value even when baseUrl would not infer it', () => {
-    const input: AppData = {
-      version: APP_DATA_VERSION,
-      api: {
-        baseUrl: 'https://my-proxy.example/v1', apiKey: 'k', model: 'm',
-        providerType: 'cloud',
-        cloudProvider: 'mistral',
-      },
-      settings: baseSettings,
-    };
-    expect(migrateAppData(input).api.cloudProvider).toBe('mistral');
+  it('turns each remembered config into a row of its own', () => {
+    // These used to be reachable only by switching the active vendor; now they
+    // are providers in their own right.
+    const out = migrateAppData(
+      legacyStore({
+        cloudProvider: 'openai',
+        baseUrl: 'https://api.openai.com/v1',
+        apiKey: 'sk-o',
+        model: 'gpt-4o',
+        savedConfigs: {
+          deepseek: { baseUrl: 'https://api.deepseek.com/v1', apiKey: 'sk-d', model: 'chat' },
+          mistral: { baseUrl: 'https://api.mistral.ai/v1', apiKey: 'sk-m', model: 'large' },
+        },
+      }),
+    );
+    expect(out.providers.deepseek.model).toBe('chat');
+    expect(out.providers.mistral.apiKey).toBe('sk-m');
+  });
+
+  it('switches on the vendor that was in use, and leaves the rest off', () => {
+    const out = migrateAppData(
+      legacyStore({
+        cloudProvider: 'openai',
+        baseUrl: 'https://api.openai.com/v1',
+        apiKey: 'sk-o',
+        model: 'gpt-4o',
+        savedConfigs: {
+          deepseek: { baseUrl: 'https://api.deepseek.com/v1', apiKey: 'sk-d', model: 'chat' },
+        },
+      }),
+    );
+    expect(out.providers.openai.enabled).toBe(true);
+    expect(out.providers.deepseek.enabled).toBe(false);
+    // The free services were always available and stay that way.
+    expect(out.providers.microsoft.enabled).toBe(true);
+    expect(out.providers.google.enabled).toBe(true);
+  });
+
+  it('does not switch on a vendor that was never usable', () => {
+    // A half-filled row in routing would be a provider that cannot answer.
+    const out = migrateAppData(legacyStore({ cloudProvider: 'openai', apiKey: '', model: '' }));
+    expect(out.providers.openai.enabled).toBe(false);
+  });
+
+  it('reads a self-hosted store into the local row', () => {
+    const out = migrateAppData(
+      legacyStore({ providerType: 'local', baseUrl: 'http://localhost:1234/v1', model: 'qwen' }),
+    );
+    expect(out.providers.local).toMatchObject({ model: 'qwen', enabled: true });
+  });
+
+  it('drops an invalid thinking value while keeping the rest of the row', () => {
+    for (const bad of ['sometimes', 'auto']) {
+      const out = migrateAppData(
+        legacyStore({ cloudProvider: 'deepseek', baseUrl: 'b', apiKey: 'k', model: 'm', thinking: bad }),
+      );
+      expect('thinking' in out.providers.deepseek, bad).toBe(false);
+      expect(out.providers.deepseek.model, bad).toBe('m');
+    }
+  });
+
+  it('keeps every valid thinking value', () => {
+    for (const good of ['off', 'low', 'medium', 'high', 'xhigh', 'max'] as const) {
+      const out = migrateAppData(
+        legacyStore({ cloudProvider: 'deepseek', baseUrl: 'b', apiKey: 'k', model: 'm', thinking: good }),
+      );
+      expect(out.providers.deepseek.thinking).toBe(good);
+    }
+  });
+
+  it('repairs a malformed row without touching its neighbours', () => {
+    const data = createDefaultAppData();
+    data.providers.openai = { baseUrl: 'b', apiKey: 'k', model: 'm', enabled: true };
+    (data.providers as Record<string, unknown>).deepseek = { baseUrl: 123 };
+    const out = migrateAppData(data);
+    expect(out.providers.deepseek).toEqual({
+      baseUrl: 'https://api.deepseek.com/v1',
+      apiKey: '',
+      model: '',
+      enabled: false,
+    });
+    expect(out.providers.openai).toEqual({ baseUrl: 'b', apiKey: 'k', model: 'm', enabled: true });
+  });
+
+  it('fills a row that is missing entirely', () => {
+    const data = createDefaultAppData();
+    delete (data.providers as Record<string, unknown>).gemini;
+    expect(migrateAppData(data).providers.gemini.baseUrl).toBe(
+      'https://generativelanguage.googleapis.com/v1beta/openai',
+    );
   });
 });
 
-describe('legacy template-field stripping', () => {
-  it('removes promptTemplates and api.promptTemplateId from pre-v0.1.8 data', () => {
+describe('routing migration', () => {
+  it('resolves the abstract "llm" to whatever the store was actually using', () => {
+    const out = migrateAppData(
+      legacyStore(
+        { cloudProvider: 'zhipu', baseUrl: 'b', apiKey: 'k', model: 'm' },
+        { engines: { selection: 'llm', fullPage: 'google', subtitle: 'llm' } },
+      ),
+    );
+    expect(out.settings.engines).toEqual({
+      selection: 'zhipu',
+      fullPage: 'google',
+      subtitle: 'zhipu',
+    });
+  });
+
+  it('carries a v0.1.9 single engine over to every surface', () => {
+    const out = migrateAppData(legacyStore({}, { engine: 'google' }));
+    expect(out.settings.engines).toEqual({
+      selection: 'google',
+      fullPage: 'google',
+      subtitle: 'google',
+    });
+  });
+
+  it('drops the legacy engine key once it has been read', () => {
+    const out = migrateAppData(legacyStore({}, { engine: 'google' }));
+    expect('engine' in out.settings).toBe(false);
+  });
+
+  it('replaces a provider we no longer ship', () => {
+    const data = createDefaultAppData();
+    data.settings.engines = { selection: 'yandex', fullPage: 'google', subtitle: 'google' } as never;
+    expect(migrateAppData(data).settings.engines.selection).toBe('microsoft');
+  });
+
+  it('preserves a valid routing table without rewriting storage', () => {
+    const seed = createDefaultAppData();
+    seed.settings.engines = { selection: 'anthropic', fullPage: 'gemini', subtitle: 'microsoft' };
+    const normalized = migrateAppData(seed);
+    // Identity is what stops a load/write loop through storage.onChanged.
+    expect(migrateAppData(normalized)).toBe(normalized);
+    expect(normalized.settings.engines.selection).toBe('anthropic');
+  });
+});
+
+describe('legacy field stripping', () => {
+  it('removes promptTemplates from pre-v0.1.8 data', () => {
     const legacy = {
-      version: APP_DATA_VERSION,
-      api: {
-        baseUrl: 'http://x', apiKey: 'k', model: 'm',
-        providerType: 'cloud', cloudProvider: 'custom',
-        savedConfigs: { custom: { baseUrl: 'http://x', apiKey: 'k', model: 'm' } },
-        promptTemplateId: 'builtin-general',
-      },
-      settings: baseSettings,
+      ...legacyStore({ baseUrl: 'http://x', apiKey: 'k', model: 'm' }),
       promptTemplates: [{ id: 'builtin-general', name: 'General' }],
     } as unknown as AppData;
     const out = migrateAppData(legacy);
     expect('promptTemplates' in out).toBe(false);
-    expect('promptTemplateId' in out.api).toBe(false);
-    // everything else survives
-    expect(out.api.baseUrl).toBe('http://x');
-    expect(out.settings.targetLanguage).toBe('en');
+    expect(out.providers.custom.baseUrl).toBe('http://x');
   });
 
-  it('is identity on data that has no legacy fields', () => {
-    const clean: AppData = {
-      version: APP_DATA_VERSION,
-      api: {
-        baseUrl: 'http://x', apiKey: 'k', model: 'm',
-        providerType: 'cloud', cloudProvider: 'custom',
-        savedConfigs: { custom: { baseUrl: 'http://x', apiKey: 'k', model: 'm' } },
-      },
-      settings: baseSettings,
-    };
-    expect(migrateAppData(clean)).toBe(clean);
+  it('removes the theme fields left by v0.1.8', () => {
+    const data = createDefaultAppData();
+    Object.assign(data.settings, { themeId: 'sepia', customThemes: [] });
+    const out = migrateAppData(data);
+    expect('themeId' in out.settings).toBe(false);
+    expect('customThemes' in out.settings).toBe(false);
   });
 });
 
-describe('savedConfigs seeding', () => {
-  it('seeds the active slot from the active fields when missing', () => {
-    const data = createDefaultAppData();
-    data.api = { ...data.api, providerType: 'cloud', cloudProvider: 'openai', baseUrl: 'https://api.openai.com/v1', apiKey: 'sk-x', model: 'gpt-4o' };
-    delete data.api.savedConfigs;
-    const out = migrateAppData(data);
-    expect(out.api.savedConfigs).toEqual({ openai: { baseUrl: 'https://api.openai.com/v1', apiKey: 'sk-x', model: 'gpt-4o' } });
-  });
-
-  it('leaves a valid savedConfigs untouched', () => {
-    const data = createDefaultAppData();
-    data.api = { ...data.api, providerType: 'cloud', cloudProvider: 'openai', baseUrl: 'b', apiKey: 'k', model: 'm', savedConfigs: { openai: { baseUrl: 'b', apiKey: 'k', model: 'm' } } };
-    const out = migrateAppData(data);
-    expect(out.api.savedConfigs).toEqual({ openai: { baseUrl: 'b', apiKey: 'k', model: 'm' } });
-  });
-
-  it('drops malformed entries and keeps the active slot', () => {
-    const data = createDefaultAppData();
-    data.api = {
-      ...data.api,
-      providerType: 'cloud', cloudProvider: 'openai', baseUrl: 'b', apiKey: 'k', model: 'm',
-      savedConfigs: { openai: { baseUrl: 'b', apiKey: 'k', model: 'm' }, deepseek: { baseUrl: 123 } } as unknown as ApiSettings['savedConfigs'],
-    };
-    const out = migrateAppData(data);
-    expect(out.api.savedConfigs).toEqual({ openai: { baseUrl: 'b', apiKey: 'k', model: 'm' } });
-  });
-
-  it("preserves a slot's thinking value and drops an invalid one", () => {
-    const data = createDefaultAppData();
-    data.api = {
-      ...data.api,
-      providerType: 'cloud', cloudProvider: 'deepseek', baseUrl: 'b', apiKey: 'k', model: 'm', thinking: 'xhigh',
-      savedConfigs: {
-        deepseek: { baseUrl: 'b', apiKey: 'k', model: 'm', thinking: 'xhigh' },
-        openai: { baseUrl: 'o', apiKey: 'k2', model: 'm2', thinking: 'bogus' },
-      } as unknown as ApiSettings['savedConfigs'],
-    };
-    const out = migrateAppData(data);
-    expect(out.api.savedConfigs?.deepseek?.thinking).toBe('xhigh');
-    expect(out.api.savedConfigs?.openai?.thinking).toBeUndefined();
-    expect(out.api.savedConfigs?.openai?.model).toBe('m2');
-  });
-});
-
-describe('thinking normalization', () => {
-  it('drops an invalid api.thinking value (including the retired auto)', () => {
-    for (const bad of ['sometimes', 'auto']) {
-      const data = createDefaultAppData();
-      (data.api as { thinking?: unknown }).thinking = bad;
-      const out = migrateAppData(data);
-      expect('thinking' in out.api, bad).toBe(false);
-    }
-  });
-
-  it('keeps every valid api.thinking value', () => {
-    for (const good of ['off', 'low', 'medium', 'high', 'xhigh', 'max'] as const) {
-      const data = createDefaultAppData();
-      data.api.thinking = good;
-      expect(migrateAppData(data).api.thinking).toBe(good);
-    }
-  });
-});
-
-describe('fullPageHotkey integrity repair', () => {
+describe('settings integrity repair', () => {
   it('fills a missing fullPageHotkey with the default', () => {
     const data = createDefaultAppData();
     delete (data.settings as Partial<GlobalSettings>).fullPageHotkey;
-    const out = migrateAppData(data);
-    expect(out.settings.fullPageHotkey).toBe('Alt+A');
+    expect(migrateAppData(data).settings.fullPageHotkey).toBe('Alt+A');
   });
 
   it('keeps a user-customised fullPageHotkey', () => {
     const data = createDefaultAppData();
     data.settings.fullPageHotkey = 'Ctrl+Shift+P';
-    const out = migrateAppData(data);
-    expect(out.settings.fullPageHotkey).toBe('Ctrl+Shift+P');
+    expect(migrateAppData(data).settings.fullPageHotkey).toBe('Ctrl+Shift+P');
   });
-});
 
-describe('engine integrity repair', () => {
-  it('keeps a store that already translates through an API on the LLM engine', () => {
+  it('replaces a target language we no longer offer', () => {
     const data = createDefaultAppData();
-    data.api = { ...data.api, baseUrl: 'https://api.deepseek.com/v1', apiKey: 'k', model: 'deepseek-chat' };
-    delete (data.settings as Partial<GlobalSettings>).engine;
-    expect(migrateAppData(data).settings.engine).toBe('llm');
+    data.settings.targetLanguage = 'klingon';
+    expect(migrateAppData(data).settings.targetLanguage).toBe('zh-CN');
   });
 
-  it('falls back to a free engine when nothing was ever configured', () => {
+  it('keeps a target language that is still on the list', () => {
     const data = createDefaultAppData();
-    data.api = { ...data.api, baseUrl: '', apiKey: '', model: '' };
-    delete (data.settings as Partial<GlobalSettings>).engine;
-    expect(migrateAppData(data).settings.engine).toBe('microsoft');
+    data.settings.targetLanguage = 'pt-PT';
+    expect(migrateAppData(data).settings.targetLanguage).toBe('pt-PT');
   });
 
-  it('replaces an unknown engine value', () => {
-    const data = createDefaultAppData();
-    (data.settings as { engine: unknown }).engine = 'yandex';
-    expect(migrateAppData(data).settings.engine).toBe('microsoft');
-  });
-
-  it('preserves a valid engine choice without rewriting storage', () => {
-    const seed = createDefaultAppData();
-    seed.settings.engine = 'google';
-    // Normalize first (a fresh default still needs savedConfigs seeded), then
-    // assert the second pass is a no-op — identity is what stops a write loop.
-    const normalized = migrateAppData(seed);
-    expect(migrateAppData(normalized)).toBe(normalized);
-    expect(normalized.settings.engine).toBe('google');
+  it('accepts a version below the current one', () => {
+    const data = { ...createDefaultAppData(), version: APP_DATA_VERSION } as AppData;
+    expect(() => migrateAppData(data)).not.toThrow();
   });
 });
