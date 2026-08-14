@@ -57,7 +57,10 @@ export function createYouTubeSite(): SubtitleSite {
 
     async probe(): Promise<SiteProbe> {
       const found = await captions();
-      if (!found) return { kind: 'unknown' };
+      // The bridge reports what the player asked for. A reader who has never
+      // turned captions on means a player that never asked, which is the
+      // likeliest reason for an empty bridge — so say that rather than "failed".
+      if (!found) return { kind: 'unknown', hint: 'enableCaptions' };
       if (found.isLive) return { kind: 'live' };
       const track = pickTrack(found.tracks, trackPref(found));
       if (!track) return { kind: 'none' };

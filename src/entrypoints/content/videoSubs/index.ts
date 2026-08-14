@@ -114,10 +114,12 @@ export function createVideoSubTranslator(deps: VideoSubTranslatorDeps): VideoSub
     if (!on) return; // reader toggled off during the await
     if (probe.kind === 'live') { deps.notify(deps.strings.live); disable(); return; }
     if (probe.kind === 'none') { deps.notify(deps.strings.noCaptions); disable(); return; }
-    if (probe.kind === 'unknown') { deps.notify(deps.strings.enableCc); disable(); return; }
 
+    // `unknown` goes ahead and asks. Some sites can only answer by fetching the
+    // transcript, and doing that before the reader has asked for a translation
+    // would be a request we have no business making on every page.
     const target = deps.getTargetLang();
-    if (probe.languageCode && target.startsWith(probe.languageCode)) {
+    if (probe.kind === 'ready' && probe.languageCode && target.startsWith(probe.languageCode)) {
       deps.notify(deps.strings.noTranslationNeeded); disable(); return;
     }
 
@@ -125,7 +127,9 @@ export function createVideoSubTranslator(deps: VideoSubTranslatorDeps): VideoSub
     try {
       fetched = await site.fetchTranscript();
     } catch {
-      deps.notify(deps.strings.failed);
+      deps.notify(probe.kind === 'unknown' && probe.hint === 'enableCaptions'
+        ? deps.strings.enableCc
+        : deps.strings.failed);
       disable();
       return;
     }

@@ -18,9 +18,18 @@ describe('subtitleSiteFor', () => {
     expect(subtitleSiteFor(loc('https://www.youtube.com/feed/subscriptions'))?.id).toBe('generic');
   });
 
+  it('hands a Zoom recording to its own adapter, on any regional host', () => {
+    expect(subtitleSiteFor(loc('https://zoom.us/rec/play/xyz'))?.id).toBe('zoom');
+    expect(subtitleSiteFor(loc('https://us02web.zoom.us/rec/share/abc'))?.id).toBe('zoom');
+  });
+
+  it('leaves the rest of Zoom alone — a meeting is not a recording', () => {
+    expect(subtitleSiteFor(loc('https://zoom.us/j/1234567890'))?.id).toBe('generic');
+  });
+
   it('falls through to the generic adapter everywhere else', () => {
-    expect(subtitleSiteFor(loc('https://zoom.us/rec/play/xyz'))?.id).toBe('generic');
     expect(subtitleSiteFor(loc('https://example.edu/lecture/3'))?.id).toBe('generic');
+    expect(subtitleSiteFor(loc('https://vimeo.com/12345'))?.id).toBe('generic');
   });
 
   it('keeps the catch-all last, or it would swallow every site above it', () => {

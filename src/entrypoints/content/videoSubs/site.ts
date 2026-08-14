@@ -64,8 +64,14 @@ export type SiteProbe =
   | { kind: 'none' }
   /** A live stream: there is no transcript to look ahead in. */
   | { kind: 'live' }
-  /** Could not tell. Offer the toggle and find out when it is pressed. */
-  | { kind: 'unknown' };
+  /**
+   * Could not tell without going and getting the transcript, which is not
+   * something to do before anyone has asked. The toggle is offered and the
+   * answer comes when it is pressed. `hint` is what to say if that fails: a
+   * site may know the likeliest reason, and "turn captions on first" is a far
+   * better message than "it did not work".
+   */
+  | { kind: 'unknown'; hint?: 'enableCaptions' };
 
 /** The adapter for this page, or null where we have nothing to offer. */
 export function siteFor(
