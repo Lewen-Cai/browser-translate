@@ -12,6 +12,8 @@ export const es: Record<StringKey, string> = {
   notConfigured: 'Sin configurar',
   // Sections
   providerPermissionDenied: 'No se puede usar sin permiso para acceder a su endpoint.',
+  searchProviders: 'Buscar proveedores…',
+  noMatches: 'Sin coincidencias',
   providerNoKey: 'Sin clave',
   sectionRouting: 'Enrutamiento',
   sectionProviders: 'Proveedores',

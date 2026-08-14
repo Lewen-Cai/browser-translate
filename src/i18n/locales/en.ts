@@ -12,6 +12,8 @@ export const en = {
   notConfigured: 'Not configured',
   // Sections
   providerPermissionDenied: 'Cannot be used without permission to reach its endpoint.',
+  searchProviders: 'Search providers…',
+  noMatches: 'No matches',
   providerNoKey: 'No key needed',
   sectionRouting: 'Routing',
   sectionProviders: 'Providers',

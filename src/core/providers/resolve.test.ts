@@ -54,7 +54,8 @@ describe('llmRequestConfig', () => {
   });
 
   it('omits extraBody entirely for a provider with no known control', () => {
-    expect(llmRequestConfig('opencode', row({ thinking: 'high' }))).not.toHaveProperty('extraBody');
+    expect(llmRequestConfig('openai', row({ thinking: 'high' }))).not.toHaveProperty('extraBody');
+    expect(llmRequestConfig('mistral', row({ thinking: 'off' }))).not.toHaveProperty('extraBody');
   });
 });
 

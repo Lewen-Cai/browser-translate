@@ -12,6 +12,8 @@ export const de: Record<StringKey, string> = {
   notConfigured: 'Nicht konfiguriert',
   // Sections
   providerPermissionDenied: 'Ohne Berechtigung für seinen Endpunkt nicht nutzbar.',
+  searchProviders: 'Anbieter suchen…',
+  noMatches: 'Keine Treffer',
   providerNoKey: 'Kein Schlüssel nötig',
   sectionRouting: 'Routing',
   sectionProviders: 'Anbieter',

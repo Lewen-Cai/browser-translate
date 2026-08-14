@@ -20,12 +20,20 @@ interface Props {
   pingNonce?: number;
   /** Skip the auto-ping (used during initial popup load when fields are still empty). */
   skip?: boolean;
+  /**
+   * Drop the state word while everything is fine, leaving the dot and the
+   * latency. Somewhere tight — a list row, a panel header — the number is the
+   * whole point and "READY" beside it is noise. Anything other than ready still
+   * says what it is, because a coloured dot alone does not explain itself.
+   */
+  compact?: boolean;
 }
 
 export function ApiStatusIndicator({
   provider,
   pingNonce = 0,
   skip = false,
+  compact = false,
 }: Props): JSX.Element {
   const cfg = useAppStore((s) => s.data.providers[provider]);
   const t = useT();
@@ -47,16 +55,17 @@ export function ApiStatusIndicator({
 
   const state = deriveStatus(provider, cfg, ping);
   const { dotClass, label } = render(state, t);
+  // A probe in flight says nothing useful in compact form — the pulsing dot
+  // already carries it, and a word that appears for a moment and vanishes reads
+  // as a glitch.
+  const showLabel = !compact || (state.kind !== 'ready' && state.kind !== 'checking');
 
   return (
-    <div
-      class="flex items-center gap-2"
-      title={tooltipFor(state)}
-    >
-      <span class={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
-      <span class="text-2xs font-mono uppercase tracking-wider text-ap-muted">
-        {label}
-      </span>
+    <div class="flex items-center gap-1.5" title={tooltipFor(state)}>
+      <span class={`w-1.5 h-1.5 shrink-0 rounded-full ${dotClass}`} />
+      {showLabel && (
+        <span class="text-2xs font-mono uppercase tracking-wider text-ap-muted">{label}</span>
+      )}
       {state.kind === 'ready' && (
         <span class="text-2xs font-mono text-ap-subtle">{state.latencyMs}ms</span>
       )}

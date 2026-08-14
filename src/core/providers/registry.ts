@@ -316,8 +316,15 @@ export function thinkingPatch(
         : { thinking: { type: 'enabled', budget_tokens: THINKING_BUDGETS[setting] } };
     case 'gemini':
       return { reasoning_effort: setting === 'off' ? 'none' : cappedEffort(setting) };
+    case 'opencode':
+      // Read off opencode's own client rather than guessed: its chat-completions
+      // protocol puts `reasoning_effort` at the top level, and its effort scale
+      // is none/minimal/low/medium/high/xhigh/max — of which the chat-completions
+      // variant rejects 'max' outright, so ours caps there. 'none' is how that
+      // scale spells off, which is why this is not simply left unsent.
+      return { reasoning_effort: setting === 'off' ? 'none' : setting === 'max' ? 'xhigh' : setting };
     default:
-      return null; // openai, moonshot, mistral, opencode, local, custom
+      return null; // openai, moonshot, mistral, local, custom
   }
 }
 

@@ -117,7 +117,7 @@ describe('keys and endpoints', () => {
 
 describe('thinkingPatch', () => {
   it('never sends a patch for a provider without known controls', () => {
-    for (const id of ['openai', 'moonshot', 'mistral', 'opencode', 'local', 'custom'] as const) {
+    for (const id of ['openai', 'moonshot', 'mistral', 'local', 'custom'] as const) {
       for (const setting of THINKING_SETTINGS) expect(thinkingPatch(id, setting)).toBeNull();
       expect(supportsThinkingToggle(id)).toBe(false);
     }
@@ -131,6 +131,16 @@ describe('thinkingPatch', () => {
     for (const setting of THINKING_SETTINGS) {
       expect(thinkingPatch('anthropic', setting)).not.toHaveProperty('reasoning_effort');
     }
+  });
+
+  it("uses opencode's own effort scale, capping where its protocol refuses 'max'", () => {
+    // Taken from opencode's client: chat-completions sends top-level
+    // reasoning_effort and rejects 'max', while 'none' is how that scale
+    // spells off.
+    expect(thinkingPatch('opencode', 'off')).toEqual({ reasoning_effort: 'none' });
+    expect(thinkingPatch('opencode', 'xhigh')).toEqual({ reasoning_effort: 'xhigh' });
+    expect(thinkingPatch('opencode', 'max')).toEqual({ reasoning_effort: 'xhigh' });
+    expect(supportsThinkingToggle('opencode')).toBe(true);
   });
 
   it("uses Gemini's 'none' to turn reasoning off, and caps its effort at high", () => {

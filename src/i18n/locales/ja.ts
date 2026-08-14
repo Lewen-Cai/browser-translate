@@ -12,6 +12,8 @@ export const ja: Record<StringKey, string> = {
   notConfigured: '未設定',
   // Sections
   providerPermissionDenied: 'エンドポイントへのアクセス許可がないため使用できません。',
+  searchProviders: 'プロバイダーを検索…',
+  noMatches: '一致なし',
   providerNoKey: 'キー不要',
   sectionRouting: 'ルーティング',
   sectionProviders: 'プロバイダー',
