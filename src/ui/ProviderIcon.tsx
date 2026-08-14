@@ -1,7 +1,6 @@
 import type { JSX } from 'preact';
 import { Server, SlidersHorizontal } from '~/ui/icons';
-import type { MtEngineId } from '~/core/mt/types';
-import type { ProviderSlot } from '~/storage/schema';
+import type { ProviderId } from '~/core/providers/registry';
 
 // Vendor marks from Lobe Icons (https://github.com/lobehub/lobe-icons), MIT.
 // The files are vendored into src/ui/brandIcons rather than pulled from the
@@ -25,8 +24,11 @@ import openrouterSvg from './brandIcons/openrouter.svg?raw';
 import mistralSvg from './brandIcons/mistral-color.svg?raw';
 import microsoftSvg from './brandIcons/microsoft-color.svg?raw';
 import googleSvg from './brandIcons/google-color.svg?raw';
+import claudeSvg from './brandIcons/claude-color.svg?raw';
+import geminiSvg from './brandIcons/gemini-color.svg?raw';
+import opencodeSvg from './brandIcons/opencode.svg?raw';
 
-export type ProviderIconId = ProviderSlot | MtEngineId;
+export type ProviderIconId = ProviderId;
 
 const BRAND_SVGS: Partial<Record<ProviderIconId, string>> = {
   openai: openaiSvg,
@@ -39,6 +41,9 @@ const BRAND_SVGS: Partial<Record<ProviderIconId, string>> = {
   mistral: mistralSvg,
   microsoft: microsoftSvg,
   google: googleSvg,
+  anthropic: claudeSvg,
+  gemini: geminiSvg,
+  opencode: opencodeSvg,
 };
 
 interface Props {
