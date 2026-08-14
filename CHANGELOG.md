@@ -2,6 +2,54 @@
 
 All notable changes will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.0] — 2026-08-14
+
+### Added
+- **Many providers at once, and one per job.** Providers are now a list you
+  configure independently rather than a single active profile, and each of the
+  three surfaces — the selection card, full-page translation, and video
+  subtitles — is routed to whichever one you want. Routing lives in General
+  settings, because which provider answers is a policy about your reading, not
+  a property of any provider. New arrivals: Anthropic (Claude), Gemini, and
+  opencode, whose Zen and Go plans are separate products with separate
+  catalogues and are offered as separate endpoints. The Providers page is a
+  searchable panel of fixed height, so a growing list never pushes the rest of
+  the page off the screen, and every provider that is switched on reports its
+  own latency.
+- **34 target languages, chosen separately from the interface language.** What
+  you read in and what the extension speaks to you in are different questions.
+- **The card answers on its own terms.** The credit line at its foot became a
+  provider switcher — who answered and who could answer instead are the same
+  question — with the target language at the other end of that line, a copy
+  control beside the translation, and translate-again in the header. Every one
+  of those choices lasts as long as the card and is never written back to
+  settings: a provider tried on one paragraph is an answer about that
+  paragraph, not a change of mind about the extension.
+- **The card names the language pair**, detected from the selection itself so
+  it is there before the answer is, and so it works with a model that never
+  reports a detected language.
+- **Subtitles beyond YouTube.** The translator now takes a site rather than
+  assuming one. Zoom cloud recordings work — its transcript lives behind
+  Zoom's own endpoint rather than on the video — as do Canvas recordings,
+  which Canvas serves from an iframe of their own, and any player that ships
+  its captions the standard way with a `<track>` element. The toggle joins the
+  player's own control bar where there is one to join, and takes a corner of
+  the picture where there is not.
+
+### Changed
+- The popup lost its status strip. Naming one provider could not stand for
+  three, and the routing section below names all of them.
+- Card dropdowns open downward, so choosing a provider never covers the
+  translation you are choosing it for.
+
+### Fixed
+- Asking again now reaches past the cache, which would otherwise hand back the
+  same words.
+- The "already in your target language" notice no longer hides the language
+  control, which is the one thing that can answer it.
+- A second translation run can no longer have its chunks overwritten by the
+  run it replaced.
+
 ## [0.1.9] — 2026-08-14
 
 ### Added
