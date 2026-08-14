@@ -107,6 +107,7 @@ export const ko: Record<StringKey, string> = {
   cardTargetLanguage: '번역할 언어…',
   cardProvider: '다른 제공업체로…',
   cardSearchLanguages: '언어 검색…',
+  cardAutoDetected: '(자동)',
   // Errors
   noProfileError: 'API가 설정되지 않았습니다. 설정을 열어 키를 추가하세요.',
   // YouTube subtitles

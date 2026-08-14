@@ -107,6 +107,7 @@ export const fr: Record<StringKey, string> = {
   cardTargetLanguage: 'Traduire vers…',
   cardProvider: 'Répondre avec…',
   cardSearchLanguages: 'Rechercher une langue…',
+  cardAutoDetected: '(auto)',
   // Errors
   noProfileError: 'API non configurée. Ouvrez les paramètres pour ajouter votre clé.',
   // YouTube subtitles

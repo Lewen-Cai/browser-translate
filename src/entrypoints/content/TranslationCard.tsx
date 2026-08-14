@@ -14,6 +14,7 @@ import { ProviderIcon } from '~/ui/ProviderIcon';
 import { engineOptions } from '~/ui/engineOptions';
 import { translationAttribution } from '~/ui/attribution';
 import { TARGET_LANGUAGES, languageEndonym } from '~/core/language/targets';
+import { identifyLanguage, sourceLanguageEndonym } from '~/core/language/identify';
 import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
 import { t } from '~/i18n';
 import type { ProvidersConfig } from '~/storage/schema';
@@ -94,6 +95,9 @@ export function TranslationCard({
   // render would slide the card whenever a chunk arrived mid-scroll.
   const base = useMemo(() => computeCardBasePosition(rect, CARD_WIDTH), [rect]);
 
+  // Detected from the selection alone, so it is on the card the moment it
+  // opens rather than one round trip later.
+  const sourceLang = useMemo(() => identifyLanguage(text), [text]);
   const provider = providerOverride ?? defaultProvider;
   const targetLang = langOverride ?? defaultTargetLang;
   const attribution = translationAttribution(provider, providers[provider]);
@@ -356,8 +360,22 @@ export function TranslationCard({
       <div class="bt-card-header">
         <div class="bt-card-strip" />
         <div class="bt-card-header-content">
+          {/* What is being translated into what. The source is detected here
+              rather than reported by the provider: it has to be on the card
+              before the answer comes back, and a model never reports one at
+              all. Where there is nothing to read — a number, an emoji — the
+              card says its own name instead of guessing out loud. */}
           <div class="bt-card-title-row">
-            <span class="bt-card-brand-mark">BrowserTranslate</span>
+            {sourceLang ? (
+              <span class="bt-card-pair">
+                <span class="bt-card-pair-lang">{sourceLanguageEndonym(sourceLang)}</span>
+                <span class="bt-card-pair-auto">{t('cardAutoDetected', locale)}</span>
+                <span class="bt-card-pair-arrow" aria-hidden="true">→</span>
+                <span class="bt-card-pair-lang">{languageEndonym(targetLang)}</span>
+              </span>
+            ) : (
+              <span class="bt-card-brand-mark">BrowserTranslate</span>
+            )}
           </div>
           <div class="bt-card-actions">
             <button

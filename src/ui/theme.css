@@ -207,6 +207,8 @@ html, body {
   display: flex;
   align-items: baseline;
   gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 .bt-card-mono-label {
   font-family: var(--ap-font-mono);
@@ -219,10 +221,39 @@ html, body {
   font-size: 13px;
   color: rgb(var(--ap-fg-muted));
 }
+/* Source → target, in the slot the card's own name used to hold. Each side
+   truncates on its own so a pair of long endonyms shortens evenly instead of
+   one of them pushing the other out. */
+.bt-card-pair {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+  font-size: 13px;
+  color: rgb(var(--ap-fg-muted));
+}
+.bt-card-pair-lang {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 148px;
+}
+.bt-card-pair-auto {
+  flex: none;
+  font-family: var(--ap-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: rgb(var(--ap-fg-subtle));
+}
+.bt-card-pair-arrow {
+  flex: none;
+  color: rgb(var(--ap-fg-subtle));
+}
 .bt-card-actions {
   display: flex;
   align-items: center;
   gap: 2px;
+  flex: none;
 }
 .bt-card-close {
   background: transparent;
