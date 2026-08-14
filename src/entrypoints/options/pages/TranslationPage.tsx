@@ -18,18 +18,8 @@ import { activeSlot, applySlot, rememberActive } from '~/core/providers/provider
 import { thinkingOptions } from '~/ui/thinkingOptions';
 import { EnginePicker } from '~/ui/components/EnginePicker';
 import { ProviderSelect } from '~/ui/components/ProviderSelect';
+import { TARGET_LANGUAGE_OPTIONS } from '~/core/language/targets';
 import type { ThinkingSetting } from '~/storage/schema';
-
-const LANGUAGES = [
-  { value: 'zh-CN', label: '简体中文 (zh-CN)' },
-  { value: 'zh-TW', label: '繁體中文 (zh-TW)' },
-  { value: 'en', label: 'English' },
-  { value: 'ja', label: '日本語' },
-  { value: 'ko', label: '한국어' },
-  { value: 'es', label: 'Español' },
-  { value: 'fr', label: 'Français' },
-  { value: 'de', label: 'Deutsch' },
-];
 
 export function TranslationPage() {
   const api = useAppStore((s) => s.data.api);
@@ -66,7 +56,7 @@ export function TranslationPage() {
       <SectionHeader number="01" label={t('sectionTranslation').toUpperCase()} />
       <div class="space-y-4">
         <Select label={t('targetLanguage')}
-          value={targetLanguage} options={LANGUAGES}
+          value={targetLanguage} options={TARGET_LANGUAGE_OPTIONS}
           onChange={(e) =>
             updateSettings({ targetLanguage: (e.target as HTMLSelectElement).value })}
         />

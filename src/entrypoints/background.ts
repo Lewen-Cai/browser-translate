@@ -10,6 +10,7 @@ import { selectionUserPrompt } from '~/core/prompt/style';
 import { batchSystemPrompt, batchUserPrompt } from '~/core/batch/prompt';
 import { parseBatchArray } from '~/core/batch/parse';
 import { runBatch } from '~/core/batch/runBatch';
+import { languageName } from '~/core/language/targets';
 import { t as i18nT, resolveLocale } from '~/i18n';
 import type { Request, TranslateRequest, TranslateBatchRequest } from '~/messaging/types';
 
@@ -126,7 +127,10 @@ async function handleTranslate(
           full = '';
           for await (const chunk of provider.translate({
             systemPrompt: autoSystemPrompt(),
-            userPrompt: selectionUserPrompt(msg.text, targetLang),
+            // The model gets the language's English name, not its code: "pt-BR"
+          // and "nb" mean nothing to it, while the cache key and the MT engines
+          // keep the code, which is the stable identity.
+          userPrompt: selectionUserPrompt(msg.text, languageName(targetLang)),
             maxTokens: api.maxTokens,
             stream: true,
             signal: abortCtl.signal,
@@ -217,7 +221,7 @@ async function handleTranslateBatch(
               raw = '';
               for await (const chunk of provider.translate({
                 systemPrompt,
-                userPrompt: batchUserPrompt(segments, targetLang),
+                userPrompt: batchUserPrompt(segments, languageName(targetLang)),
                 maxTokens: api.maxTokens,
                 stream: false,
                 signal: abortCtl.signal,

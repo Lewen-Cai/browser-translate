@@ -21,18 +21,8 @@ import { EnginePicker } from '~/ui/components/EnginePicker';
 import { ProviderSelect } from '~/ui/components/ProviderSelect';
 import { MT_ENGINES } from '~/core/mt';
 import type { MtEngineId } from '~/core/mt/types';
+import { TARGET_LANGUAGE_OPTIONS } from '~/core/language/targets';
 import type { ApiSettings, ThinkingSetting } from '~/storage/schema';
-
-const LANGUAGES = [
-  { value: 'zh-CN', label: '简体中文' },
-  { value: 'zh-TW', label: '繁體中文' },
-  { value: 'en', label: 'English' },
-  { value: 'ja', label: '日本語' },
-  { value: 'ko', label: '한국어' },
-  { value: 'es', label: 'Español' },
-  { value: 'fr', label: 'Français' },
-  { value: 'de', label: 'Deutsch' },
-];
 
 function apiEqual(a: ApiSettings, b: ApiSettings): boolean {
   return (
@@ -179,7 +169,7 @@ export function App() {
           <Select
             label={t('targetLanguage')}
             value={settings.targetLanguage}
-            options={LANGUAGES}
+            options={TARGET_LANGUAGE_OPTIONS}
             onChange={(e) =>
               updateSettings({ targetLanguage: (e.target as HTMLSelectElement).value })
             }

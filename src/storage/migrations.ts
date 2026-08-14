@@ -3,6 +3,7 @@ import type { ProviderConfig, ProviderSlot } from './schema';
 import { inferCloudProvider, isCloudProvider } from '~/core/providers/presets';
 import { activeSlot } from '~/core/providers/providerSlots';
 import { normalizeSubtitlePosition, normalizeSubtitleStyle } from '~/core/subtitles/style';
+import { DEFAULT_TARGET_LANGUAGE, isTargetLanguage } from '~/core/language/targets';
 
 /**
  * Integrity repairs applied to AppData on every load.
@@ -75,16 +76,23 @@ function fillSettingsDefaults(data: AppData): AppData {
       : 'microsoft';
   const subtitlePosition = normalizeSubtitlePosition(s.subtitlePosition);
   const subtitleStyle = normalizeSubtitleStyle(s.subtitleStyle);
+  // A target language we no longer offer would be sent to the engines verbatim
+  // and answered with something arbitrary, so it falls back rather than passes
+  // through. Every language the picker has ever offered is still on the list.
+  const targetLanguage = isTargetLanguage(s.targetLanguage)
+    ? s.targetLanguage
+    : DEFAULT_TARGET_LANGUAGE;
   const unchanged =
     fullPageHotkey === s.fullPageHotkey &&
     engine === s.engine &&
+    targetLanguage === s.targetLanguage &&
     subtitlePosition === s.subtitlePosition &&
     subtitleStyle === s.subtitleStyle;
   if (unchanged) return data;
 
   return {
     ...data,
-    settings: { ...s, engine, fullPageHotkey, subtitlePosition, subtitleStyle },
+    settings: { ...s, engine, fullPageHotkey, targetLanguage, subtitlePosition, subtitleStyle },
   };
 }
 

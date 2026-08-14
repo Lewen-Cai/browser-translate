@@ -5,7 +5,7 @@ import { cn } from '~/lib/cn';
 interface Props extends JSX.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   hint?: string;
-  options: Array<{ value: string; label: string }>;
+  options: readonly { value: string; label: string }[];
 }
 
 export function Select({ label, hint, options, class: cls, className, ...rest }: Props) {

@@ -1,14 +1,19 @@
 import type { MtEngineId } from './types';
 
 /**
- * The app stores BCP-47-ish codes ('zh-CN', 'en', …). The two services agree on
- * everything except Chinese: Microsoft's Translator uses script subtags
- * (zh-Hans/zh-Hant) while Google's endpoint uses the region form (zh-CN/zh-TW).
- * Anything not listed falls back to the primary subtag, which both accept.
+ * The app stores BCP-47-ish codes ('zh-CN', 'en', …). Anything not listed here
+ * falls back to the primary subtag, which both services accept. Two families
+ * need naming explicitly:
+ *
+ * - Chinese: Microsoft's Translator uses script subtags (zh-Hans/zh-Hant) while
+ *   Google's endpoint uses the region form (zh-CN/zh-TW).
+ * - European Portuguese: both engines honour `pt-PT` and translate it
+ *   differently from plain `pt`, which both read as Brazilian. Dropping the
+ *   region here would answer in the wrong variety without erroring.
  */
 const OVERRIDES: Record<MtEngineId, Record<string, string>> = {
-  microsoft: { 'zh-CN': 'zh-Hans', 'zh-TW': 'zh-Hant' },
-  google: { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW' },
+  microsoft: { 'zh-CN': 'zh-Hans', 'zh-TW': 'zh-Hant', 'pt-PT': 'pt-PT' },
+  google: { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-PT': 'pt-PT' },
 };
 
 /** Map an app language code to the engine's own code. */
