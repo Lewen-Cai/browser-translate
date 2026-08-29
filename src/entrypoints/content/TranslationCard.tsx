@@ -287,6 +287,17 @@ export function TranslationCard({
   const isDict = looksLikeDictionary(received);
   const dictEntry = isDict && !streaming && !error ? parseDictionaryEntry(received) : null;
 
+  /**
+   * Nothing has come back yet.
+   *
+   * The one state that does not get the full frame. A fixed size is worth
+   * having because the answer arriving must not move anything — but there is no
+   * answer here, and a spinner marooned in three hundred pixels of empty card
+   * is a promise about how much is coming that we have no way to keep. So this
+   * state sizes to itself, and the frame appears with the first words.
+   */
+  const awaitingAnswer = !error && !activeNotice && streaming && (isDict || !displayed);
+
   // What the copy button puts on the clipboard: the answer, not the card. A
   // dictionary entry's answer is its formal translation, falling back to the
   // senses — copying the raw JSON would be copying our own plumbing.
@@ -327,7 +338,11 @@ export function TranslationCard({
         top: `${top}px`,
         left: `${left}px`,
         width: `${CARD_WIDTH}px`,
-        height: `${base.height}px`,
+        // Sized to its content while waiting, and never past the frame it is
+        // about to become.
+        ...(awaitingAnswer
+          ? { maxHeight: `${base.height}px` }
+          : { height: `${base.height}px` }),
         transformOrigin: 'top right',
         transform: visible ? 'scale(1)' : 'scale(0.88)',
         opacity: visible ? 1 : 0,
@@ -369,6 +384,19 @@ export function TranslationCard({
             )}
           </div>
           <div class="bt-card-actions">
+            {/* Beside retranslate rather than down beside the translation: both
+                act on the answer, and taking it out of the body leaves the two
+                panes the same width — their scrollbars line up instead of one
+                being pushed in by a button. */}
+            <button
+              onClick={() => void copyResult()}
+              class="bt-card-close"
+              disabled={!copyText}
+              title={t(copied ? 'cardCopied' : 'cardCopy', locale)}
+              aria-label={t(copied ? 'cardCopied' : 'cardCopy', locale)}
+            >
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+            </button>
             <button
               onClick={retranslate}
               class="bt-card-close"
@@ -393,7 +421,7 @@ export function TranslationCard({
           </div>
         </div>
       </div>
-      <div class="bt-card-body">
+      <div class="bt-card-body" data-waiting={awaitingAnswer ? 'true' : 'false'}>
         {activeNotice ? (
           <div class="bt-card-notice">{activeNotice}</div>
         ) : (
@@ -406,9 +434,6 @@ export function TranslationCard({
                 <div class="bt-card-source">{text}</div>
               </div>
             )}
-            {/* Copy sits against the result it copies, in the column the source
-                row's chevron already established — a control in a far corner
-                would leave the reader working out what it acts on. */}
             <div class="bt-card-result-row">
               <div class="bt-card-result">
                 {error ? (
@@ -416,35 +441,25 @@ export function TranslationCard({
                     <AlertCircle size={15} class="bt-card-error-icon" />
                     <span>{error}</span>
                   </div>
-                ) : isDict && streaming ? (
-                  <span class="bt-card-loading">
-                    <Loader2 size={13} class="animate-spin" /> {t('loading', locale)}
-                  </span>
+                ) : awaitingAnswer ? (
+                  // In the middle of the space it is holding, not tucked into
+                  // the corner the first line will land in.
+                  <div class="bt-card-waiting">
+                    <span class="bt-card-loading">
+                      <Loader2 size={13} class="animate-spin" /> {t('loading', locale)}
+                    </span>
+                  </div>
                 ) : dictEntry ? (
                   <DictionaryView entry={dictEntry} locale={locale} />
                 ) : (
                   <div class="bt-card-text">
-                    {displayed || (streaming && (
-                      <span class="bt-card-loading">
-                        <Loader2 size={13} class="animate-spin" /> {t('loading', locale)}
-                      </span>
-                    ))}
+                    {displayed}
                     {/* A caret while more is still arriving, so a pause in the
                         stream doesn't read as a finished translation. */}
                     {displayed && streaming && <span class="bt-card-caret" aria-hidden="true" />}
                   </div>
                 )}
               </div>
-              {copyText && (
-                <button
-                  class="bt-card-close bt-card-aside-btn"
-                  onClick={() => void copyResult()}
-                  title={t(copied ? 'cardCopied' : 'cardCopy', locale)}
-                  aria-label={t(copied ? 'cardCopied' : 'cardCopy', locale)}
-                >
-                  {copied ? <Check size={15} /> : <Copy size={15} />}
-                </button>
-              )}
             </div>
           </>
         )}

@@ -278,9 +278,12 @@ html, body {
 }
 
 /* Source text shown above the translation, for comparison.
-   Its own scroll area, capped at a share of a card whose height is fixed: a
-   long original can be read in full without the translation ever leaving the
-   card, and a short one takes only the room it needs. */
+   Its own scroll area, and never more than three tenths of the space the two
+   panes share — the original is there to check the translation against, not to
+   be read instead of it, so the answer keeps the larger half. A short original
+   still takes only the room it needs; the cap is a ceiling, not a share-out.
+   The percentage resolves against the body, which is exactly that shared space,
+   so the split holds at any card height. */
 .bt-card-source-row {
   display: flex;
   align-items: flex-start;
@@ -290,8 +293,14 @@ html, body {
   border-bottom: 1px dashed rgb(var(--ap-border));
   flex: 0 1 auto;
   min-height: 0;
-  max-height: 42%;
+  max-height: 30%;
   overflow: hidden;
+}
+/* While waiting there is no translation to keep room for, and the body has no
+   definite height for a percentage to resolve against, so the cap is a flat one
+   — enough original to read, and enough left for the card to stay small. */
+.bt-card-body[data-waiting='true'] .bt-card-source-row {
+  max-height: 108px;
 }
 .bt-card-source {
   flex: 1;
@@ -362,11 +371,14 @@ html, body {
   height: 100%;
   overflow-y: auto;
 }
-/* A control set beside a pane rather than inside it: it must not stretch with
-   the pane, and it sits against the first line of the text it acts on. */
-.bt-card-aside-btn {
-  flex: none;
-  margin-top: -2px;
+/* Both panes now hold text and nothing else, so they end at the same place and
+   their scrollbars line up. The controls that acted on them are in the header. */
+.bt-card-waiting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  height: 100%;
 }
 .bt-card-close:disabled { opacity: 0.4; cursor: default; }
 .bt-card-close:disabled:hover { color: rgb(var(--ap-fg-muted)); background: transparent; }
