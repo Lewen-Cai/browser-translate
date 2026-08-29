@@ -5,9 +5,11 @@ import { Select } from '~/ui/components/Select';
 import { ApiStatusIndicator } from '~/ui/components/ApiStatusIndicator';
 import { ProviderIcon } from '~/ui/ProviderIcon';
 import { ChevronRight, Eye, EyeOff } from '~/ui/icons';
-import { thinkingOptions } from '~/ui/thinkingOptions';
+import { dialectOptions, thinkingOptions } from '~/ui/thinkingOptions';
 import { useT } from '~/i18n';
-import { PROVIDERS, supportsThinkingToggle, type ProviderId } from '~/core/providers/registry';
+import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
+import { dialectIsChosen, supportsThinking } from '~/core/providers/resolve';
+import type { ThinkingDialect } from '~/core/providers/thinking';
 import type { ProviderConfig, ThinkingSetting } from '~/storage/schema';
 
 interface Props {
@@ -109,11 +111,34 @@ export function ProviderDetail({ id, onBack }: Props) {
           onInput={(e) => set({ model: (e.target as HTMLInputElement).value })}
         />
 
+        {/* Where the registry knows the vendor it also knows the parameter,
+            and offering a choice there could only let someone be wrong about
+            something already settled. A custom endpoint or a local runtime is
+            the opposite case: only its operator knows what the software behind
+            it reads, so the choice belongs to them. */}
+        {dialectIsChosen(id) && (
+          <Select
+            label={t('thinkingDialect')}
+            value={config.thinkingDialect ?? 'none'}
+            hint={t('thinkingDialectHint')}
+            options={dialectOptions(t('thinkingDialectNone'))}
+            onChange={(e) =>
+              set({ thinkingDialect: (e.target as HTMLSelectElement).value as ThinkingDialect })
+            }
+          />
+        )}
+
         <Select
           label={t('thinkingLabel')}
           value={config.thinking ?? 'off'}
-          disabled={!supportsThinkingToggle(id)}
-          hint={supportsThinkingToggle(id) ? t('thinkingDesc') : t('thinkingUnsupported')}
+          disabled={!supportsThinking(id, config)}
+          hint={
+            supportsThinking(id, config)
+              ? t('thinkingDesc')
+              : dialectIsChosen(id)
+                ? t('thinkingNeedsDialect')
+                : t('thinkingUnsupported')
+          }
           options={thinkingOptions(t('thinkingOff'))}
           onChange={(e) =>
             set({ thinking: (e.target as HTMLSelectElement).value as ThinkingSetting })

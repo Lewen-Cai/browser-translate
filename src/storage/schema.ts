@@ -1,4 +1,5 @@
 import type { ProviderId } from '~/core/providers/registry';
+import type { ThinkingDialect } from '~/core/providers/thinking';
 import type { SubtitlePosition, SubtitleStyle } from '~/core/subtitles/style';
 
 export const APP_DATA_VERSION = 1 as const;
@@ -25,6 +26,12 @@ export interface ProviderConfig {
    * reasoning tokens. Mapped per provider to its own parameter.
    */
   thinking?: ThinkingSetting;
+  /**
+   * Which request-body fields carry that control, for a provider the registry
+   * has no answer for — a custom endpoint, or a local runtime whose loaded
+   * model decides. Ignored where the registry does know, and undefined ≡ none.
+   */
+  thinkingDialect?: ThinkingDialect;
   /** Whether routing may pick it. */
   enabled: boolean;
 }

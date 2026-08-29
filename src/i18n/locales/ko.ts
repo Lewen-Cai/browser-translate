@@ -58,6 +58,10 @@ export const ko: Record<StringKey, string> = {
   thinkingOff: '끄기',
   thinkingDesc: '기본 꺼짐 — 응답이 더 빠르고 숨겨진 추론 토큰이 과금되지 않습니다.',
   thinkingUnsupported: '이 제공업체에서는 제어할 수 없어 모델 기본값을 따릅니다.',
+  thinkingDialect: '추론 매개변수',
+  thinkingDialectNone: '보내지 않음',
+  thinkingDialectHint: '이 엔드포인트가 추론 제어에 사용하는 필드입니다. 받아들인다고 확신하지 않으면 보내지 마세요 — 모르는 필드는 그대로 거부될 수 있습니다.',
+  thinkingNeedsDialect: '설정하려면 먼저 위에서 추론 매개변수를 선택하세요.',
   // Translation form
   targetLanguage: '대상 언어',
   triggerMode: '실행 방식',

@@ -58,6 +58,10 @@ export const zhCN: Record<StringKey, string> = {
   thinkingOff: '关闭',
   thinkingDesc: '默认关闭——出字更快，也不为隐藏的思考 token 计费。',
   thinkingUnsupported: '该服务商没有可控参数，遵循模型默认行为。',
+  thinkingDialect: '思考参数',
+  thinkingDialectNone: '不发送',
+  thinkingDialectHint: '该端点用哪个字段控制思考。不确定就别发——它不认识的字段可能直接被拒绝。',
+  thinkingNeedsDialect: '先在上面选一个思考参数才能设置。',
   // Translation form
   targetLanguage: '目标语言',
   triggerMode: '触发方式',

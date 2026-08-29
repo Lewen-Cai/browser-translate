@@ -58,6 +58,10 @@ export const zhTW: Record<StringKey, string> = {
   thinkingOff: '關閉',
   thinkingDesc: '預設關閉——出字更快，也不為隱藏的思考 token 計費。',
   thinkingUnsupported: '該服務商沒有可控參數，遵循模型預設行為。',
+  thinkingDialect: '思考參數',
+  thinkingDialectNone: '不傳送',
+  thinkingDialectHint: '該端點用哪個欄位控制思考。不確定就別傳——它不認識的欄位可能直接被拒絕。',
+  thinkingNeedsDialect: '先在上面選一個思考參數才能設定。',
   // Translation form
   targetLanguage: '目標語言',
   triggerMode: '觸發方式',

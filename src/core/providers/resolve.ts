@@ -1,18 +1,45 @@
-import { PROVIDERS, thinkingPatch, type ProviderId } from './registry';
+import { PROVIDERS, knownDialect, type ProviderId } from './registry';
+import { dialectPatch, type ThinkingDialect } from './thinking';
 import type { OpenAIProviderConfig } from './openai';
 import type { ProviderConfig, ProvidersConfig } from '~/storage/schema';
 
 /**
+ * Which dialect this row will actually be asked in.
+ *
+ * The registry wins where it has an answer: a stored override for DeepSeek
+ * could only ever be wrong, and a control that lets you be wrong about a thing
+ * we already know is a control that will be. Where it has none, the stored
+ * choice stands, and 'none' — send nothing — remains the default, because an
+ * unrecognised field can 400 a strict endpoint outright.
+ */
+export function effectiveDialect(
+  id: ProviderId,
+  cfg: ProviderConfig | undefined,
+): ThinkingDialect {
+  return knownDialect(id) ?? cfg?.thinkingDialect ?? 'none';
+}
+
+/** Whether this row has a way to say it at all — drives the UI control. */
+export function supportsThinking(id: ProviderId, cfg: ProviderConfig | undefined): boolean {
+  return effectiveDialect(id, cfg) !== 'none';
+}
+
+/** Whether the dialect is the user's to choose, rather than the registry's. */
+export function dialectIsChosen(id: ProviderId): boolean {
+  return knownDialect(id) === undefined;
+}
+
+/**
  * Build the request config for a model-backed provider.
  *
- * The registry supplies two things the stored config cannot: the headers the
- * endpoint requires before a browser may talk to it at all, and how this vendor
- * spells thinking control. Both are properties of the vendor, not of what the
- * user typed, so neither is stored.
+ * The registry supplies the headers the endpoint requires before a browser may
+ * talk to it at all — a property of the vendor, not of what the user typed, so
+ * it is not stored. Thinking control comes from the dialect, which is the
+ * registry's where it knows one and the row's where it does not.
  */
 export function llmRequestConfig(id: ProviderId, cfg: ProviderConfig): OpenAIProviderConfig {
   const def = PROVIDERS[id];
-  const patch = thinkingPatch(id, cfg.thinking ?? 'off');
+  const patch = dialectPatch(effectiveDialect(id, cfg), cfg.thinking ?? 'off');
   return {
     baseUrl: cfg.baseUrl,
     apiKey: cfg.apiKey,

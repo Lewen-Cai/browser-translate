@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
+  dialectIsChosen,
+  effectiveDialect,
   enabledProviders,
   isProviderReady,
   llmRequestConfig,
   resolveRequestedProvider,
+  supportsThinking,
 } from './resolve';
 import { createDefaultProviders } from '~/storage/defaults';
 import type { ProviderConfig } from '~/storage/schema';
@@ -58,9 +61,52 @@ describe('llmRequestConfig', () => {
     });
   });
 
-  it('omits extraBody entirely for a provider with no known control', () => {
+  it('omits extraBody entirely for a row that named no dialect', () => {
     expect(llmRequestConfig('openai', row({ thinking: 'high' }))).not.toHaveProperty('extraBody');
     expect(llmRequestConfig('mistral', row({ thinking: 'off' }))).not.toHaveProperty('extraBody');
+  });
+
+  it('speaks the dialect a custom endpoint named for itself', () => {
+    expect(
+      llmRequestConfig('custom', row({ thinkingDialect: 'enable-thinking', thinking: 'off' }))
+        .extraBody,
+    ).toEqual({ enable_thinking: false });
+    expect(
+      llmRequestConfig('local', row({ thinkingDialect: 'thinking-effort', thinking: 'high' }))
+        .extraBody,
+    ).toEqual({ reasoning_effort: 'high' });
+  });
+
+  it('sends the off form once a dialect is named, even with thinking unset', () => {
+    // The point of naming a parameter is to stop paying for reasoning, so a row
+    // that names one and says nothing else must still say off.
+    expect(llmRequestConfig('custom', row({ thinkingDialect: 'reasoning-object' })).extraBody)
+      .toEqual({ reasoning: { enabled: false } });
+  });
+});
+
+describe('effectiveDialect', () => {
+  it('lets the registry win where it knows the vendor', () => {
+    // A stored override here could only ever be wrong about something already
+    // settled, so it is not consulted.
+    expect(effectiveDialect('deepseek', row({ thinkingDialect: 'reasoning-object' }))).toBe(
+      'thinking-effort',
+    );
+    expect(dialectIsChosen('deepseek')).toBe(false);
+  });
+
+  it('takes the stored dialect where the registry has none', () => {
+    expect(effectiveDialect('custom', row({ thinkingDialect: 'effort' }))).toBe('effort');
+    expect(dialectIsChosen('custom')).toBe(true);
+    expect(dialectIsChosen('local')).toBe(true);
+  });
+
+  it("defaults to sending nothing, for a row that has not said what it accepts", () => {
+    expect(effectiveDialect('custom', row())).toBe('none');
+    expect(effectiveDialect('custom', undefined)).toBe('none');
+    expect(supportsThinking('custom', row())).toBe(false);
+    expect(supportsThinking('custom', row({ thinkingDialect: 'effort' }))).toBe(true);
+    expect(supportsThinking('deepseek', row())).toBe(true);
   });
 });
 

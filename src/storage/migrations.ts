@@ -1,4 +1,5 @@
 import { APP_DATA_VERSION, isThinkingSetting, type AppData } from './schema';
+import { isThinkingDialect } from '~/core/providers/thinking';
 import type { GlobalSettings, ProviderConfig, ProvidersConfig } from './schema';
 import { createDefaultProviders, defaultProviderConfig } from './defaults';
 import { PROVIDER_IDS, isProviderId, type ProviderId } from '~/core/providers/registry';
@@ -78,21 +79,29 @@ function legacyActiveProvider(api: LegacyApi): ProviderId {
 function normalizeRow(id: ProviderId, value: unknown): ProviderConfig {
   const fallback = defaultProviderConfig(id);
   if (value === null || typeof value !== 'object') return fallback;
-  const row = value as Partial<ProviderConfig> & { thinking?: unknown };
+  const row = value as Partial<ProviderConfig> & { thinking?: unknown; thinkingDialect?: unknown };
   const thinkingOk = row.thinking === undefined || isThinkingSetting(row.thinking);
+  const dialectOk = row.thinkingDialect === undefined || isThinkingDialect(row.thinkingDialect);
+  // Counted rather than fixed at four: the optional fields are the ones a row
+  // may legitimately lack, and a row carrying one must still be recognised as
+  // sound. Rebuilding a sound row returns a new reference, which the client
+  // reads as "migrated" and writes back — every load, forever.
+  const optional = (row.thinking === undefined ? 0 : 1) + (row.thinkingDialect === undefined ? 0 : 1);
   const clean =
     typeof row.baseUrl === 'string' &&
     typeof row.apiKey === 'string' &&
     typeof row.model === 'string' &&
     typeof row.enabled === 'boolean' &&
     thinkingOk &&
-    Object.keys(row).length === (row.thinking === undefined ? 4 : 5);
+    dialectOk &&
+    Object.keys(row).length === 4 + optional;
   if (clean) return value as ProviderConfig;
   return {
     baseUrl: str(row.baseUrl, fallback.baseUrl),
     apiKey: str(row.apiKey, ''),
     model: str(row.model, ''),
     ...(isThinkingSetting(row.thinking) && { thinking: row.thinking }),
+    ...(isThinkingDialect(row.thinkingDialect) && { thinkingDialect: row.thinkingDialect }),
     enabled: typeof row.enabled === 'boolean' ? row.enabled : fallback.enabled,
   };
 }

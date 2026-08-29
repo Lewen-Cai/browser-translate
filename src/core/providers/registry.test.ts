@@ -7,12 +7,11 @@ import {
   inferProvider,
   isProviderId,
   providersFor,
+  knownDialect,
   supportsCapability,
-  supportsThinkingToggle,
-  thinkingPatch,
 } from './registry';
 import { MT_ENGINE_IDS } from '~/core/mt/types';
-import { THINKING_SETTINGS } from '~/storage/schema';
+import { isThinkingDialect } from './thinking';
 
 describe('the registry', () => {
   it('gives every id a definition that agrees with its own key', () => {
@@ -115,49 +114,34 @@ describe('keys and endpoints', () => {
   });
 });
 
-describe('thinkingPatch', () => {
-  it('never sends a patch for a provider without known controls', () => {
+describe('the thinking dialect each provider speaks', () => {
+  it('leaves the dialect open where only the operator could know it', () => {
+    // Not "these have no controls" — these are the rows whose controls are
+    // decided by software we did not choose, so the choice is handed over.
     for (const id of ['openai', 'moonshot', 'mistral', 'local', 'custom'] as const) {
-      for (const setting of THINKING_SETTINGS) expect(thinkingPatch(id, setting)).toBeNull();
-      expect(supportsThinkingToggle(id)).toBe(false);
+      expect(knownDialect(id)).toBeUndefined();
     }
   });
 
-  it('routes Anthropic through its thinking object, since it ignores reasoning_effort', () => {
-    expect(thinkingPatch('anthropic', 'off')).toEqual({ thinking: { type: 'disabled' } });
-    expect(thinkingPatch('anthropic', 'high')).toEqual({
-      thinking: { type: 'enabled', budget_tokens: 8192 },
-    });
-    for (const setting of THINKING_SETTINGS) {
-      expect(thinkingPatch('anthropic', setting)).not.toHaveProperty('reasoning_effort');
+  it('keeps the vendor mappings the earlier releases shipped with', () => {
+    expect(knownDialect('deepseek')).toBe('thinking-effort');
+    expect(knownDialect('zhipu')).toBe('thinking-enabled-effort');
+    expect(knownDialect('dashscope')).toBe('enable-thinking');
+    expect(knownDialect('siliconflow')).toBe('enable-thinking');
+    expect(knownDialect('openrouter')).toBe('reasoning-object');
+    // Anthropic's compatibility layer ignores reasoning_effort, so effort has
+    // to travel inside the native thinking object it passes through.
+    expect(knownDialect('anthropic')).toBe('thinking-budget');
+    // Gemini's scale stops at high; opencode's reaches xhigh.
+    expect(knownDialect('gemini')).toBe('effort-capped');
+    expect(knownDialect('opencode')).toBe('effort');
+  });
+
+  it('names a real dialect wherever it names one, and never for a free service', () => {
+    for (const id of PROVIDER_IDS) {
+      const dialect = knownDialect(id);
+      if (dialect !== undefined) expect(isThinkingDialect(dialect)).toBe(true);
     }
-  });
-
-  it("uses opencode's own effort scale, capping where its protocol refuses 'max'", () => {
-    // Taken from opencode's client: chat-completions sends top-level
-    // reasoning_effort and rejects 'max', while 'none' is how that scale
-    // spells off.
-    expect(thinkingPatch('opencode', 'off')).toEqual({ reasoning_effort: 'none' });
-    expect(thinkingPatch('opencode', 'xhigh')).toEqual({ reasoning_effort: 'xhigh' });
-    expect(thinkingPatch('opencode', 'max')).toEqual({ reasoning_effort: 'xhigh' });
-    expect(supportsThinkingToggle('opencode')).toBe(true);
-  });
-
-  it("uses Gemini's 'none' to turn reasoning off, and caps its effort at high", () => {
-    expect(thinkingPatch('gemini', 'off')).toEqual({ reasoning_effort: 'none' });
-    expect(thinkingPatch('gemini', 'medium')).toEqual({ reasoning_effort: 'medium' });
-    expect(thinkingPatch('gemini', 'max')).toEqual({ reasoning_effort: 'high' });
-  });
-
-  it('keeps the mappings the earlier providers already shipped with', () => {
-    expect(thinkingPatch('deepseek', 'off')).toEqual({ thinking: { type: 'disabled' } });
-    expect(thinkingPatch('deepseek', 'xhigh')).toEqual({ reasoning_effort: 'xhigh' });
-    expect(thinkingPatch('dashscope', 'off')).toEqual({ enable_thinking: false });
-    expect(thinkingPatch('siliconflow', 'low')).toEqual({
-      enable_thinking: true,
-      thinking_budget: 2048,
-    });
-    expect(thinkingPatch('openrouter', 'off')).toEqual({ reasoning: { enabled: false } });
-    expect(thinkingPatch('openrouter', 'max')).toEqual({ reasoning: { effort: 'high' } });
+    for (const id of SERVICE_IDS) expect(knownDialect(id)).toBeUndefined();
   });
 });

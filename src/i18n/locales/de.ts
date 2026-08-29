@@ -58,6 +58,10 @@ export const de: Record<StringKey, string> = {
   thinkingOff: 'Aus',
   thinkingDesc: 'Standardmäßig aus – schnellere Antworten, keine Abrechnung versteckter Reasoning-Tokens.',
   thinkingUnsupported: 'Für diesen Anbieter nicht steuerbar – es gilt der Modellstandard.',
+  thinkingDialect: 'Reasoning-Parameter',
+  thinkingDialectNone: 'Nichts senden',
+  thinkingDialectHint: 'Welches Feld dieser Endpunkt zur Steuerung des Reasonings liest. Senden Sie nichts, solange Sie nicht wissen, dass er eines akzeptiert – ein unbekanntes Feld kann rundweg abgelehnt werden.',
+  thinkingNeedsDialect: 'Wählen Sie zuerst oben einen Reasoning-Parameter.',
   // Translation form
   targetLanguage: 'Zielsprache',
   triggerMode: 'Auslösemodus',

@@ -58,6 +58,10 @@ export const es: Record<StringKey, string> = {
   thinkingOff: 'Desactivado',
   thinkingDesc: 'Desactivado por defecto: respuestas más rápidas y sin facturar tokens de razonamiento ocultos.',
   thinkingUnsupported: 'No controlable para este proveedor; se aplica el valor predeterminado del modelo.',
+  thinkingDialect: 'Parámetro de razonamiento',
+  thinkingDialectNone: 'No enviar nada',
+  thinkingDialectHint: 'Qué campo lee este endpoint para controlar el razonamiento. No envíes nada salvo que sepas que lo acepta: un campo desconocido puede ser rechazado sin más.',
+  thinkingNeedsDialect: 'Elige antes un parámetro de razonamiento arriba.',
   // Translation form
   targetLanguage: 'Idioma de destino',
   triggerMode: 'Modo de activación',

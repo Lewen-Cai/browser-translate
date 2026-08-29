@@ -58,6 +58,10 @@ export const fr: Record<StringKey, string> = {
   thinkingOff: 'Désactivé',
   thinkingDesc: 'Désactivée par défaut : réponses plus rapides, sans facturer les jetons de raisonnement cachés.',
   thinkingUnsupported: 'Non contrôlable pour ce fournisseur ; le comportement par défaut du modèle s\'applique.',
+  thinkingDialect: 'Paramètre de raisonnement',
+  thinkingDialectNone: 'Ne rien envoyer',
+  thinkingDialectHint: "Le champ que ce point d'accès lit pour contrôler le raisonnement. N'envoyez rien sauf si vous savez qu'il l'accepte : un champ inconnu peut être rejeté d'emblée.",
+  thinkingNeedsDialect: "Choisissez d'abord un paramètre de raisonnement ci-dessus.",
   // Translation form
   targetLanguage: 'Langue cible',
   triggerMode: 'Mode de déclenchement',

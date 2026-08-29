@@ -58,6 +58,10 @@ export const ja: Record<StringKey, string> = {
   thinkingOff: 'オフ',
   thinkingDesc: '既定でオフ——応答が速くなり、非表示の思考トークンは課金されません。',
   thinkingUnsupported: 'このプロバイダーでは制御できず、モデルの既定に従います。',
+  thinkingDialect: '思考パラメータ',
+  thinkingDialectNone: '送信しない',
+  thinkingDialectHint: 'このエンドポイントが思考の制御に読む項目です。受け付けると分かっていない限り送信しないでください——未知の項目は拒否されることがあります。',
+  thinkingNeedsDialect: '設定するには、まず上で思考パラメータを選んでください。',
   // Translation form
   targetLanguage: '翻訳先の言語',
   triggerMode: 'トリガー方式',

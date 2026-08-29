@@ -58,6 +58,10 @@ export const en = {
   thinkingOff: 'Off',
   thinkingDesc: 'Off by default — answers arrive faster and hidden reasoning tokens are not billed.',
   thinkingUnsupported: 'Not controllable for this provider — the model default applies.',
+  thinkingDialect: 'Reasoning parameter',
+  thinkingDialectNone: 'Send nothing',
+  thinkingDialectHint: 'Which field this endpoint reads to control reasoning. Send nothing unless you know it accepts one — an unknown field can be rejected outright.',
+  thinkingNeedsDialect: 'Choose a reasoning parameter above before setting this.',
   // Translation form
   targetLanguage: 'Target language',
   triggerMode: 'Trigger mode',

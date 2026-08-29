@@ -1,5 +1,4 @@
-import type { ThinkingSetting } from '~/storage/schema';
-import { dialectPatch, type ThinkingDialect } from './thinking';
+import type { ThinkingDialect } from './thinking';
 
 /**
  * Every provider that can produce a translation, in one list.
@@ -274,21 +273,13 @@ export function inferProvider(baseUrl: string): ProviderId {
 }
 
 /**
- * Top-level request-body fields that control thinking for `id` at the given
- * setting, or null when the provider has no safe parameter.
+ * The dialect we know this provider speaks, or undefined where we do not.
  *
- * The mapping itself lives in `./thinking`, keyed by wire format rather than by
- * vendor: which fields an endpoint reads is a property of the software
- * answering, and a provider is only a well-known default for it.
+ * Undefined is not "no controls" — it is "not ours to say". A custom endpoint
+ * or a local runtime answers in whatever dialect the software behind it
+ * implements, which only its operator knows, so those are the rows that get to
+ * name one themselves. See `effectiveDialect` in ./resolve.
  */
-export function thinkingPatch(
-  id: ProviderId,
-  setting: ThinkingSetting,
-): Record<string, unknown> | null {
-  return dialectPatch(PROVIDERS[id].thinkingDialect ?? 'none', setting);
-}
-
-/** True when the provider has known thinking controls (drives the UI control). */
-export function supportsThinkingToggle(id: ProviderId): boolean {
-  return thinkingPatch(id, 'off') !== null;
+export function knownDialect(id: ProviderId): ThinkingDialect | undefined {
+  return PROVIDERS[id].thinkingDialect;
 }

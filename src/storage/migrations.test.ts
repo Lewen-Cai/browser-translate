@@ -34,6 +34,25 @@ describe('migrateAppData', () => {
     expect(migrateAppData(input)).toBe(input);
   });
 
+  it('leaves a row that named its own thinking dialect exactly as it was', () => {
+    // The row repair checks the key count, so every optional field has to be
+    // counted there too. Miss one and a sound row looks unsound, gets rebuilt
+    // into a new reference, and loadAppData writes it back on every single load
+    // — with the field it did not recognise dropped.
+    const input = createDefaultAppData();
+    input.providers.custom = { ...input.providers.custom, thinkingDialect: 'effort' };
+    expect(migrateAppData(input)).toBe(input);
+    expect(migrateAppData(input).providers.custom.thinkingDialect).toBe('effort');
+  });
+
+  it('drops a dialect it does not recognise, rather than putting it on the wire', () => {
+    const input = createDefaultAppData();
+    (input.providers.custom as unknown as Record<string, unknown>).thinkingDialect = 'made-up';
+    const out = migrateAppData(input);
+    expect('thinkingDialect' in out.providers.custom).toBe(false);
+    expect(out.providers.custom.baseUrl).toBe(input.providers.custom.baseUrl);
+  });
+
   it('throws on unknown future version', () => {
     expect(() => migrateAppData({ version: 99 } as never)).toThrow();
   });
