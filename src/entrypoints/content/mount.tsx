@@ -1,5 +1,6 @@
 import { render, type ComponentChild } from 'preact';
 import themeCss from '~/ui/theme.css?inline';
+import { plainTextCopyHandler, shadowSelectionText } from './copyPlainText';
 
 const HOST_ID = 'browsertranslate-host';
 
@@ -32,6 +33,12 @@ export function createShadowMount(): MountedShadow {
     const container = document.createElement('div');
     container.id = 'bt-root';
     root.appendChild(container);
+    // Once per shadow root, not per card: it is the whole tree whose painted
+    // background would otherwise travel with anything copied out of it.
+    const shadow = root;
+    shadow.addEventListener('copy', (event) =>
+      plainTextCopyHandler(() => shadowSelectionText(shadow))(event as ClipboardEvent),
+    );
   }
   const container = root.querySelector('#bt-root') as HTMLElement;
   return {
