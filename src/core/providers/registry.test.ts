@@ -106,6 +106,66 @@ describe('keys and endpoints', () => {
     }
   });
 
+  it('offers DashScope every region that publishes a shared domain', () => {
+    const urls = PROVIDERS.dashscope.endpoints.map((e) => e.baseUrl);
+    expect(urls).toContain('https://dashscope.aliyuncs.com/compatible-mode/v1');
+    expect(urls).toContain('https://dashscope-intl.aliyuncs.com/compatible-mode/v1');
+    expect(urls).toContain('https://cn-hongkong.dashscope.aliyuncs.com/compatible-mode/v1');
+    expect(urls).toContain('https://dashscope-us.aliyuncs.com/compatible-mode/v1');
+    // Frankfurt and Tokyo publish none — they are per-workspace only — so the
+    // list must not be a ceiling.
+    expect(PROVIDERS.dashscope.allowCustomEndpoint).toBe(true);
+  });
+
+  it('offers the subscription, on the hosts its own keys work on', () => {
+    const urls = PROVIDERS.dashscope.endpoints.map((e) => e.baseUrl);
+    // Token Plan has to be here, or a subscriber has nowhere to point: its
+    // sk-sp- key is refused by every metered endpoint above, and refuses
+    // metered keys in turn.
+    expect(urls).toContain('https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1');
+    expect(urls).toContain('https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1');
+  });
+
+  it('does not offer Coding Plan, which can no longer be bought', () => {
+    // Still served, so anyone holding one can type the address in — but a
+    // preset is an offer, and offering most people a plan closed to them is
+    // worse than not mentioning it.
+    const urls = PROVIDERS.dashscope.endpoints.map((e) => e.baseUrl);
+    expect(urls.some((u) => u.includes('coding'))).toBe(false);
+  });
+
+  it('puts the metered regions before the subscriptions', () => {
+    // Most people are on pay-as-you-go, and a plan endpoint chosen by accident
+    // fails as a billing problem rather than as a wrong address.
+    const labels = PROVIDERS.dashscope.endpoints.map((e) => e.label);
+    const firstPlan = labels.findIndex((l) => l.includes('Plan'));
+    expect(labels.slice(0, firstPlan).every((l) => !l.includes('Plan'))).toBe(true);
+  });
+
+  it('keeps the two addresses earlier releases stored, so nobody is stranded', () => {
+    // v0.2.0 shipped these two under the labels 'China' and 'International'.
+    // Relabelling them is free; changing them would have silently pointed an
+    // existing install at an endpoint its key does not work on.
+    for (const url of [
+      'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+    ]) {
+      expect(inferProvider(url)).toBe('dashscope');
+    }
+  });
+
+  it('only opens the address field where the vendor hands out ones we cannot list', () => {
+    // Everywhere else the list is the whole story, and a typed address would be
+    // a way to get it wrong.
+    for (const id of PROVIDER_IDS) {
+      if (PROVIDERS[id].allowCustomEndpoint) {
+        expect(PROVIDERS[id].endpoints.length).toBeGreaterThan(0);
+      }
+    }
+    expect(PROVIDERS.moonshot.allowCustomEndpoint).toBeUndefined();
+    expect(PROVIDERS.opencode.allowCustomEndpoint).toBeUndefined();
+  });
+
   it('matches a stored base URL back to its provider', () => {
     expect(inferProvider('https://api.anthropic.com/v1')).toBe('anthropic');
     expect(inferProvider('https://api.moonshot.ai/v1')).toBe('moonshot');

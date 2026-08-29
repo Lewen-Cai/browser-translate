@@ -45,6 +45,8 @@ export const ja: Record<StringKey, string> = {
   cloudProvider: 'プロバイダー',
   cloudProviderCustom: 'カスタム',
   cloudEndpoint: 'エンドポイント',
+  endpointCustom: 'カスタムアドレス',
+  endpointKeyScoped: 'これらは別々のアカウント・リージョン・プランです——一方の API キーやモデル一覧は、通常もう一方では使えません。',
   applyConfig: '設定を適用',
   // Status states
   statusChecking: '確認中…',

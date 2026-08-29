@@ -45,6 +45,8 @@ export const fr: Record<StringKey, string> = {
   cloudProvider: 'Fournisseur',
   cloudProviderCustom: 'Personnalisé',
   cloudEndpoint: 'Point de terminaison',
+  endpointCustom: 'Adresse personnalisée',
+  endpointKeyScoped: "Ce sont des comptes, régions ou forfaits distincts : la clé d'API et la liste de modèles de l'un sont généralement refusées par l'autre.",
   applyConfig: 'Appliquer la configuration',
   // Status states
   statusChecking: 'Vérification…',

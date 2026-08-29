@@ -45,6 +45,8 @@ export const en = {
   cloudProvider: 'Provider',
   cloudProviderCustom: 'Custom',
   cloudEndpoint: 'Endpoint',
+  endpointCustom: 'Custom address',
+  endpointKeyScoped: 'Separate accounts, regions or plans — an API key and model list from one is usually rejected by another.',
   applyConfig: 'Apply config',
   // Status states
   statusChecking: 'Checking…',

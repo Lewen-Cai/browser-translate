@@ -45,6 +45,8 @@ export const de: Record<StringKey, string> = {
   cloudProvider: 'Anbieter',
   cloudProviderCustom: 'Benutzerdefiniert',
   cloudEndpoint: 'Endpunkt',
+  endpointCustom: 'Eigene Adresse',
+  endpointKeyScoped: 'Getrennte Konten, Regionen oder Tarife – API-Schlüssel und Modellliste des einen werden vom anderen meist abgelehnt.',
   applyConfig: 'Konfiguration anwenden',
   // Status states
   statusChecking: 'Wird geprüft…',

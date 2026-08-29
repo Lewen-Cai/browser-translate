@@ -45,6 +45,8 @@ export const zhCN: Record<StringKey, string> = {
   cloudProvider: '供应商',
   cloudProviderCustom: '自定义',
   cloudEndpoint: '节点',
+  endpointCustom: '自定义地址',
+  endpointKeyScoped: '这些是彼此独立的账号、区域或套餐——一个地址的 API Key 和模型清单通常在另一个上不可用。',
   applyConfig: '应用配置',
   // Status states
   statusChecking: '检测中…',

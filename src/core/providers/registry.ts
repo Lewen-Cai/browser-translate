@@ -78,6 +78,15 @@ export interface ProviderDef {
    */
   hostPermission?: string;
   /**
+   * Whether an address outside `endpoints` may be typed in.
+   *
+   * For a vendor whose public endpoints are the whole story, the list is the
+   * whole story and the field is closed. Set this where the vendor also hands
+   * out addresses we cannot enumerate — a per-workspace or per-deployment host
+   * — so the list stays a shortcut rather than a ceiling.
+   */
+  allowCustomEndpoint?: boolean;
+  /**
    * Which request-body fields turn this provider's reasoning up or off.
    * Absent means we know of none, and nothing is sent.
    */
@@ -174,11 +183,48 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
     label: 'Qwen (DashScope)',
     kind: 'llm',
     capabilities: LLM_CAPABILITIES,
+    // Two axes, and both of them decide whether a key works at all. Taken from
+    // Model Studio's own "Base URL 总览", both the China and the international
+    // edition of it, because the two pages do not list the same endpoints.
+    //
+    // Region first: four regions publish a shared domain, and each has its own
+    // key and its own model list — the docs say plainly that none of the three
+    // carries across. Frankfurt and Tokyo publish none: they are reachable only
+    // at {WorkspaceId}.{region}.maas.aliyuncs.com, which is why this provider
+    // accepts a typed address as well. We cannot enumerate somebody's
+    // workspace, and pretending the list is complete would strand them.
+    //
+    // Then the plan, which is a different product rather than a discount. Token
+    // Plan uses keys prefixed sk-sp- that the metered endpoints refuse and
+    // which refuse metered keys in turn, and serves a catalogue of its own.
+    //
+    // Its predecessor, Coding Plan, is not listed. It is still served but no
+    // longer sold — Lite closed to new customers in March 2026, Pro is not
+    // restocked — so listing it would offer most people a plan they cannot buy,
+    // and anyone who does hold one has the address field to type it into.
+    //
+    // Note for anyone reading this before pointing an extension at them: the
+    // plan endpoints are documented as being for interactive AI tools, not as
+    // a general API to build a service on.
     endpoints: [
-      { label: 'China', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1' },
-      { label: 'International', baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1' },
+      { label: 'Beijing', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1' },
+      { label: 'Singapore', baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1' },
+      {
+        label: 'Hong Kong',
+        baseUrl: 'https://cn-hongkong.dashscope.aliyuncs.com/compatible-mode/v1',
+      },
+      { label: 'US (Virginia)', baseUrl: 'https://dashscope-us.aliyuncs.com/compatible-mode/v1' },
+      {
+        label: 'Token Plan · Beijing',
+        baseUrl: 'https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1',
+      },
+      {
+        label: 'Token Plan · Singapore',
+        baseUrl: 'https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1',
+      },
     ],
     needsKey: true,
+    allowCustomEndpoint: true,
     thinkingDialect: 'enable-thinking',
   },
   siliconflow: {

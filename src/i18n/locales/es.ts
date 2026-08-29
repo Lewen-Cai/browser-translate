@@ -45,6 +45,8 @@ export const es: Record<StringKey, string> = {
   cloudProvider: 'Proveedor',
   cloudProviderCustom: 'Personalizado',
   cloudEndpoint: 'Endpoint',
+  endpointCustom: 'Dirección personalizada',
+  endpointKeyScoped: 'Son cuentas, regiones o planes distintos: la clave de API y la lista de modelos de uno suelen ser rechazadas por otro.',
   applyConfig: 'Aplicar configuración',
   // Status states
   statusChecking: 'Comprobando…',

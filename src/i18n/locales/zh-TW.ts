@@ -45,6 +45,8 @@ export const zhTW: Record<StringKey, string> = {
   cloudProvider: '供應商',
   cloudProviderCustom: '自訂',
   cloudEndpoint: '節點',
+  endpointCustom: '自訂位址',
+  endpointKeyScoped: '這些是彼此獨立的帳號、區域或方案——一個位址的 API Key 與模型清單通常在另一個上不可用。',
   applyConfig: '套用設定',
   // Status states
   statusChecking: '檢查中…',

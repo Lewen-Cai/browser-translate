@@ -44,7 +44,10 @@ export function ProvidersPanel() {
   }
 
   if (selected) {
-    return <ProviderDetail id={selected} onBack={() => setSelected(null)} />;
+    // Keyed so that opening a different provider builds a fresh form rather
+    // than carrying the last one's local state — which endpoint mode it was in
+    // — across to a provider it says nothing about.
+    return <ProviderDetail key={selected} id={selected} onBack={() => setSelected(null)} />;
   }
 
   const q = query.trim().toLowerCase();

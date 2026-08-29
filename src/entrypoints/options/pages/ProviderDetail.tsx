@@ -30,6 +30,18 @@ export function ProviderDetail({ id, onBack }: Props) {
   const t = useT();
   const def = PROVIDERS[id];
 
+  /**
+   * Whether the address is being typed rather than picked.
+   *
+   * Starts true for a stored address the list does not contain, so a workspace
+   * host survives a trip through this page instead of being silently snapped
+   * back to whichever preset happened to be first.
+   */
+  const [typingEndpoint, setTypingEndpoint] = useState(
+    def.endpoints.length > 0 && !def.endpoints.some((e) => e.baseUrl === config.baseUrl),
+  );
+  const endpointEditable = def.endpoints.length === 0 || typingEndpoint;
+
   // Re-probe once editing settles. Every keystroke changes the stored config,
   // and probing each one would fire a request per character.
   const [pingNonce, setPingNonce] = useState(0);
@@ -67,18 +79,34 @@ export function ProviderDetail({ id, onBack }: Props) {
         {def.endpoints.length > 1 && (
           <Select
             label={t('cloudEndpoint')}
-            value={config.baseUrl}
-            options={def.endpoints.map((e) => ({ value: e.baseUrl, label: e.label }))}
-            onChange={(e) => set({ baseUrl: (e.target as HTMLSelectElement).value })}
+            value={typingEndpoint ? '' : config.baseUrl}
+            // Worth saying wherever there is more than one: these are not
+            // mirrors of one endpoint but separate accounts, regions or plans,
+            // and a key that works on one is usually rejected by the next.
+            hint={t('endpointKeyScoped')}
+            options={[
+              ...def.endpoints.map((e) => ({ value: e.baseUrl, label: e.label })),
+              ...(def.allowCustomEndpoint || typingEndpoint
+                ? [{ value: '', label: t('endpointCustom') }]
+                : []),
+            ]}
+            onChange={(e) => {
+              const next = (e.target as HTMLSelectElement).value;
+              setTypingEndpoint(next === '');
+              // Choosing "custom" leaves the address alone — it is the one
+              // already there that is about to be edited.
+              if (next) set({ baseUrl: next });
+            }}
           />
         )}
 
         <Input
           label={t('baseUrl')}
           value={config.baseUrl}
-          // A vendor with fixed endpoints has nothing to type; a self-hosted
-          // runtime or a hand-entered endpoint is nothing but the address.
-          disabled={def.endpoints.length > 0}
+          // A vendor whose public endpoints are the whole story has nothing to
+          // type; a self-hosted runtime, or a vendor handing out addresses we
+          // cannot enumerate, is nothing but the address.
+          disabled={!endpointEditable}
           mono
           onInput={(e) => set({ baseUrl: (e.target as HTMLInputElement).value })}
         />

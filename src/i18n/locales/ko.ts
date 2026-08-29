@@ -45,6 +45,8 @@ export const ko: Record<StringKey, string> = {
   cloudProvider: '제공자',
   cloudProviderCustom: '사용자 지정',
   cloudEndpoint: '엔드포인트',
+  endpointCustom: '사용자 지정 주소',
+  endpointKeyScoped: '서로 다른 계정·리전·요금제입니다 — 한쪽의 API 키와 모델 목록은 대개 다른 쪽에서 거부됩니다.',
   applyConfig: '설정 적용',
   // Status states
   statusChecking: '확인 중…',
