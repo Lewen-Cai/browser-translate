@@ -3,6 +3,7 @@ import { HotkeyInput } from '~/ui/components/HotkeyInput';
 import { Select } from '~/ui/components/Select';
 import { SectionHeader } from '~/ui/components/SectionHeader';
 import { EngineRoutingPicker } from '~/ui/components/EngineRoutingPicker';
+import { CARD_HEIGHT_CHOICES, CARD_WIDTH_CHOICES, normalizeCardSize } from '~/core/card/size';
 import { useT } from '~/i18n';
 import type { GlobalSettings } from '~/storage/schema';
 
@@ -86,6 +87,34 @@ export function GeneralPage() {
             onChange={(e) =>
               update({ theme: (e.target as HTMLSelectElement).value as 'auto' | 'light' | 'dark' })}
           />
+          {/* The card is a fixed size so an arriving answer never moves
+              anything; how much room that answer gets is a judgement about the
+              screen it is read on, which is not ours to make. */}
+          <div class="grid grid-cols-2 gap-3">
+            <Select label={t('cardWidth')}
+              value={String(settings.cardSize.width)}
+              options={CARD_WIDTH_CHOICES.map((v) => ({ value: String(v), label: `${v} px` }))}
+              onChange={(e) =>
+                update({
+                  cardSize: normalizeCardSize({
+                    ...settings.cardSize,
+                    width: Number((e.target as HTMLSelectElement).value),
+                  }),
+                })}
+            />
+            <Select label={t('cardHeight')}
+              value={String(settings.cardSize.height)}
+              options={CARD_HEIGHT_CHOICES.map((v) => ({ value: String(v), label: `${v} px` }))}
+              onChange={(e) =>
+                update({
+                  cardSize: normalizeCardSize({
+                    ...settings.cardSize,
+                    height: Number((e.target as HTMLSelectElement).value),
+                  }),
+                })}
+            />
+          </div>
+
           <Select label={t('uiLanguage')}
             value={settings.uiLanguage}
             options={[

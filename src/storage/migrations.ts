@@ -1,5 +1,6 @@
 import { APP_DATA_VERSION, isThinkingSetting, type AppData } from './schema';
 import { isThinkingDialect } from '~/core/providers/thinking';
+import { normalizeCardSize } from '~/core/card/size';
 import type { GlobalSettings, ProviderConfig, ProvidersConfig } from './schema';
 import { createDefaultProviders, defaultProviderConfig } from './defaults';
 import { PROVIDER_IDS, isProviderId, type ProviderId } from '~/core/providers/registry';
@@ -189,6 +190,7 @@ function fillSettingsDefaults(data: AppData): AppData {
   // named a provider for everything keeps it.
   const seed: ProviderId = isProviderId(s.engines) ? s.engines : DEFAULT_PROVIDER;
   const engines = normalizeEngineRouting(s.engines, seed);
+  const cardSize = normalizeCardSize(s.cardSize);
   const subtitlePosition = normalizeSubtitlePosition(s.subtitlePosition);
   const subtitleStyle = normalizeSubtitleStyle(s.subtitleStyle);
   // A target language we no longer offer would be sent to the providers verbatim
@@ -198,6 +200,7 @@ function fillSettingsDefaults(data: AppData): AppData {
     ? s.targetLanguage
     : DEFAULT_TARGET_LANGUAGE;
   const unchanged =
+    cardSize === s.cardSize &&
     fullPageHotkey === s.fullPageHotkey &&
     engines === s.engines &&
     targetLanguage === s.targetLanguage &&
@@ -211,6 +214,14 @@ function fillSettingsDefaults(data: AppData): AppData {
   const { engine: _legacy, ...rest } = s;
   return {
     ...data,
-    settings: { ...rest, engines, fullPageHotkey, targetLanguage, subtitlePosition, subtitleStyle },
+    settings: {
+      ...rest,
+      engines,
+      fullPageHotkey,
+      targetLanguage,
+      subtitlePosition,
+      subtitleStyle,
+      cardSize,
+    },
   };
 }

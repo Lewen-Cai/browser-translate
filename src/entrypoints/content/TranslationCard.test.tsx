@@ -10,6 +10,7 @@ vi.mock('~/messaging/client', () => ({
 
 import { TranslationCard } from './TranslationCard';
 import { createDefaultProviders } from '~/storage/defaults';
+import { DEFAULT_CARD_SIZE } from '~/core/card/size';
 
 function rect(): DOMRect {
   return {
@@ -29,6 +30,7 @@ function open(text: string, targetLang = 'zh-CN', notice?: string) {
       providers={providers}
       defaultProvider="microsoft"
       defaultTargetLang={targetLang}
+      size={DEFAULT_CARD_SIZE}
       notice={notice}
       onClose={() => {}}
     />,

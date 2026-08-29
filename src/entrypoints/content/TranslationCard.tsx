@@ -3,7 +3,7 @@ import {
   X, AlertCircle, Loader2, Pin, ChevronDown, Copy, Check, RefreshCw, Languages,
 } from '~/ui/icons';
 import { streamTranslate, abortTranslate } from '~/messaging/client';
-import { CARD_WIDTH, clampCardPosition, computeCardBasePosition } from './cardLayout';
+import { clampCardPosition, computeCardBasePosition } from './cardLayout';
 import { looksLikeDictionary } from '~/core/dictionary/discriminate';
 import { advanceReveal } from './reveal';
 import { parseDictionaryEntry } from '~/core/dictionary/parse';
@@ -18,6 +18,7 @@ import { identifyLanguage, sourceLanguageEndonym } from '~/core/language/identif
 import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
 import { t } from '~/i18n';
 import type { ProvidersConfig } from '~/storage/schema';
+import type { CardSize } from '~/core/card/size';
 import type { Locale } from '~/i18n/strings';
 
 interface Props {
@@ -32,6 +33,8 @@ interface Props {
   defaultProvider: ProviderId;
   /** The configured target language — likewise a starting point, not a rule. */
   defaultTargetLang: string;
+  /** How big the card is, from settings. */
+  size: CardSize;
   /** Pinning is enforced outside the card — the content script owns the
    *  outside-click and new-selection handling that pinning suppresses. */
   onPinChange?: (pinned: boolean) => void;
@@ -48,7 +51,7 @@ function friendlyError(raw: string, locale: Locale): string {
 
 export function TranslationCard({
   text, rect, locale, onClose, notice,
-  providers, defaultProvider, defaultTargetLang, onPinChange,
+  providers, defaultProvider, defaultTargetLang, size, onPinChange,
 }: Props) {
   const [pinned, setPinned] = useState(false);
   /**
@@ -91,7 +94,7 @@ export function TranslationCard({
   // Fixed for as long as the card is showing this selection. See
   // computeCardBasePosition: it reads the scroll position, so recomputing it per
   // render would slide the card whenever a chunk arrived mid-scroll.
-  const base = useMemo(() => computeCardBasePosition(rect, CARD_WIDTH), [rect]);
+  const base = useMemo(() => computeCardBasePosition(rect, size), [rect, size]);
 
   // Detected from the selection alone, so it is on the card the moment it
   // opens rather than one round trip later.
@@ -279,8 +282,8 @@ export function TranslationCard({
   // the grip nudges it, clamped so it can't be thrown off screen.
   const held = pinned && pin !== null;
   const { left, top } = held
-    ? clampCardPosition(pin.left + offset.x, pin.top + offset.y, CARD_WIDTH, { x: 0, y: 0 })
-    : clampCardPosition(base.left + offset.x, base.top + offset.y, CARD_WIDTH);
+    ? clampCardPosition(pin.left + offset.x, pin.top + offset.y, size.width, { x: 0, y: 0 })
+    : clampCardPosition(base.left + offset.x, base.top + offset.y, size.width);
 
   // Discriminate on the full received text. Dictionary (JSON, starts with '{')
   // renders only once complete; translations show the typewriter-revealed slice.
@@ -290,11 +293,14 @@ export function TranslationCard({
   /**
    * Nothing has come back yet.
    *
-   * The one state that does not get the full frame. A fixed size is worth
-   * having because the answer arriving must not move anything — but there is no
-   * answer here, and a spinner marooned in three hundred pixels of empty card
-   * is a promise about how much is coming that we have no way to keep. So this
-   * state sizes to itself, and the frame appears with the first words.
+   * The one state that does not get the frame at all — not the original either.
+   * A fixed size is worth having because the answer arriving must not move
+   * anything, but there is no answer here to protect, and a card held open
+   * around a spinner is a promise about how much is coming that we have no way
+   * to keep. The original is not shown either: it is there to be read against
+   * the translation, and on its own it is just the text already on the page
+   * behind the card. So this state is the card saying one thing, at the size of
+   * saying it, and the frame arrives with the first words.
    */
   const awaitingAnswer = !error && !activeNotice && streaming && (isDict || !displayed);
 
@@ -337,7 +343,7 @@ export function TranslationCard({
         position: held ? 'fixed' : 'absolute',
         top: `${top}px`,
         left: `${left}px`,
-        width: `${CARD_WIDTH}px`,
+        width: `${size.width}px`,
         // Sized to its content while waiting, and never past the frame it is
         // about to become.
         ...(awaitingAnswer
@@ -422,7 +428,13 @@ export function TranslationCard({
         </div>
       </div>
       <div class="bt-card-body" data-waiting={awaitingAnswer ? 'true' : 'false'}>
-        {activeNotice ? (
+        {awaitingAnswer ? (
+          <div class="bt-card-waiting">
+            <span class="bt-card-loading">
+              <Loader2 size={13} class="animate-spin" /> {t('loading', locale)}
+            </span>
+          </div>
+        ) : activeNotice ? (
           <div class="bt-card-notice">{activeNotice}</div>
         ) : (
           <>
@@ -440,14 +452,6 @@ export function TranslationCard({
                   <div class="bt-card-error">
                     <AlertCircle size={15} class="bt-card-error-icon" />
                     <span>{error}</span>
-                  </div>
-                ) : awaitingAnswer ? (
-                  // In the middle of the space it is holding, not tucked into
-                  // the corner the first line will land in.
-                  <div class="bt-card-waiting">
-                    <span class="bt-card-loading">
-                      <Loader2 size={13} class="animate-spin" /> {t('loading', locale)}
-                    </span>
                   </div>
                 ) : dictEntry ? (
                   <DictionaryView entry={dictEntry} locale={locale} />

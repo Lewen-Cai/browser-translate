@@ -22,6 +22,8 @@ export const fr: Record<StringKey, string> = {
   sectionApiEndpoint: 'Point de terminaison API',
   sectionCache: 'Cache',
   sectionAppearance: 'Apparence',
+  cardWidth: 'Largeur de la carte',
+  cardHeight: 'Hauteur de la carte',
   sectionData: 'Données',
   openaiCompatible: 'Compatible OpenAI',
   // Options nav

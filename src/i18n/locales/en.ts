@@ -22,6 +22,8 @@ export const en = {
   sectionApiEndpoint: 'API Endpoint',
   sectionCache: 'Cache',
   sectionAppearance: 'Appearance',
+  cardWidth: 'Card width',
+  cardHeight: 'Card height',
   sectionData: 'Data',
   openaiCompatible: 'OpenAI-compatible',
   // Options nav

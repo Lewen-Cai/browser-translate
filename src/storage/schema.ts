@@ -1,6 +1,7 @@
 import type { ProviderId } from '~/core/providers/registry';
 import type { ThinkingDialect } from '~/core/providers/thinking';
 import type { SubtitlePosition, SubtitleStyle } from '~/core/subtitles/style';
+import type { CardSize } from '~/core/card/size';
 
 export const APP_DATA_VERSION = 1 as const;
 
@@ -67,6 +68,12 @@ export interface GlobalSettings {
   fullPageHotkey: string;
   cacheEnabled: boolean;
   cacheTTLDays: number;
+  /**
+   * How big the selection card is. Fixed so an arriving answer moves nothing,
+   * and settable because how much room that answer deserves depends on the
+   * screen it is read on.
+   */
+  cardSize: CardSize;
   /** Where the on-video subtitle block sits, relative to a player edge. */
   subtitlePosition: SubtitlePosition;
   /** How the on-video subtitles are drawn. */

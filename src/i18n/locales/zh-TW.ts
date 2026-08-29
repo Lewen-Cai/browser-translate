@@ -22,6 +22,8 @@ export const zhTW: Record<StringKey, string> = {
   sectionApiEndpoint: '端點位址',
   sectionCache: '快取',
   sectionAppearance: '外觀',
+  cardWidth: '卡片寬度',
+  cardHeight: '卡片高度',
   sectionData: '資料',
   openaiCompatible: '相容 OpenAI 協定',
   // Options nav

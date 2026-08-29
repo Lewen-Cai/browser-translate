@@ -22,6 +22,8 @@ export const zhCN: Record<StringKey, string> = {
   sectionApiEndpoint: '接口地址',
   sectionCache: '缓存',
   sectionAppearance: '外观',
+  cardWidth: '卡片宽度',
+  cardHeight: '卡片高度',
   sectionData: '数据',
   openaiCompatible: '兼容 OpenAI 协议',
   // Options nav

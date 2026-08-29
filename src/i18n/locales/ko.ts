@@ -22,6 +22,8 @@ export const ko: Record<StringKey, string> = {
   sectionApiEndpoint: 'API 엔드포인트',
   sectionCache: '캐시',
   sectionAppearance: '모양',
+  cardWidth: '카드 너비',
+  cardHeight: '카드 높이',
   sectionData: '데이터',
   openaiCompatible: 'OpenAI 호환',
   // Options nav

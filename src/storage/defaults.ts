@@ -3,6 +3,7 @@ import { PROVIDERS, PROVIDER_IDS, type ProviderId } from '~/core/providers/regis
 import { DEFAULT_PROVIDER } from '~/core/engines/routing';
 import { DEFAULT_SUBTITLE_POSITION, DEFAULT_SUBTITLE_STYLE } from '~/core/subtitles/style';
 import { DEFAULT_TARGET_LANGUAGE } from '~/core/language/targets';
+import { DEFAULT_CARD_SIZE } from '~/core/card/size';
 
 /**
  * A blank row for `id`. Cloud vendors start on their first endpoint so the
@@ -44,6 +45,7 @@ export function createDefaultAppData(): AppData {
       fullPageHotkey: 'Alt+A',
       cacheEnabled: true,
       cacheTTLDays: 7,
+      cardSize: DEFAULT_CARD_SIZE,
       subtitlePosition: DEFAULT_SUBTITLE_POSITION,
       subtitleStyle: DEFAULT_SUBTITLE_STYLE,
       theme: 'auto',

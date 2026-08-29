@@ -22,6 +22,8 @@ export const ja: Record<StringKey, string> = {
   sectionApiEndpoint: 'API エンドポイント',
   sectionCache: 'キャッシュ',
   sectionAppearance: '外観',
+  cardWidth: 'カードの幅',
+  cardHeight: 'カードの高さ',
   sectionData: 'データ',
   openaiCompatible: 'OpenAI 互換',
   // Options nav

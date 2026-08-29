@@ -14,6 +14,7 @@ import { resolveLocale, t } from '~/i18n';
 import type { Locale } from '~/i18n/strings';
 import type { ProviderId } from '~/core/providers/registry';
 import type { AppData, GlobalSettings, ProvidersConfig } from '~/storage/schema';
+import { DEFAULT_CARD_SIZE, type CardSize } from '~/core/card/size';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -45,6 +46,7 @@ export default defineContentScript({
     // the rows rather than a finished credit line.
     let providersConfig: ProvidersConfig = createDefaultProviders();
     let selectionProvider: ProviderId = 'microsoft';
+    let cardSize: CardSize = DEFAULT_CARD_SIZE;
     // A pinned card survives clicks elsewhere on the page, and keeps the spot
     // the reader dragged it to when they translate something else.
     let cardPinned = false;
@@ -91,6 +93,7 @@ export default defineContentScript({
         providers: providersConfig,
         defaultProvider: selectionProvider,
         defaultTargetLang: targetLanguage,
+        size: cardSize,
         notice: skip ? t('noTranslationNeeded', locale) : undefined,
         onPinChange: (next: boolean) => {
           cardPinned = next;
@@ -126,6 +129,7 @@ export default defineContentScript({
       targetLanguage = data.settings.targetLanguage;
       providersConfig = data.providers;
       selectionProvider = data.settings.engines.selection;
+      cardSize = data.settings.cardSize;
       applyTheme();
 
       if (data.settings.triggerMode === 'icon') {

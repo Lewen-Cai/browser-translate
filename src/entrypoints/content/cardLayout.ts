@@ -1,17 +1,17 @@
 import { computeIconPosition, ICON_SIZE } from './TriggerIcon';
+import type { CardSize } from '~/core/card/size';
 
 /**
- * The card's size, which does not depend on what is in it.
+ * The card does not resize itself to what is in it.
  *
  * A box that grows with its content means the same word gets a different card
  * depending on where on the page it was read, and every streamed answer pushes
  * its own footer down the screen as it arrives. Fixing both dimensions costs a
  * roomy card for a two-word answer and buys a card that is in the same place,
  * at the same size, every time — with the original and the translation each
- * scrolling inside their own half.
+ * scrolling inside their own half. How big that box is comes from settings; see
+ * `~/core/card/size`.
  */
-export const CARD_WIDTH = 460;
-export const CARD_HEIGHT = 340;
 
 export interface CardVerticalLayout {
   /** Document-space top for the card (the shadow host is position:absolute). */
@@ -36,7 +36,7 @@ const ICON_GAP = 2;
  * Reads window.innerHeight / scrollY (same convention as computeIconPosition);
  * the returned `top` is document-space.
  */
-export function computeCardVerticalLayout(rect: DOMRect): CardVerticalLayout {
+export function computeCardVerticalLayout(rect: DOMRect, wanted: number): CardVerticalLayout {
   const { innerHeight, scrollY } = window;
   const iconPos = computeIconPosition(rect);
   const iconTopVp = iconPos.top - scrollY;
@@ -44,7 +44,7 @@ export function computeCardVerticalLayout(rect: DOMRect): CardVerticalLayout {
 
   // A window shorter than the card gets as much as fits; the panes inside take
   // care of the rest.
-  const height = Math.min(CARD_HEIGHT, innerHeight - 2 * MARGIN);
+  const height = Math.min(wanted, innerHeight - 2 * MARGIN);
 
   const below = iconBottomVp + ICON_GAP;
   const above = iconTopVp - ICON_GAP - height;
@@ -76,14 +76,14 @@ export interface CardBasePosition {
  * the page scrolls. Recomputing it per render would drift the card whenever
  * anything else caused a render mid-scroll.
  */
-export function computeCardBasePosition(rect: DOMRect, width: number): CardBasePosition {
+export function computeCardBasePosition(rect: DOMRect, size: CardSize): CardBasePosition {
   const iconPos = computeIconPosition(rect);
-  let left = iconPos.left + ICON_SIZE - width;
+  let left = iconPos.left + ICON_SIZE - size.width;
   const minLeft = window.scrollX + MARGIN / 2;
-  const maxLeft = window.scrollX + window.innerWidth - width - MARGIN / 2;
+  const maxLeft = window.scrollX + window.innerWidth - size.width - MARGIN / 2;
   if (left < minLeft) left = minLeft;
   if (left > maxLeft) left = maxLeft;
-  const { top, height } = computeCardVerticalLayout(rect);
+  const { top, height } = computeCardVerticalLayout(rect, size.height);
   return { left, top, height };
 }
 

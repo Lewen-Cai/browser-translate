@@ -296,11 +296,10 @@ html, body {
   max-height: 30%;
   overflow: hidden;
 }
-/* While waiting there is no translation to keep room for, and the body has no
-   definite height for a percentage to resolve against, so the cap is a flat one
-   — enough original to read, and enough left for the card to stay small. */
-.bt-card-body[data-waiting='true'] .bt-card-source-row {
-  max-height: 108px;
+/* Waiting is the whole card: no original, no translation, just the one line
+   saying so. Nothing to divide, so nothing here to cap. */
+.bt-card-body[data-waiting='true'] {
+  padding: 20px 16px;
 }
 .bt-card-source {
   flex: 1;
