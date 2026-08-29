@@ -277,9 +277,10 @@ html, body {
   background: currentColor;
 }
 
-/* Source text shown above the translation, for comparison. Clamped to three
-   lines by default so a long selection doesn't push the translation off screen;
-   the chevron opens it into its own scroll area. */
+/* Source text shown above the translation, for comparison.
+   Its own scroll area, capped at a share of a card whose height is fixed: a
+   long original can be read in full without the translation ever leaving the
+   card, and a short one takes only the room it needs. */
 .bt-card-source-row {
   display: flex;
   align-items: flex-start;
@@ -287,28 +288,21 @@ html, body {
   padding-bottom: 8px;
   margin-bottom: 8px;
   border-bottom: 1px dashed rgb(var(--ap-border));
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 42%;
+  overflow: hidden;
 }
 .bt-card-source {
   flex: 1;
   min-width: 0;
+  height: 100%;
+  overflow-y: auto;
   color: rgb(var(--ap-fg-muted));
   font-size: 14px;
   line-height: 1.5;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.bt-card-source-open {
-  display: block;
-  max-height: 116px;
-  overflow-y: auto;
-}
-.bt-card-source-toggle {
-  flex: none;
-  margin-top: -2px;
 }
 
 /* Credit line: which model or service produced this translation. */
@@ -352,14 +346,28 @@ html, body {
 .bt-card-foot-btn:first-child { margin-left: -5px; }
 .bt-card-foot-lang { margin-left: auto; margin-right: -5px; }
 
-/* The translation and the control that copies it, in the same column the source
-   row's chevron already uses. */
+/* The translation, and the control that copies it, filling whatever the source
+   above did not take. Scrolls on its own so the card's foot never moves. */
 .bt-card-result-row {
   display: flex;
   align-items: flex-start;
   gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
-.bt-card-result { flex: 1; min-width: 0; }
+.bt-card-result {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+}
+/* A control set beside a pane rather than inside it: it must not stretch with
+   the pane, and it sits against the first line of the text it acts on. */
+.bt-card-aside-btn {
+  flex: none;
+  margin-top: -2px;
+}
 .bt-card-close:disabled { opacity: 0.4; cursor: default; }
 .bt-card-close:disabled:hover { color: rgb(var(--ap-fg-muted)); background: transparent; }
 
@@ -547,10 +555,16 @@ html, body {
   color: rgb(var(--ap-fg));
   margin-top: 2px;
 }
+/* The two panes, and nothing else. The body itself does not scroll — that was
+   what let a streaming answer push the footer down the screen — it hands its
+   height to the panes, which scroll instead. */
 .bt-card-body {
   padding: 14px 16px;
-  overflow-y: auto;
+  flex: 1 1 auto;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .bt-card-text {
   white-space: pre-wrap;

@@ -105,8 +105,6 @@ export const en = {
   cardPin: 'Pin the card open',
   cardUnpin: 'Unpin',
   cardDrag: 'Drag to move',
-  cardExpandSource: 'Show full original',
-  cardCollapseSource: 'Collapse original',
   cardRetranslate: 'Translate again',
   cardCopy: 'Copy translation',
   cardCopied: 'Copied',

@@ -105,8 +105,6 @@ export const zhTW: Record<StringKey, string> = {
   cardPin: '釘選卡片',
   cardUnpin: '取消釘選',
   cardDrag: '拖曳可移動',
-  cardExpandSource: '展開原文',
-  cardCollapseSource: '收合原文',
   cardRetranslate: '重新翻譯',
   cardCopy: '複製譯文',
   cardCopied: '已複製',

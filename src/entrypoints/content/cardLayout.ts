@@ -1,21 +1,37 @@
 import { computeIconPosition, ICON_SIZE } from './TriggerIcon';
 
+/**
+ * The card's size, which does not depend on what is in it.
+ *
+ * A box that grows with its content means the same word gets a different card
+ * depending on where on the page it was read, and every streamed answer pushes
+ * its own footer down the screen as it arrives. Fixing both dimensions costs a
+ * roomy card for a two-word answer and buys a card that is in the same place,
+ * at the same size, every time — with the original and the translation each
+ * scrolling inside their own half.
+ */
+export const CARD_WIDTH = 460;
+export const CARD_HEIGHT = 340;
+
 export interface CardVerticalLayout {
   /** Document-space top for the card (the shadow host is position:absolute). */
   top: number;
-  /** Max height in px so the card never exceeds the viewport; the body scrolls. */
-  maxHeight: number;
+  /** The card's height. Fixed, unless the window is too short to hold it. */
+  height: number;
 }
 
 const MARGIN = 8;
 const ICON_GAP = 2;
-const MIN_HEIGHT = 120;
 
 /**
- * Vertical placement for the TranslationCard. The card drops just below the
- * trigger icon, but is always kept fully inside the viewport: it is pulled up
- * when the selection sits near the bottom, and a max-height is returned so a
- * long translation scrolls INSIDE the card instead of overflowing off-screen.
+ * Vertical placement for the TranslationCard.
+ *
+ * The card drops below the trigger icon where there is room, and goes above the
+ * icon where there is not — a selection near the foot of the window is the
+ * common case, not an edge one, and the alternative is a card squeezed into
+ * whatever is left, which is how the height stopped being predictable. Where
+ * neither side fits it sits against the bottom edge and overlaps the selection,
+ * because being readable beats being out of the way.
  *
  * Reads window.innerHeight / scrollY (same convention as computeIconPosition);
  * the returned `top` is document-space.
@@ -23,18 +39,23 @@ const MIN_HEIGHT = 120;
 export function computeCardVerticalLayout(rect: DOMRect): CardVerticalLayout {
   const { innerHeight, scrollY } = window;
   const iconPos = computeIconPosition(rect);
-  const iconBottomVp = iconPos.top + ICON_SIZE - scrollY; // viewport space
+  const iconTopVp = iconPos.top - scrollY;
+  const iconBottomVp = iconTopVp + ICON_SIZE;
 
-  let topVp = iconBottomVp + ICON_GAP;
+  // A window shorter than the card gets as much as fits; the panes inside take
+  // care of the rest.
+  const height = Math.min(CARD_HEIGHT, innerHeight - 2 * MARGIN);
 
-  // Keep at least MIN_HEIGHT of room above the viewport bottom; if the selection
-  // is near the bottom, pull the card up so it stays readable.
-  const maxTopVp = innerHeight - MIN_HEIGHT - MARGIN;
-  if (topVp > maxTopVp) topVp = maxTopVp;
+  const below = iconBottomVp + ICON_GAP;
+  const above = iconTopVp - ICON_GAP - height;
+
+  let topVp: number;
+  if (below + height <= innerHeight - MARGIN) topVp = below;
+  else if (above >= MARGIN) topVp = above;
+  else topVp = innerHeight - MARGIN - height;
+
   if (topVp < MARGIN) topVp = MARGIN;
-
-  const maxHeight = innerHeight - topVp - MARGIN;
-  return { top: topVp + scrollY, maxHeight };
+  return { top: topVp + scrollY, height };
 }
 
 /** Enough of a dragged card must stay on screen to grab it again. */
@@ -44,7 +65,7 @@ export interface CardBasePosition {
   /** Document-space left/top the card opens at. */
   left: number;
   top: number;
-  maxHeight: number;
+  height: number;
 }
 
 /**
@@ -62,8 +83,8 @@ export function computeCardBasePosition(rect: DOMRect, width: number): CardBaseP
   const maxLeft = window.scrollX + window.innerWidth - width - MARGIN / 2;
   if (left < minLeft) left = minLeft;
   if (left > maxLeft) left = maxLeft;
-  const { top, maxHeight } = computeCardVerticalLayout(rect);
-  return { left, top, maxHeight };
+  const { top, height } = computeCardVerticalLayout(rect);
+  return { left, top, height };
 }
 
 /**

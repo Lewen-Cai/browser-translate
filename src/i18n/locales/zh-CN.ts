@@ -105,8 +105,6 @@ export const zhCN: Record<StringKey, string> = {
   cardPin: '固定卡片',
   cardUnpin: '取消固定',
   cardDrag: '拖动可移动',
-  cardExpandSource: '展开原文',
-  cardCollapseSource: '收起原文',
   cardRetranslate: '重新翻译',
   cardCopy: '复制译文',
   cardCopied: '已复制',

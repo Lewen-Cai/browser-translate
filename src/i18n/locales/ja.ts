@@ -105,8 +105,6 @@ export const ja: Record<StringKey, string> = {
   cardPin: 'カードを固定',
   cardUnpin: '固定を解除',
   cardDrag: 'ドラッグで移動',
-  cardExpandSource: '原文をすべて表示',
-  cardCollapseSource: '原文を折りたたむ',
   cardRetranslate: '翻訳し直す',
   cardCopy: '訳文をコピー',
   cardCopied: 'コピーしました',

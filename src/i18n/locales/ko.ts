@@ -105,8 +105,6 @@ export const ko: Record<StringKey, string> = {
   cardPin: '카드 고정',
   cardUnpin: '고정 해제',
   cardDrag: '드래그하여 이동',
-  cardExpandSource: '원문 전체 보기',
-  cardCollapseSource: '원문 접기',
   cardRetranslate: '다시 번역',
   cardCopy: '번역문 복사',
   cardCopied: '복사됨',

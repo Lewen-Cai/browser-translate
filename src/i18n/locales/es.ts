@@ -105,8 +105,6 @@ export const es: Record<StringKey, string> = {
   cardPin: 'Fijar la tarjeta',
   cardUnpin: 'Dejar de fijar',
   cardDrag: 'Arrastra para mover',
-  cardExpandSource: 'Ver todo el original',
-  cardCollapseSource: 'Contraer el original',
   cardRetranslate: 'Traducir de nuevo',
   cardCopy: 'Copiar la traducción',
   cardCopied: 'Copiado',

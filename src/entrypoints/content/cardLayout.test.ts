@@ -1,5 +1,10 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { clampCardPosition, computeCardBasePosition, computeCardVerticalLayout } from './cardLayout';
+import {
+  CARD_HEIGHT,
+  clampCardPosition,
+  computeCardBasePosition,
+  computeCardVerticalLayout,
+} from './cardLayout';
 
 function rect(top: number, right: number): DOMRect {
   return { top, right, left: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON() {} } as DOMRect;
@@ -17,25 +22,52 @@ const WIDTH = 360;
 afterEach(() => setViewport({}));
 
 describe('computeCardVerticalLayout', () => {
-  it('drops below the icon and caps height to the viewport for a mid-page selection', () => {
+  it('drops below the icon for a mid-page selection, at the one height', () => {
     setViewport({ innerHeight: 800 });
-    const { top, maxHeight } = computeCardVerticalLayout(rect(200, 400));
+    const { top, height } = computeCardVerticalLayout(rect(200, 400));
     expect(top).toBe(198); // iconBottom(196) + 2
-    expect(maxHeight).toBe(594); // 800 - 198 - 8 margin
+    expect(height).toBe(CARD_HEIGHT);
   });
 
-  it('pulls the card up so it stays on-screen when the selection is near the bottom', () => {
+  it('goes above the selection when the card would not fit below it', () => {
+    // The card used to be squeezed into whatever was left down there, which is
+    // how the same word came out a different size at the foot of a page.
     setViewport({ innerHeight: 800 });
-    const { top, maxHeight } = computeCardVerticalLayout(rect(770, 400));
-    expect(top).toBe(672); // clamped to innerHeight - MIN_HEIGHT(120) - MARGIN(8)
-    expect(maxHeight).toBe(120); // never smaller than MIN_HEIGHT
+    const { top, height } = computeCardVerticalLayout(rect(770, 400));
+    expect(height).toBe(CARD_HEIGHT);
+    expect(top + height).toBeLessThanOrEqual(800 - 8);
+    expect(top).toBeLessThan(770);
   });
 
-  it('returns a DOCUMENT-space top (scroll included) while bounding height to the viewport', () => {
+  it('is the same height wherever on the page the selection was', () => {
+    setViewport({ innerHeight: 800 });
+    const heights = [40, 200, 400, 600, 770, 799].map(
+      (y) => computeCardVerticalLayout(rect(y, 400)).height,
+    );
+    expect(new Set(heights)).toEqual(new Set([CARD_HEIGHT]));
+  });
+
+  it('keeps the card inside the window at every one of those positions', () => {
+    setViewport({ innerHeight: 800 });
+    for (const y of [0, 40, 200, 400, 600, 770, 799]) {
+      const { top, height } = computeCardVerticalLayout(rect(y, 400));
+      expect(top).toBeGreaterThanOrEqual(8);
+      expect(top + height).toBeLessThanOrEqual(800 - 8);
+    }
+  });
+
+  it('gives up height only to a window too short to hold the card', () => {
+    setViewport({ innerHeight: 260 });
+    const { top, height } = computeCardVerticalLayout(rect(100, 400));
+    expect(height).toBe(260 - 16);
+    expect(top).toBe(8);
+  });
+
+  it('returns a DOCUMENT-space top (scroll included), with height unaffected', () => {
     setViewport({ innerHeight: 800, scrollY: 1000 });
-    const { top, maxHeight } = computeCardVerticalLayout(rect(200, 400));
+    const { top, height } = computeCardVerticalLayout(rect(200, 400));
     expect(top).toBe(1198); // 198 viewport + 1000 scroll
-    expect(maxHeight).toBe(594); // height stays viewport-bounded regardless of scroll
+    expect(height).toBe(CARD_HEIGHT);
   });
 });
 

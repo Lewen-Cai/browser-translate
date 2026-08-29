@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import {
-  X, AlertCircle, Loader2, Pin, ChevronDown, ChevronUp, Copy, Check, RefreshCw, Languages,
+  X, AlertCircle, Loader2, Pin, ChevronDown, Copy, Check, RefreshCw, Languages,
 } from '~/ui/icons';
 import { streamTranslate, abortTranslate } from '~/messaging/client';
-import { clampCardPosition, computeCardBasePosition } from './cardLayout';
+import { CARD_WIDTH, clampCardPosition, computeCardBasePosition } from './cardLayout';
 import { looksLikeDictionary } from '~/core/dictionary/discriminate';
 import { advanceReveal } from './reveal';
 import { parseDictionaryEntry } from '~/core/dictionary/parse';
@@ -37,7 +37,6 @@ interface Props {
   onPinChange?: (pinned: boolean) => void;
 }
 
-const CARD_WIDTH = 460;
 let requestSeq = 0;
 
 function friendlyError(raw: string, locale: Locale): string {
@@ -75,7 +74,6 @@ export function TranslationCard({
   const [visible, setVisible] = useState(false);   // drives open animation
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
-  const [sourceExpanded, setSourceExpanded] = useState(false);
   const dragStart = useRef<{ x: number; y: number; baseX: number; baseY: number } | null>(null);
   const currentReqId = useRef<string>('');
   /**
@@ -110,11 +108,6 @@ export function TranslationCard({
     const animId = window.requestAnimationFrame(() => setVisible(true));
     return () => window.cancelAnimationFrame(animId);
   }, []);
-
-  // Only a new selection is a new original to read; changing provider or
-  // language re-answers the same one, and collapsing it under the reader would
-  // be the card taking back something they opened.
-  useEffect(() => { setSourceExpanded(false); }, [text]);
 
   // Keyed on the selection: a pinned card stays mounted while the reader picks
   // new text, and must translate that text rather than keep showing the old
@@ -334,7 +327,7 @@ export function TranslationCard({
         top: `${top}px`,
         left: `${left}px`,
         width: `${CARD_WIDTH}px`,
-        maxHeight: `${base.maxHeight}px`,
+        height: `${base.height}px`,
         transformOrigin: 'top right',
         transform: visible ? 'scale(1)' : 'scale(0.88)',
         opacity: visible ? 1 : 0,
@@ -410,18 +403,7 @@ export function TranslationCard({
                 headword, so repeating it there would be noise. */}
             {!error && !dictEntry && (
               <div class="bt-card-source-row">
-                <div class={`bt-card-source${sourceExpanded ? ' bt-card-source-open' : ''}`}>
-                  {text}
-                </div>
-                <button
-                  class="bt-card-close bt-card-source-toggle"
-                  onClick={() => setSourceExpanded((v) => !v)}
-                  title={t(sourceExpanded ? 'cardCollapseSource' : 'cardExpandSource', locale)}
-                  aria-label={t(sourceExpanded ? 'cardCollapseSource' : 'cardExpandSource', locale)}
-                  aria-expanded={sourceExpanded}
-                >
-                  {sourceExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-                </button>
+                <div class="bt-card-source">{text}</div>
               </div>
             )}
             {/* Copy sits against the result it copies, in the column the source
@@ -455,7 +437,7 @@ export function TranslationCard({
               </div>
               {copyText && (
                 <button
-                  class="bt-card-close bt-card-source-toggle"
+                  class="bt-card-close bt-card-aside-btn"
                   onClick={() => void copyResult()}
                   title={t(copied ? 'cardCopied' : 'cardCopy', locale)}
                   aria-label={t(copied ? 'cardCopied' : 'cardCopy', locale)}
@@ -510,7 +492,10 @@ export function TranslationCard({
         // list over the translation the reader is choosing a provider for. It
         // flips only where there is genuinely no room below.
         placement="below"
-        width={menu === 'lang' ? 224 : 232}
+        // One width for both. They open from the same row, a few pixels
+        // apart, and two menus that are nearly the same size read as a mistake
+        // rather than as a fit to their contents.
+        width={232}
         searchPlaceholder={t(menu === 'lang' ? 'cardSearchLanguages' : 'searchProviders', locale)}
         emptyLabel={t('noMatches', locale)}
         onSelect={(v) => {

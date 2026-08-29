@@ -105,8 +105,6 @@ export const fr: Record<StringKey, string> = {
   cardPin: 'Épingler la carte',
   cardUnpin: 'Détacher',
   cardDrag: 'Faites glisser pour déplacer',
-  cardExpandSource: 'Afficher tout l’original',
-  cardCollapseSource: 'Réduire l’original',
   cardRetranslate: 'Traduire à nouveau',
   cardCopy: 'Copier la traduction',
   cardCopied: 'Copié',
