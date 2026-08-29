@@ -3,7 +3,6 @@ import type { StringKey } from './en';
 export const zhTW: Record<StringKey, string> = {
   // Common
   loading: '載入中…',
-  clearAll: '全部清除',
   // Popup / options shared
   settings: '設定',
   openFullSettings: '開啟完整設定',
@@ -18,8 +17,6 @@ export const zhTW: Record<StringKey, string> = {
   sectionRouting: '路由策略',
   sectionProviders: '服務商',
   sectionTranslation: '翻譯',
-  sectionRecent: '最近翻譯',
-  sectionApiEndpoint: '端點位址',
   sectionCache: '快取',
   sectionAppearance: '外觀',
   cardWidth: '卡片寬度',
@@ -49,15 +46,9 @@ export const zhTW: Record<StringKey, string> = {
   dictionaryNeedsModel: '單字的詞典釋義來自你自己的模型。選擇翻譯服務時，劃詞一律按翻譯處理。',
   engineFreeDisclaimer: '微軟與 Google 翻譯使用的是公開端點，並非官方 API，也未獲得兩家公司的授權或背書。它們可能隨時變更或失效，按現狀提供，不作任何擔保。為防免費服務失效後無法使用，建議自備模型 API：設定好自己的金鑰，服務出問題時切過去即可。',
   // Provider type + presets
-  providerType: '服務類型',
-  providerTypeCloud: '雲端',
-  providerTypeLocal: '本機',
-  cloudProvider: '供應商',
-  cloudProviderCustom: '自訂',
   cloudEndpoint: '節點',
   endpointCustom: '自訂位址',
   endpointKeyScoped: '這些是彼此獨立的帳號、區域或方案——一個位址的 API Key 與模型清單通常在另一個上不可用。',
-  applyConfig: '套用設定',
   // Status states
   statusChecking: '檢查中…',
   statusModelMissing: '找不到模型',
@@ -94,7 +85,6 @@ export const zhTW: Record<StringKey, string> = {
   cacheTranslations: '快取譯文',
   cacheDesc: '相同文字直接重用快取，節省 token',
   cacheTtl: '快取有效期（天）',
-  cacheShort: '快取',
   // Appearance
   themeMode: '明暗模式',
   themeAuto: '跟隨系統',

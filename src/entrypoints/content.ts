@@ -14,6 +14,7 @@ import { resolveLocale, t } from '~/i18n';
 import type { Locale } from '~/i18n/strings';
 import type { ProviderId } from '~/core/providers/registry';
 import type { AppData, GlobalSettings, ProvidersConfig } from '~/storage/schema';
+import type { PageStateResponse } from '~/messaging/types';
 import { DEFAULT_CARD_SIZE, type CardSize } from '~/core/card/size';
 
 export default defineContentScript({
@@ -198,13 +199,14 @@ export default defineContentScript({
     });
 
     chrome.runtime.onMessage.addListener((msg: { type?: string }, _sender, sendResponse) => {
+      const reply = (state: PageStateResponse) => sendResponse(state);
       if (msg?.type === 'page:toggle') {
         togglePageTranslation();
-        sendResponse({ translated: pageTranslator?.isOn() ?? false });
+        reply({ translated: pageTranslator?.isOn() ?? false });
         return false;
       }
       if (msg?.type === 'page:query') {
-        sendResponse({ translated: pageTranslator?.isOn() ?? false });
+        reply({ translated: pageTranslator?.isOn() ?? false });
         return false;
       }
       return false;

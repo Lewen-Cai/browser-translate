@@ -3,7 +3,6 @@ import type { StringKey } from './en';
 export const de: Record<StringKey, string> = {
   // Common
   loading: 'Wird geladen…',
-  clearAll: 'Alles löschen',
   // Popup / options shared
   settings: 'Einstellungen',
   openFullSettings: 'Vollständige Einstellungen öffnen',
@@ -18,8 +17,6 @@ export const de: Record<StringKey, string> = {
   sectionRouting: 'Routing',
   sectionProviders: 'Anbieter',
   sectionTranslation: 'Übersetzung',
-  sectionRecent: 'Zuletzt',
-  sectionApiEndpoint: 'API-Endpunkt',
   sectionCache: 'Cache',
   sectionAppearance: 'Darstellung',
   cardWidth: 'Kartenbreite',
@@ -49,15 +46,9 @@ export const de: Record<StringKey, string> = {
   dictionaryNeedsModel: 'Wörterbucheinträge für einzelne Wörter stammen aus Ihrem eigenen Modell. Mit einem ausgewählten Dienst wird die Auswahl immer übersetzt.',
   engineFreeDisclaimer: 'Die Übersetzungen von Microsoft und Google laufen über öffentliche Endpunkte, die keine offiziellen APIs sind und weder mit den Unternehmen verbunden noch von ihnen freigegeben wurden. Sie können sich jederzeit ändern oder ausfallen und werden ohne Gewähr bereitgestellt. Falls ein kostenloser Dienst ausfällt, wechseln Sie zu Ihrem eigenen Modell — ein hinterlegter API-Schlüssel ist die Absicherung.',
   // Provider type + presets
-  providerType: 'Anbietertyp',
-  providerTypeCloud: 'Cloud',
-  providerTypeLocal: 'Lokal',
-  cloudProvider: 'Anbieter',
-  cloudProviderCustom: 'Benutzerdefiniert',
   cloudEndpoint: 'Endpunkt',
   endpointCustom: 'Eigene Adresse',
   endpointKeyScoped: 'Getrennte Konten, Regionen oder Tarife – API-Schlüssel und Modellliste des einen werden vom anderen meist abgelehnt.',
-  applyConfig: 'Konfiguration anwenden',
   // Status states
   statusChecking: 'Wird geprüft…',
   statusModelMissing: 'Modell nicht gefunden',
@@ -94,7 +85,6 @@ export const de: Record<StringKey, string> = {
   cacheTranslations: 'Übersetzungen zwischenspeichern',
   cacheDesc: 'Identische Übersetzungen wiederverwenden, um Tokens zu sparen',
   cacheTtl: 'Cache-Dauer (Tage)',
-  cacheShort: 'Cache',
   // Appearance
   themeMode: 'Hell-/Dunkelmodus',
   themeAuto: 'Systemeinstellung folgen',

@@ -3,7 +3,6 @@ import type { StringKey } from './en';
 export const zhCN: Record<StringKey, string> = {
   // Common
   loading: '加载中…',
-  clearAll: '清空全部',
   // Popup / options shared
   settings: '设置',
   openFullSettings: '打开完整设置',
@@ -18,8 +17,6 @@ export const zhCN: Record<StringKey, string> = {
   sectionRouting: '路由策略',
   sectionProviders: '服务商',
   sectionTranslation: '翻译',
-  sectionRecent: '最近翻译',
-  sectionApiEndpoint: '接口地址',
   sectionCache: '缓存',
   sectionAppearance: '外观',
   cardWidth: '卡片宽度',
@@ -49,15 +46,9 @@ export const zhCN: Record<StringKey, string> = {
   dictionaryNeedsModel: '单词的词典释义来自你自己的模型。选择翻译服务时，划词一律按翻译处理。',
   engineFreeDisclaimer: '微软和谷歌翻译使用的是公开端点，并非官方 API，也未获得两家公司的授权或背书。它们可能随时变更或失效，按现状提供，不作任何担保。为防免费服务失效后无法使用，建议自备模型 API：配置好自己的 Key，服务出问题时切过去即可。',
   // Provider type + presets
-  providerType: '服务类型',
-  providerTypeCloud: '云服务',
-  providerTypeLocal: '本地',
-  cloudProvider: '供应商',
-  cloudProviderCustom: '自定义',
   cloudEndpoint: '节点',
   endpointCustom: '自定义地址',
   endpointKeyScoped: '这些是彼此独立的账号、区域或套餐——一个地址的 API Key 和模型清单通常在另一个上不可用。',
-  applyConfig: '应用配置',
   // Status states
   statusChecking: '检测中…',
   statusModelMissing: '模型未找到',
@@ -94,7 +85,6 @@ export const zhCN: Record<StringKey, string> = {
   cacheTranslations: '缓存译文',
   cacheDesc: '相同文本直接复用缓存，省 token',
   cacheTtl: '缓存有效期（天）',
-  cacheShort: '缓存',
   // Appearance
   themeMode: '明暗模式',
   themeAuto: '跟随系统',

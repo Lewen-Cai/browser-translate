@@ -3,7 +3,6 @@ import type { StringKey } from './en';
 export const fr: Record<StringKey, string> = {
   // Common
   loading: 'Chargement…',
-  clearAll: 'Tout effacer',
   // Popup / options shared
   settings: 'Paramètres',
   openFullSettings: 'Ouvrir tous les paramètres',
@@ -18,8 +17,6 @@ export const fr: Record<StringKey, string> = {
   sectionRouting: 'Routage',
   sectionProviders: 'Fournisseurs',
   sectionTranslation: 'Traduction',
-  sectionRecent: 'Récents',
-  sectionApiEndpoint: 'Point de terminaison API',
   sectionCache: 'Cache',
   sectionAppearance: 'Apparence',
   cardWidth: 'Largeur de la carte',
@@ -49,15 +46,9 @@ export const fr: Record<StringKey, string> = {
   dictionaryNeedsModel: 'Les entrées de dictionnaire pour un mot isolé viennent de votre propre modèle. Avec un service sélectionné, la sélection est toujours traduite.',
   engineFreeDisclaimer: 'Les traductions Microsoft et Google passent par des endpoints publics qui ne sont pas des API officielles et ne sont ni affiliés ni approuvés par ces entreprises. Ils peuvent changer ou cesser de fonctionner à tout moment et sont fournis en l’état, sans garantie. Si un service gratuit cesse de fonctionner, basculez sur votre propre modèle : garder une clé d’API configurée est ce qui vous met à l’abri.',
   // Provider type + presets
-  providerType: 'Type de fournisseur',
-  providerTypeCloud: 'Cloud',
-  providerTypeLocal: 'Local',
-  cloudProvider: 'Fournisseur',
-  cloudProviderCustom: 'Personnalisé',
   cloudEndpoint: 'Point de terminaison',
   endpointCustom: 'Adresse personnalisée',
   endpointKeyScoped: "Ce sont des comptes, régions ou forfaits distincts : la clé d'API et la liste de modèles de l'un sont généralement refusées par l'autre.",
-  applyConfig: 'Appliquer la configuration',
   // Status states
   statusChecking: 'Vérification…',
   statusModelMissing: 'Modèle introuvable',
@@ -94,7 +85,6 @@ export const fr: Record<StringKey, string> = {
   cacheTranslations: 'Mettre les traductions en cache',
   cacheDesc: 'Réutilise les traductions identiques pour économiser des tokens',
   cacheTtl: 'Durée du cache (jours)',
-  cacheShort: 'Cache',
   // Appearance
   themeMode: 'Mode clair/sombre',
   themeAuto: 'Selon le système',

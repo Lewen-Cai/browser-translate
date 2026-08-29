@@ -3,7 +3,6 @@ import type { StringKey } from './en';
 export const ja: Record<StringKey, string> = {
   // Common
   loading: '読み込み中…',
-  clearAll: 'すべて消去',
   // Popup / options shared
   settings: '設定',
   openFullSettings: '詳細設定を開く',
@@ -18,8 +17,6 @@ export const ja: Record<StringKey, string> = {
   sectionRouting: 'ルーティング',
   sectionProviders: 'プロバイダー',
   sectionTranslation: '翻訳',
-  sectionRecent: '最近の翻訳',
-  sectionApiEndpoint: 'API エンドポイント',
   sectionCache: 'キャッシュ',
   sectionAppearance: '外観',
   cardWidth: 'カードの幅',
@@ -49,15 +46,9 @@ export const ja: Record<StringKey, string> = {
   dictionaryNeedsModel: '単語の辞書項目は自分のモデルから得られます。サービスを選ぶと、選択範囲は常に翻訳されます。',
   engineFreeDisclaimer: 'Microsoft と Google の翻訳は公開エンドポイントを利用しており、公式 API ではなく、両社の承認も受けていません。予告なく変更・停止される可能性があり、現状のまま無保証で提供されます。無料サービスが止まったときに備えて、自分のモデル API を用意しておくことをおすすめします。キーを設定しておけば切り替えるだけで済みます。',
   // Provider type + presets
-  providerType: 'プロバイダー種別',
-  providerTypeCloud: 'クラウド',
-  providerTypeLocal: 'ローカル',
-  cloudProvider: 'プロバイダー',
-  cloudProviderCustom: 'カスタム',
   cloudEndpoint: 'エンドポイント',
   endpointCustom: 'カスタムアドレス',
   endpointKeyScoped: 'これらは別々のアカウント・リージョン・プランです——一方の API キーやモデル一覧は、通常もう一方では使えません。',
-  applyConfig: '設定を適用',
   // Status states
   statusChecking: '確認中…',
   statusModelMissing: 'モデルが見つかりません',
@@ -94,7 +85,6 @@ export const ja: Record<StringKey, string> = {
   cacheTranslations: '翻訳をキャッシュ',
   cacheDesc: '完全一致の翻訳を再利用してトークンを節約',
   cacheTtl: 'キャッシュ保持期間（日）',
-  cacheShort: 'キャッシュ',
   // Appearance
   themeMode: 'ライト／ダークモード',
   themeAuto: 'システムに従う',

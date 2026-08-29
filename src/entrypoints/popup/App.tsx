@@ -9,6 +9,7 @@ import { useApplyTheme } from '~/ui/useApplyTheme';
 import { useApplyLocale } from '~/ui/useApplyLocale';
 import { EngineRoutingPicker } from '~/ui/components/EngineRoutingPicker';
 import { TARGET_LANGUAGE_OPTIONS } from '~/core/language/targets';
+import type { PageStateResponse } from '~/messaging/types';
 
 export function App() {
   const load = useAppStore((s) => s.load);
@@ -31,7 +32,7 @@ export function App() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const id = tabs[0]?.id;
       if (id === undefined) return;
-      chrome.tabs.sendMessage(id, { type: 'page:query' }, (resp?: { translated: boolean }) => {
+      chrome.tabs.sendMessage(id, { type: 'page:query' }, (resp?: PageStateResponse) => {
         if (chrome.runtime.lastError) return; // no content script on this page
         if (resp) setPageOn(resp.translated);
       });
@@ -47,7 +48,7 @@ export function App() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const id = tabs[0]?.id;
       if (id === undefined) return;
-      chrome.tabs.sendMessage(id, { type: 'page:toggle' }, (resp?: { translated: boolean }) => {
+      chrome.tabs.sendMessage(id, { type: 'page:toggle' }, (resp?: PageStateResponse) => {
         if (chrome.runtime.lastError) return;
         if (resp) setPageOn(resp.translated);
       });

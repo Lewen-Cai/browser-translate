@@ -3,7 +3,6 @@ import type { StringKey } from './en';
 export const ko: Record<StringKey, string> = {
   // Common
   loading: '불러오는 중…',
-  clearAll: '전체 지우기',
   // Popup / options shared
   settings: '설정',
   openFullSettings: '전체 설정 열기',
@@ -18,8 +17,6 @@ export const ko: Record<StringKey, string> = {
   sectionRouting: '라우팅',
   sectionProviders: '제공업체',
   sectionTranslation: '번역',
-  sectionRecent: '최근 번역',
-  sectionApiEndpoint: 'API 엔드포인트',
   sectionCache: '캐시',
   sectionAppearance: '모양',
   cardWidth: '카드 너비',
@@ -49,15 +46,9 @@ export const ko: Record<StringKey, string> = {
   dictionaryNeedsModel: '단어의 사전 항목은 내 모델에서 나옵니다. 서비스를 선택하면 선택 영역은 항상 번역됩니다.',
   engineFreeDisclaimer: 'Microsoft와 Google 번역은 공개 엔드포인트를 사용하며 공식 API가 아니고 두 회사의 승인을 받지도 않았습니다. 언제든 변경되거나 중단될 수 있으며 보증 없이 있는 그대로 제공됩니다. 무료 서비스가 중단될 때를 대비해 자신의 모델 API를 준비해 두는 것을 권합니다. 키를 설정해 두면 전환만 하면 됩니다.',
   // Provider type + presets
-  providerType: '제공자 유형',
-  providerTypeCloud: '클라우드',
-  providerTypeLocal: '로컬',
-  cloudProvider: '제공자',
-  cloudProviderCustom: '사용자 지정',
   cloudEndpoint: '엔드포인트',
   endpointCustom: '사용자 지정 주소',
   endpointKeyScoped: '서로 다른 계정·리전·요금제입니다 — 한쪽의 API 키와 모델 목록은 대개 다른 쪽에서 거부됩니다.',
-  applyConfig: '설정 적용',
   // Status states
   statusChecking: '확인 중…',
   statusModelMissing: '모델을 찾을 수 없음',
@@ -94,7 +85,6 @@ export const ko: Record<StringKey, string> = {
   cacheTranslations: '번역 캐시',
   cacheDesc: '동일한 텍스트의 번역을 재사용하여 토큰 절약',
   cacheTtl: '캐시 유지 기간(일)',
-  cacheShort: '캐시',
   // Appearance
   themeMode: '라이트/다크 모드',
   themeAuto: '시스템 설정 따름',

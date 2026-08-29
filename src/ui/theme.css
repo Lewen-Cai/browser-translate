@@ -196,13 +196,6 @@ html, body {
   min-width: 0;
   flex: 1;
 }
-.bt-card-mono-label {
-  font-family: var(--ap-font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgb(var(--ap-fg-muted));
-}
 .bt-card-brand-mark {
   font-size: 13px;
   color: rgb(var(--ap-fg-muted));
