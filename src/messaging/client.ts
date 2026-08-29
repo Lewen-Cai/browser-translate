@@ -1,5 +1,6 @@
 import type {
   PingResponse,
+  UpdateCheckResponse,
   Request,
   TranslateBatchRequest,
   TranslateBatchResponse,
@@ -137,5 +138,38 @@ export function translateBatch(
     }
     chrome.runtime.onMessage.addListener(listener);
     sendRequest(req);
+  });
+}
+
+/**
+ * Ask the background what the newest release is.
+ *
+ * Same shape as `pingApi`: the background is the only place allowed to reach
+ * the network, so this posts a request and waits for the reply that carries its
+ * own id back.
+ */
+export function checkForUpdate(): Promise<UpdateCheckResponse> {
+  const requestId = `update-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return new Promise((resolve) => {
+    try {
+      assertExtensionContext();
+    } catch (e) {
+      resolve({ type: 'update:error', requestId, message: (e as Error).message });
+      return;
+    }
+    const listener = (msg: unknown) => {
+      const m = msg as UpdateCheckResponse;
+      if (m.requestId !== requestId) return;
+      if (m.type === 'update:result' || m.type === 'update:error') {
+        chrome.runtime.onMessage.removeListener(listener);
+        resolve(m);
+      }
+    };
+    chrome.runtime.onMessage.addListener(listener);
+    sendRequest({ type: 'update:check', requestId });
+    setTimeout(() => {
+      chrome.runtime.onMessage.removeListener(listener);
+      resolve({ type: 'update:error', requestId, message: 'Timeout (15s)' });
+    }, 15000);
   });
 }

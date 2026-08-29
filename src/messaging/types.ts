@@ -54,6 +54,30 @@ export type PingResponse =
     }
   | { type: 'ping:error'; requestId: string; status?: number; message: string };
 
+/**
+ * Ask GitHub for the newest release. Sent by the settings page when somebody
+ * presses the button; the background also runs the same check by itself once
+ * per browser launch, when that has been switched on.
+ */
+export interface UpdateCheckRequest {
+  type: 'update:check';
+  requestId: string;
+}
+
+export type UpdateCheckResponse =
+  | {
+      type: 'update:result';
+      requestId: string;
+      /** The newest published tag. */
+      latestTag: string;
+      /** Whether it is newer than what is running. */
+      updateAvailable: boolean;
+      releaseUrl: string;
+      /** The package attached to that release, or null if none was. */
+      downloadUrl: string | null;
+    }
+  | { type: 'update:error'; requestId: string; message: string };
+
 export interface TranslateBatchRequest {
   type: 'translate:batch';
   requestId: string;
@@ -86,4 +110,4 @@ export type Request =
   | TranslateBatchRequest
   | AbortRequest
   | PingRequest
- ;
+  | UpdateCheckRequest;

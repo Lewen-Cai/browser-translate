@@ -9,6 +9,7 @@ import { cn } from '~/lib/cn';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
 import { useApplyLocale } from '~/ui/useApplyLocale';
+import { UpdateCheck } from './UpdateCheck';
 
 type Tab = 'general' | 'translation' | 'video' | 'data';
 
@@ -45,6 +46,10 @@ export function App() {
             <h1 class="text-3xl font-semibold mt-1">{t('settings')}</h1>
             <p class="text-xs text-ap-muted mt-2 font-mono">{t('privacyTagline')}</p>
           </div>
+          {/* Opposite the title, where a version number belongs — and where a
+              control that changes nothing about the extension can sit without
+              being mistaken for a setting. */}
+          <UpdateCheck />
         </div>
       </div>
 

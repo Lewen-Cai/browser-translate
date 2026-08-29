@@ -82,6 +82,25 @@ export interface GlobalSettings {
   uiLanguage: 'auto' | 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'ko' | 'es' | 'fr' | 'de';
 }
 
+/**
+ * What the last update check found — written only when somebody presses the
+ * button, and read when the settings page opens so the answer survives closing
+ * it. Deliberately outside `AppData`: this is something we observed, not
+ * something the user set, and `app:data` is watched by every content script, so
+ * writing a check result there would rebuild the selection watchers on every
+ * tab and close any card that happened to be open.
+ */
+export interface UpdateState {
+  /** Epoch ms of the last completed check, 0 if there has never been one. */
+  lastCheckedAt: number;
+  /** The newest tag seen, or null if no check has succeeded. */
+  latestTag: string | null;
+  /** Where that release is published. */
+  releaseUrl: string | null;
+  /** The package attached to it, if there was one. */
+  downloadUrl: string | null;
+}
+
 export interface CacheMeta {
   key: string;
   storageKey: string;

@@ -17,6 +17,8 @@ import { parseBatchArray } from '~/core/batch/parse';
 import { runBatch } from '~/core/batch/runBatch';
 import { languageName } from '~/core/language/targets';
 import { t as i18nT, resolveLocale } from '~/i18n';
+import { fetchLatestRelease } from '~/core/update/github';
+import { isUpdateAvailable } from '~/core/update/version';
 import type { Request, TranslateRequest, TranslateBatchRequest } from '~/messaging/types';
 
 /** Parallel requests the free engines get per batch — they are far cheaper and
@@ -45,6 +47,11 @@ export default defineBackground(() => {
     }
     if (msg.type === 'ping') {
       void handlePing(msg.requestId, msg.provider, client);
+      sendResponse({ ok: true });
+      return false;
+    }
+    if (msg.type === 'update:check') {
+      void handleUpdateCheck(msg.requestId, client);
       sendResponse({ ok: true });
       return false;
     }
@@ -456,4 +463,46 @@ async function withRetry<T>(fn: () => Promise<T>, max = 2): Promise<T> {
     }
   }
   throw lastErr;
+}
+
+/**
+ * Ask GitHub what the newest release is, and remember the answer.
+ *
+ * Only ever because somebody pressed the button. Chrome cannot update this
+ * extension for us — self-hosting installs only under enterprise policy on
+ * Windows and macOS, and an unpacked extension is never updated at all — so
+ * saying that a release exists is the whole of what can be done here, and doing
+ * that unasked would be an outbound request buying nothing the reader could not
+ * have had by asking.
+ */
+async function handleUpdateCheck(requestId: string, client: StorageClient): Promise<void> {
+  // The asker may have closed the page while we were waiting on the network,
+  // and a reply with nobody left to hear it is not an error worth raising.
+  const send = (payload: object) => {
+    chrome.runtime.sendMessage(payload).catch(() => {});
+  };
+  try {
+    const release = await fetchLatestRelease();
+    const available = isUpdateAvailable(release.tag, chrome.runtime.getManifest().version);
+    await client.saveUpdateState({
+      lastCheckedAt: Date.now(),
+      latestTag: release.tag,
+      releaseUrl: release.url,
+      downloadUrl: release.downloadUrl,
+    });
+    send({
+      type: 'update:result',
+      requestId,
+      latestTag: release.tag,
+      updateAvailable: available,
+      releaseUrl: release.url,
+      downloadUrl: release.downloadUrl,
+    });
+  } catch (e) {
+    send({
+      type: 'update:error',
+      requestId,
+      message: e instanceof Error ? e.message : String(e),
+    });
+  }
 }

@@ -1,9 +1,10 @@
 import { createDefaultAppData } from './defaults';
 import { migrateAppData } from './migrations';
-import type { AppData, CacheEntry, CacheMeta, GlobalSettings } from './schema';
+import type { AppData, CacheEntry, CacheMeta, GlobalSettings, UpdateState } from './schema';
 
 const KEY_APP = 'app:data';
 const KEY_CACHE_INDEX = 'cache:index';
+const KEY_UPDATE = 'update:state';
 const CACHE_PREFIX = 'cache:';
 
 export class StorageClient {
@@ -36,6 +37,27 @@ export class StorageClient {
   async patchSettings(patch: Partial<GlobalSettings>): Promise<void> {
     const data = await this.loadAppData();
     await this.saveAppData({ ...data, settings: { ...data.settings, ...patch } });
+  }
+
+  /**
+   * What the last update check found. Its own key, alongside the cache rather
+   * than inside `app:data`: content scripts watch that one and rebuild
+   * themselves when it changes, and a background check has no business closing
+   * somebody's open card.
+   */
+  async loadUpdateState(): Promise<UpdateState> {
+    const result = await this.local.get(KEY_UPDATE);
+    const stored = result[KEY_UPDATE] as Partial<UpdateState> | undefined;
+    return {
+      lastCheckedAt: typeof stored?.lastCheckedAt === 'number' ? stored.lastCheckedAt : 0,
+      latestTag: typeof stored?.latestTag === 'string' ? stored.latestTag : null,
+      releaseUrl: typeof stored?.releaseUrl === 'string' ? stored.releaseUrl : null,
+      downloadUrl: typeof stored?.downloadUrl === 'string' ? stored.downloadUrl : null,
+    };
+  }
+
+  async saveUpdateState(state: UpdateState): Promise<void> {
+    await this.local.set({ [KEY_UPDATE]: state });
   }
 
   async loadCacheIndex(): Promise<CacheMeta[]> {
