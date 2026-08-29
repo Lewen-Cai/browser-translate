@@ -1,4 +1,5 @@
-import type { ThinkingLevel, ThinkingSetting } from '~/storage/schema';
+import type { ThinkingSetting } from '~/storage/schema';
+import { dialectPatch, type ThinkingDialect } from './thinking';
 
 /**
  * Every provider that can produce a translation, in one list.
@@ -77,6 +78,11 @@ export interface ProviderDef {
    * the prompt away from everyone who never touches this provider.
    */
   hostPermission?: string;
+  /**
+   * Which request-body fields turn this provider's reasoning up or off.
+   * Absent means we know of none, and nothing is sent.
+   */
+  thinkingDialect?: ThinkingDialect;
 }
 
 const LLM_CAPABILITIES = ['translate', 'dictionary'] as const;
@@ -121,6 +127,7 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
     endpoints: one('https://api.anthropic.com/v1'),
     needsKey: true,
     requiredHeaders: { 'anthropic-dangerous-direct-browser-access': 'true' },
+    thinkingDialect: 'thinking-budget',
   },
   gemini: {
     id: 'gemini',
@@ -129,6 +136,7 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
     capabilities: LLM_CAPABILITIES,
     endpoints: one('https://generativelanguage.googleapis.com/v1beta/openai'),
     needsKey: true,
+    thinkingDialect: 'effort-capped',
   },
   deepseek: {
     id: 'deepseek',
@@ -137,6 +145,7 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
     capabilities: LLM_CAPABILITIES,
     endpoints: one('https://api.deepseek.com/v1'),
     needsKey: true,
+    thinkingDialect: 'thinking-effort',
   },
   moonshot: {
     id: 'moonshot',
@@ -159,6 +168,7 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
       { label: 'International', baseUrl: 'https://api.z.ai/api/paas/v4' },
     ],
     needsKey: true,
+    thinkingDialect: 'thinking-enabled-effort',
   },
   dashscope: {
     id: 'dashscope',
@@ -170,6 +180,7 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
       { label: 'International', baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1' },
     ],
     needsKey: true,
+    thinkingDialect: 'enable-thinking',
   },
   siliconflow: {
     id: 'siliconflow',
@@ -181,6 +192,7 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
       { label: 'International', baseUrl: 'https://api.siliconflow.com/v1' },
     ],
     needsKey: true,
+    thinkingDialect: 'enable-thinking',
   },
   openrouter: {
     id: 'openrouter',
@@ -189,6 +201,7 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
     capabilities: LLM_CAPABILITIES,
     endpoints: one('https://openrouter.ai/api/v1'),
     needsKey: true,
+    thinkingDialect: 'reasoning-object',
   },
   mistral: {
     id: 'mistral',
@@ -219,6 +232,7 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
     // sends no CORS headers, so a browser request is refused before it can be
     // read. A host permission is the only way through.
     hostPermission: 'https://opencode.ai/*',
+    thinkingDialect: 'effort',
   },
   local: {
     id: 'local',
@@ -259,73 +273,19 @@ export function inferProvider(baseUrl: string): ProviderId {
   return 'custom';
 }
 
-/** Token budgets for the tiered levels on budget-based providers. */
-const THINKING_BUDGETS: Record<ThinkingLevel, number> = {
-  low: 2048,
-  medium: 4096,
-  high: 8192,
-  xhigh: 16384,
-  max: 32768,
-};
-
-/** Providers whose effort scale tops out at 'high'. */
-function cappedEffort(setting: ThinkingLevel): 'low' | 'medium' | 'high' {
-  return setting === 'low' || setting === 'medium' ? setting : 'high';
-}
-
 /**
  * Top-level request-body fields that control thinking for `id` at the given
- * setting, or null when the provider has no safe parameter — nothing is sent
- * then, because an unknown field can 400 on a strict API.
+ * setting, or null when the provider has no safe parameter.
  *
- * Verified against provider docs 2026-08:
- * - DeepSeek / Zhipu: thinking.type to disable; reasoning_effort for tiers.
- * - DashScope / SiliconFlow: enable_thinking boolean + thinking_budget tokens.
- * - OpenRouter: unified reasoning object; effort tops out at high.
- * - Anthropic: its compatibility layer *ignores* reasoning_effort, so effort
- *   has to go through the native thinking object it passes through instead.
- * - Gemini: top-level reasoning_effort, which uniquely accepts 'none' to turn
- *   reasoning off. Its own docs note 2.5 Pro and 3 cannot be turned off at all,
- *   in which case the value is simply not honoured — it is not an error.
- * - opencode is a gateway in front of many vendors' models and normalises none
- *   of this, so nothing is sent.
+ * The mapping itself lives in `./thinking`, keyed by wire format rather than by
+ * vendor: which fields an endpoint reads is a property of the software
+ * answering, and a provider is only a well-known default for it.
  */
 export function thinkingPatch(
   id: ProviderId,
   setting: ThinkingSetting,
 ): Record<string, unknown> | null {
-  switch (id) {
-    case 'deepseek':
-      return setting === 'off' ? { thinking: { type: 'disabled' } } : { reasoning_effort: setting };
-    case 'zhipu':
-      return setting === 'off'
-        ? { thinking: { type: 'disabled' } }
-        : { thinking: { type: 'enabled' }, reasoning_effort: setting };
-    case 'dashscope':
-    case 'siliconflow':
-      return setting === 'off'
-        ? { enable_thinking: false }
-        : { enable_thinking: true, thinking_budget: THINKING_BUDGETS[setting] };
-    case 'openrouter':
-      return setting === 'off'
-        ? { reasoning: { enabled: false } }
-        : { reasoning: { effort: cappedEffort(setting) } };
-    case 'anthropic':
-      return setting === 'off'
-        ? { thinking: { type: 'disabled' } }
-        : { thinking: { type: 'enabled', budget_tokens: THINKING_BUDGETS[setting] } };
-    case 'gemini':
-      return { reasoning_effort: setting === 'off' ? 'none' : cappedEffort(setting) };
-    case 'opencode':
-      // Read off opencode's own client rather than guessed: its chat-completions
-      // protocol puts `reasoning_effort` at the top level, and its effort scale
-      // is none/minimal/low/medium/high/xhigh/max — of which the chat-completions
-      // variant rejects 'max' outright, so ours caps there. 'none' is how that
-      // scale spells off, which is why this is not simply left unsent.
-      return { reasoning_effort: setting === 'off' ? 'none' : setting === 'max' ? 'xhigh' : setting };
-    default:
-      return null; // openai, moonshot, mistral, local, custom
-  }
+  return dialectPatch(PROVIDERS[id].thinkingDialect ?? 'none', setting);
 }
 
 /** True when the provider has known thinking controls (drives the UI control). */
