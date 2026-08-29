@@ -2,6 +2,53 @@
 
 All notable changes will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.1] — 2026-08-30
+
+### Added
+- **Check for a new version, from the settings header.** Opposite the title:
+  the installed version, and a button that asks GitHub whether a newer release
+  exists. Only when you press it — nothing runs on its own, and nothing about
+  you is sent. If there is one, it offers the build itself: one click
+  downloads the `.zip`, and a note says what to do with it, because Chrome
+  cannot install an extension it did not install in the first place.
+- **DashScope now offers every region it publishes, and its subscription.**
+  Beijing, Singapore, Hong Kong and US (Virginia) are listed separately, and so
+  is Token Plan — a subscription on hosts of its own, whose `sk-sp-` keys the
+  metered endpoints refuse and which refuses metered keys in turn. Frankfurt and
+  Tokyo are reachable only at a per-workspace address, so this provider also
+  lets you type one in. Each endpoint is a separate account with its own key and
+  model list, and the form now says so.
+- **A custom or local endpoint can say which reasoning parameter it reads.**
+  Thinking control was previously only available for the vendors we had the
+  mapping for; for a custom endpoint or a local runtime, what the server
+  accepts is decided by software you chose, so you can now name it —
+  `enable_thinking`, `reasoning_effort`, `thinking.type` and the rest — or
+  leave it sending nothing, which is still the default.
+
+### Changed
+- **The selection card is one fixed size.** Its height used to come from
+  whatever was in it, capped by however much window was left below the
+  selection — so the same word came out four times taller at the top of a page
+  than at the bottom, and every streamed answer grew the box line by line.
+  Now the frame never moves: the original and the translation each scroll in
+  their own half of it, and the card goes above the selection when it will not
+  fit below. The original is capped at three tenths of the space the two panes
+  share — it is there to check the translation against, not to be read instead
+  of it. A card still waiting for its first words is the one exception to all
+  of this: it shows only that it is waiting, at the size of saying so, and the
+  frame arrives with the first words. Copy moved up beside translate-again,
+  which leaves both panes the same width and their scrollbars lined up.
+- **How big the card is, is now yours to set** (General → Appearance). Six
+  widths and six heights. Fixing the size is what keeps an arriving answer from
+  moving anything, but how much room that answer deserves depends on the screen
+  it is read on.
+
+### Fixed
+- **Copying from the card no longer pastes a black background.** Chrome writes
+  an HTML flavour alongside the plain text on a copy, and it carried the card's
+  own background into whatever you pasted into. A copy that starts inside the
+  card now yields the words alone.
+
 ## [0.2.0] — 2026-08-14
 
 ### Added
