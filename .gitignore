@@ -1,20 +1,14 @@
 # Dependencies
 node_modules/
-.pnp
-.pnp.js
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
 
-# Build output
+# Build output (WXT)
 .output/
 .wxt/
-dist/
-build/
 *.zip
 *.crx
 *.xpi
+dist/
+build/
 
 # Environment / secrets
 .env
@@ -24,12 +18,20 @@ build/
 # Logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
 
+# Test / coverage
+coverage/
+
+# Caches
+.cache/
+.eslintcache
+
 # Editor / OS
-.vscode/
+# `.vscode/` excluded as a whole would make the negation below dead code —
+# Git cannot re-include a file whose parent directory is excluded, so exclude
+# the contents instead and un-ignore the shared extensions list.
+.vscode/*
 !.vscode/extensions.json
 .idea/
 .DS_Store
@@ -37,19 +39,9 @@ Thumbs.db
 *.swp
 *~
 
-# Test / coverage
-coverage/
-.nyc_output/
+# Browser-automation artifacts
+.playwright-mcp/
 
-# Cache
-.cache/
-.eslintcache
-.parcel-cache/
-
-# Superpowers brainstorming artifacts & all docs (local only)
-.superpowers/
-.claude/
+# Local-only docs and agent context
 docs/
-
-# Claude Code context — local guidance, not for public repo
 CLAUDE.md
