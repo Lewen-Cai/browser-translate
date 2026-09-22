@@ -6,8 +6,10 @@ import { createDefaultProviders, defaultProviderConfig } from './defaults';
 import { PROVIDER_IDS, isProviderId, type ProviderId } from '~/core/providers/registry';
 import { isProviderReady } from '~/core/providers/resolve';
 import { DEFAULT_PROVIDER, normalizeEngineRouting } from '~/core/engines/routing';
-import { DEFAULT_TARGET_LANGUAGE, isTargetLanguage } from '~/core/language/targets';
+import { normalizeTargetLanguage } from '~/core/language/targets';
 import { normalizeSubtitlePosition, normalizeSubtitleStyle } from '~/core/subtitles/style';
+import { normalizePromptSettings } from '~/core/prompt/templates';
+import { isLocale } from '~/i18n/localeInfo';
 
 /**
  * Integrity repairs applied to AppData on every load.
@@ -190,16 +192,18 @@ function fillSettingsDefaults(data: AppData): AppData {
   // named a provider for everything keeps it.
   const seed: ProviderId = isProviderId(s.engines) ? s.engines : DEFAULT_PROVIDER;
   const engines = normalizeEngineRouting(s.engines, seed);
+  const prompts = normalizePromptSettings(s.prompts);
+  const uiLanguage = s.uiLanguage === 'auto' || isLocale(s.uiLanguage) ? s.uiLanguage : 'auto';
   const cardSize = normalizeCardSize(s.cardSize);
   const subtitlePosition = normalizeSubtitlePosition(s.subtitlePosition);
   const subtitleStyle = normalizeSubtitleStyle(s.subtitleStyle);
   // A target language we no longer offer would be sent to the providers verbatim
   // and answered with something arbitrary, so it falls back rather than passes
-  // through. Every language the picker has ever offered is still on the list.
-  const targetLanguage = isTargetLanguage(s.targetLanguage)
-    ? s.targetLanguage
-    : DEFAULT_TARGET_LANGUAGE;
+  // through. Legacy generic English migrates to US English.
+  const targetLanguage = normalizeTargetLanguage(s.targetLanguage);
   const unchanged =
+    prompts === s.prompts &&
+    uiLanguage === s.uiLanguage &&
     cardSize === s.cardSize &&
     fullPageHotkey === s.fullPageHotkey &&
     engines === s.engines &&
@@ -219,6 +223,8 @@ function fillSettingsDefaults(data: AppData): AppData {
       engines,
       fullPageHotkey,
       targetLanguage,
+      prompts,
+      uiLanguage,
       subtitlePosition,
       subtitleStyle,
       cardSize,

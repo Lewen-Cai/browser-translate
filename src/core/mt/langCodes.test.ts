@@ -19,6 +19,19 @@ describe('toEngineLang', () => {
     }
   });
 
+  it('silently falls back to English where a service cannot provide a regional variety', () => {
+    expect(toEngineLang('microsoft', 'en-GB')).toBe('en-GB');
+    for (const code of ['en-AU', 'en-US']) expect(toEngineLang('microsoft', code)).toBe('en');
+    for (const code of ['en-AU', 'en-GB', 'en-US']) expect(toEngineLang('google', code)).toBe('en');
+  });
+
+  it('maps Filipino and Serbian without losing the requested script', () => {
+    expect(toEngineLang('microsoft', 'fil')).toBe('fil');
+    expect(toEngineLang('google', 'fil')).toBe('tl');
+    expect(toEngineLang('microsoft', 'sr-Cyrl')).toBe('sr-Cyrl');
+    expect(toEngineLang('google', 'sr-Cyrl')).toBe('sr');
+  });
+
   it('falls back to the primary subtag for unlisted regional codes', () => {
     expect(toEngineLang('microsoft', 'pt-BR')).toBe('pt');
     expect(toEngineLang('google', 'pt-BR')).toBe('pt');

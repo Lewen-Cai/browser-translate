@@ -14,7 +14,7 @@ import type { TranslateBatchRequest } from '~/messaging/types';
 
 export interface VideoSubsStrings extends SubtitleUiStrings {
   titleOff: string; titleOn: string; noCaptions: string;
-  enableCc: string; noTranslationNeeded: string; live: string; failed: string;
+  enableCc: string; live: string; failed: string;
 }
 
 export interface VideoSubTranslatorDeps {
@@ -119,11 +119,6 @@ export function createVideoSubTranslator(deps: VideoSubTranslatorDeps): VideoSub
     // `unknown` goes ahead and asks. Some sites can only answer by fetching the
     // transcript, and doing that before the reader has asked for a translation
     // would be a request we have no business making on every page.
-    const target = deps.getTargetLang();
-    if (probe.kind === 'ready' && probe.languageCode && target.startsWith(probe.languageCode)) {
-      deps.notify(deps.strings.noTranslationNeeded); disable(); return;
-    }
-
     let fetched: Cue[];
     try {
       fetched = await site.fetchTranscript();

@@ -7,8 +7,6 @@ import { TranslationCard } from './content/TranslationCard';
 import { createPageTranslator, type PageTranslator } from './content/pageTranslate';
 import { StorageClient } from '~/storage/client';
 import { resolveEffectiveTheme } from '~/ui/themeResolver';
-import { isLikelyPassage } from '~/core/selection/isLikelyPassage';
-import { isSameLanguageAsTarget } from '~/core/language/sameLanguage';
 import { createDefaultProviders } from '~/storage/defaults';
 import { resolveLocale, t } from '~/i18n';
 import type { Locale } from '~/i18n/strings';
@@ -81,7 +79,6 @@ export default defineContentScript({
     const showCard = (info: SelectionInfo) => {
       // The icon has done its job the moment the card opens.
       iconNode = null;
-      const skip = isLikelyPassage(info.text) && isSameLanguageAsTarget(info.text, targetLanguage);
       // While pinned the card must not jump back to the new selection.
       const rect = cardPinned && pinnedRect ? pinnedRect : info.rect;
       if (!cardPinned) pinnedRect = info.rect;
@@ -95,7 +92,6 @@ export default defineContentScript({
         defaultProvider: selectionProvider,
         defaultTargetLang: targetLanguage,
         size: cardSize,
-        notice: skip ? t('noTranslationNeeded', locale) : undefined,
         onPinChange: (next: boolean) => {
           cardPinned = next;
           if (next) pinnedRect = rect;

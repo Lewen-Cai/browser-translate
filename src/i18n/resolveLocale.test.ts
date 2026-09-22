@@ -27,8 +27,16 @@ describe('resolveLocale', () => {
     expect(resolveLocale('auto', 'de-AT')).toBe('de');
   });
 
+  it.each([
+    ['pt-BR', 'pt-BR'], ['pt-PT', 'pt-BR'], ['it-IT', 'it'], ['ru-RU', 'ru'],
+    ['tr-TR', 'tr'], ['vi-VN', 'vi'], ['id-ID', 'id'],
+  ])('resolves new browser locale %s to %s', (browser, expected) => {
+    expect(resolveLocale('auto', browser)).toBe(expected);
+    expect(resolveLocale(expected, 'en-US')).toBe(expected);
+  });
+
   it('falls back to en for unknown or missing browser lang', () => {
-    expect(resolveLocale('auto', 'pt-BR')).toBe('en');
+    expect(resolveLocale('auto', 'xx-XX')).toBe('en');
     expect(resolveLocale('auto', '')).toBe('en');
     expect(resolveLocale('auto', 'en-GB')).toBe('en');
   });

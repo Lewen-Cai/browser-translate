@@ -2,12 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Check, Search } from '~/ui/icons';
 import { ProviderIcon } from '~/ui/ProviderIcon';
 import type { ProviderId } from '~/core/providers/registry';
+import { foldSearch } from '~/core/language/search';
 
 export interface CardMenuItem {
   value: string;
   label: string;
   /** Second line — a model name, a language's English name. */
   hint?: string;
+  /** Optional localized names and regional aliases, pre-folded for search. */
+  searchText?: string;
   /** Draw this vendor's mark beside the label. */
   iconId?: ProviderId;
   /** Heading the item sits under. Consecutive items sharing one share a heading. */
@@ -85,14 +88,11 @@ export function CardMenu({
   }, [onClose]);
 
   const shown = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter(
-      (i) =>
-        i.label.toLowerCase().includes(q) ||
-        i.hint?.toLowerCase().includes(q) ||
-        i.value.toLowerCase().includes(q),
-    );
+    const parts = foldSearch(query).trim().split(/\s+/).filter(Boolean);
+    return items.filter((i) => {
+      const text = i.searchText ?? foldSearch(`${i.label} ${i.hint ?? ''} ${i.value}`);
+      return parts.every((part) => text.includes(part));
+    });
   }, [items, query]);
 
   // The card positions itself the same two ways, so the menu reads the same
@@ -151,6 +151,7 @@ export function CardMenu({
               type="text"
               value={query}
               placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
               onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
             />
           </div>
@@ -172,8 +173,8 @@ export function CardMenu({
               >
                 {item.iconId && <ProviderIcon id={item.iconId} size={17} />}
                 <span class="bt-menu-item-text">
-                  <span class="bt-menu-item-label">{item.label}</span>
-                  {item.hint && <span class="bt-menu-item-hint">{item.hint}</span>}
+                  <span class="bt-menu-item-label"><bdi>{item.label}</bdi></span>
+                  {item.hint && <span class="bt-menu-item-hint"><bdi>{item.hint}</bdi></span>}
                 </span>
                 {item.value === value && <Check size={14} class="bt-menu-check" />}
               </button>,

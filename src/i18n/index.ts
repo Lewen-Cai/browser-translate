@@ -8,9 +8,13 @@ function currentBrowserLang(): string {
   return typeof navigator !== 'undefined' ? navigator.language : 'en';
 }
 
-export function useT(): (key: StringKey) => string {
+export function useLocale(): Locale {
   const uiLang = useAppStore((s) => s.data.settings.uiLanguage);
-  const locale = resolveLocale(uiLang, currentBrowserLang());
+  return resolveLocale(uiLang, currentBrowserLang());
+}
+
+export function useT(): (key: StringKey) => string {
+  const locale = useLocale();
   return (key: StringKey) => MESSAGES[locale][key];
 }
 

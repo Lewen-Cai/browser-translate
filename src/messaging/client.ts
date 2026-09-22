@@ -42,9 +42,11 @@ export async function* streamTranslate(req: TranslateRequest): AsyncIterable<Tra
   let ended = false;
 
   const listener = (msg: unknown) => {
+    if (!msg || typeof msg !== 'object') return;
     const m = msg as TranslateResponse;
-    if (m.requestId !== req.requestId) return;
-    if (m.type === 'translate:chunk') {
+    if (m.requestId !== req.requestId || ended) return;
+    if (!['translate:chunk', 'translate:reset', 'translate:done', 'translate:error'].includes(m.type)) return;
+    if (m.type === 'translate:chunk' || m.type === 'translate:reset') {
       if (resolveNext) { resolveNext(m); resolveNext = null; }
       else queue.push(m);
     } else {
@@ -68,7 +70,7 @@ export async function* streamTranslate(req: TranslateRequest): AsyncIterable<Tra
       }
       if (!next) break;
       yield next;
-      if (next.type !== 'translate:chunk') break;
+      if (next.type === 'translate:done' || next.type === 'translate:error') break;
     }
   } finally {
     chrome.runtime.onMessage.removeListener(listener);

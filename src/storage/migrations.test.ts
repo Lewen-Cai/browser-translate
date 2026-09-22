@@ -265,6 +265,14 @@ describe('settings integrity repair', () => {
     expect(migrateAppData(data).settings.targetLanguage).toBe('zh-CN');
   });
 
+  it('migrates generic English to US without changing explicit regions', () => {
+    for (const [old, expected] of [['en', 'en-US'], ['en-AU', 'en-AU'], ['en-GB', 'en-GB']]) {
+      const data = createDefaultAppData();
+      data.settings.targetLanguage = old!;
+      expect(migrateAppData(data).settings.targetLanguage).toBe(expected);
+    }
+  });
+
   it('keeps a target language that is still on the list', () => {
     const data = createDefaultAppData();
     data.settings.targetLanguage = 'pt-PT';

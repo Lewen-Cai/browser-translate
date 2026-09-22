@@ -71,6 +71,16 @@ describe('identifyLanguage — Latin script', () => {
   });
 });
 
+describe('mixed-script display labels', () => {
+  it('does not turn substantial mixed prose into English by letter count', () => {
+    expect(identifyLanguage('我在花园日志里记录 soil moisture 和 rainfall，然后调整浇水次数。')).toBe('mixed');
+  });
+  it('keeps small acronyms and native Japanese script combinations out of the mixed bucket', () => {
+    expect(identifyLanguage('这是关于 API 的中文说明文字。')).toBe('zh-CN');
+    expect(identifyLanguage('日本語の文章を読んでいます。')).toBe('ja');
+  });
+});
+
 describe('sourceLanguageEndonym', () => {
   it('names every language the identifier can return', () => {
     const seen = new Set<string>();
@@ -91,6 +101,11 @@ describe('sourceLanguageEndonym', () => {
       // coming back means the identifier can name something nothing can label.
       expect(name).not.toBe(code);
     }
+  });
+
+  it('still names English as a source without claiming to detect a region', () => {
+    expect(sourceLanguageEndonym('en')).toBe('English');
+    expect(TARGET_LANGUAGES.some((l) => l.code === 'en')).toBe(false);
   });
 
   it('names Portuguese without picking a country for it', () => {

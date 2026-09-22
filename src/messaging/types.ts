@@ -1,5 +1,6 @@
 import type { TranslationSurface } from '~/storage/schema';
 import type { ProviderId } from '~/core/providers/registry';
+import type { ResultFormat } from '~/core/selection/response';
 
 export interface TranslateRequest {
   type: 'translate';
@@ -23,7 +24,8 @@ export interface TranslateRequest {
 
 export type TranslateResponse =
   | { type: 'translate:chunk'; requestId: string; delta: string }
-  | { type: 'translate:done'; requestId: string; full: string; cached: boolean }
+  | { type: 'translate:reset'; requestId: string }
+  | { type: 'translate:done'; requestId: string; full: string; cached: boolean; format: ResultFormat }
   | { type: 'translate:error'; requestId: string; message: string; kind: string };
 
 export interface AbortRequest {

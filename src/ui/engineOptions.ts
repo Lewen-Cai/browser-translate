@@ -23,7 +23,7 @@ export interface EngineOptionLabels {
 export function engineOptions(
   providers: ProvidersConfig,
   labels: EngineOptionLabels,
-  opts: { capability?: Capability; keep?: ProviderId } = {},
+  opts: { capability?: Capability; keep?: ProviderId; compact?: boolean } = {},
 ): ProviderOption[] {
   const capability = opts.capability ?? 'translate';
   return PROVIDER_IDS.filter((id) => {
@@ -31,7 +31,7 @@ export function engineOptions(
     return providers[id]?.enabled || id === opts.keep;
   }).map((id) => ({
     value: id,
-    label: PROVIDERS[id].label,
+    label: opts.compact ? PROVIDERS[id].shortLabel ?? PROVIDERS[id].label : PROVIDERS[id].label,
     iconId: id,
     group: PROVIDERS[id].kind === 'service' ? labels.services : labels.models,
   }));

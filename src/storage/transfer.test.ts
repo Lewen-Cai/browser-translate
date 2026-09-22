@@ -72,7 +72,7 @@ describe('importAppData', () => {
   it('round-trips providers, routing and settings', () => {
     const exported = exportAppData(sample(), { includeKeys: true }, 123);
     const imported = importAppData(JSON.parse(JSON.stringify(exported)));
-    expect(imported.settings.targetLanguage).toBe('en');
+    expect(imported.settings.targetLanguage).toBe('en-US');
     expect(imported.settings.engines).toEqual({
       selection: 'anthropic',
       fullPage: 'google',

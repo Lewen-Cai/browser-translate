@@ -3,12 +3,10 @@ import { languageEndonym } from './targets';
 /**
  * What language a selection is in, named well enough to show a reader.
  *
- * This is a different question from `detect.ts`, which answers "is this already
- * the target language, so should we skip it" and is deliberately coarse and
- * conservative — a wrong yes there means refusing to translate. Here a wrong
- * answer only mislabels a line the reader can see for themselves, so it can
- * afford to guess, and it is worth guessing at the two dozen languages the
- * target list can name rather than at four scripts.
+ * Display only: a guess must never decide whether a requested translation runs.
+ * Mixed-language selections and regional rewrites still go to the provider even
+ * when the label matches the target. This lightweight heuristic does not claim
+ * to distinguish every target language or every English variety.
  *
  * Nothing here asks a service. The pair has to be on the card before the
  * translation comes back, it has to work for a model that never reports a
@@ -104,6 +102,8 @@ const LATIN: readonly LatinProfile[] = [
 
 /** Languages named only as a source — the target list splits these by region. */
 const SOURCE_ONLY_ENDONYMS: Readonly<Record<string, string>> = {
+  mixed: 'Mixed languages',
+  en: 'English',
   pt: 'Português',
 };
 
@@ -145,6 +145,14 @@ export function identifyLanguage(text: string): string | null {
   }
 
   if (counts.size === 0) return null;
+
+  // Substantial Latin text alongside another script is better labelled mixed
+  // than confidently called English just because identifiers have more letters.
+  // Do not label Japanese's native Han+kana mixture as multiple languages.
+  const latin = counts.get('latin') ?? 0;
+  const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
+  const other = total - latin;
+  if (latin >= 12 && other >= 6 && Math.min(latin, other) / total >= 0.15) return 'mixed';
 
   // Kana settles Japanese outright: Japanese borrows Han characters, so a text
   // with both is Japanese, while one with Han alone is not.

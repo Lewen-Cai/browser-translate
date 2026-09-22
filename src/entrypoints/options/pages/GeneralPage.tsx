@@ -2,134 +2,43 @@ import { useAppStore } from '~/storage/store';
 import { HotkeyInput } from '~/ui/components/HotkeyInput';
 import { Select } from '~/ui/components/Select';
 import { SectionHeader } from '~/ui/components/SectionHeader';
-import { EngineRoutingPicker } from '~/ui/components/EngineRoutingPicker';
 import { CARD_HEIGHT_CHOICES, CARD_WIDTH_CHOICES, normalizeCardSize } from '~/core/card/size';
 import { useT } from '~/i18n';
 import type { GlobalSettings } from '~/storage/schema';
+import { UI_LANGUAGE_OPTIONS } from '~/i18n/localeInfo';
 
-const UI_LANGUAGES: { value: Exclude<GlobalSettings['uiLanguage'], 'auto'>; label: string }[] = [
-  { value: 'zh-CN', label: '简体中文' },
-  { value: 'zh-TW', label: '繁體中文' },
-  { value: 'en', label: 'English' },
-  { value: 'ja', label: '日本語' },
-  { value: 'ko', label: '한국어' },
-  { value: 'es', label: 'Español' },
-  { value: 'fr', label: 'Français' },
-  { value: 'de', label: 'Deutsch' },
-];
-
-/** How translation is reached, and how the extension itself looks. */
 export function GeneralPage() {
   const settings = useAppStore((s) => s.data.settings);
-  const providers = useAppStore((s) => s.data.providers);
   const update = useAppStore((s) => s.updateSettings);
   const t = useT();
-
   return (
-    <div class="max-w-lg space-y-8">
-      {/* Which provider does what is a policy about behaviour, not part of
-          configuring a provider — the Translation page holds the credentials,
-          this decides where they get used. */}
-      <div>
-        <SectionHeader number="01" label={t('sectionRouting').toUpperCase()} />
-        <EngineRoutingPicker
-          engines={settings.engines}
-          providers={providers}
-          onChange={(next) => update({ engines: next })}
-        />
-      </div>
-
-      <div>
-        <SectionHeader number="02" label={t('sectionTrigger').toUpperCase()} />
-        <div class="space-y-4">
-          <Select label={t('triggerMode')}
-            value={settings.triggerMode}
-            options={[
-              { value: 'icon', label: t('iconAfterSelection') },
-              { value: 'hotkey', label: t('hotkeyOnly') },
-            ]}
-            onChange={(e) =>
-              update({ triggerMode: (e.target as HTMLSelectElement).value as 'icon' | 'hotkey' })}
-          />
-          <div class="space-y-4">
-            <span class="block text-xs font-mono uppercase tracking-wider text-ap-muted">
-              {t('keyboardShortcuts')}
-            </span>
-            <HotkeyInput
-              label={t('hotkey')}
-              value={settings.hotkey}
-              disabled={settings.triggerMode !== 'hotkey'}
-              recordingLabel={t('pressShortcut')}
-              onChange={(combo) => update({ hotkey: combo })}
-            />
-            <HotkeyInput
-              label={t('fullPageHotkey')}
-              value={settings.fullPageHotkey}
-              disabled={settings.triggerMode !== 'hotkey'}
-              hint={t('hotkeyHint')}
-              recordingLabel={t('pressShortcut')}
-              onChange={(combo) => update({ fullPageHotkey: combo })}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <SectionHeader number="03" label={t('sectionAppearance').toUpperCase()} />
-        <div class="space-y-4">
-          <Select label={t('themeMode')}
-            value={settings.theme}
-            options={[
-              { value: 'auto', label: t('themeAuto') },
-              { value: 'light', label: t('themeLight') },
-              { value: 'dark', label: t('themeDark') },
-            ]}
-            onChange={(e) =>
-              update({ theme: (e.target as HTMLSelectElement).value as 'auto' | 'light' | 'dark' })}
-          />
-          {/* The card is a fixed size so an arriving answer never moves
-              anything; how much room that answer gets is a judgement about the
-              screen it is read on, which is not ours to make. */}
-          <div class="grid grid-cols-2 gap-3">
-            <Select label={t('cardWidth')}
-              value={String(settings.cardSize.width)}
-              options={CARD_WIDTH_CHOICES.map((v) => ({ value: String(v), label: `${v} px` }))}
-              onChange={(e) =>
-                update({
-                  cardSize: normalizeCardSize({
-                    ...settings.cardSize,
-                    width: Number((e.target as HTMLSelectElement).value),
-                  }),
-                })}
-            />
-            <Select label={t('cardHeight')}
-              value={String(settings.cardSize.height)}
-              options={CARD_HEIGHT_CHOICES.map((v) => ({ value: String(v), label: `${v} px` }))}
-              onChange={(e) =>
-                update({
-                  cardSize: normalizeCardSize({
-                    ...settings.cardSize,
-                    height: Number((e.target as HTMLSelectElement).value),
-                  }),
-                })}
-            />
-          </div>
-
-          <Select label={t('uiLanguage')}
-            value={settings.uiLanguage}
-            options={[
-              { value: 'auto', label: t('uiLangAuto') },
-              ...UI_LANGUAGES,
-            ]}
-            onChange={(e) =>
-              update({
-                uiLanguage: (e.target as HTMLSelectElement)
-                  .value as GlobalSettings['uiLanguage'],
-              })
-            }
-          />
-        </div>
-      </div>
+    <div class="space-y-5">
+      <section class="ap-settings-panel">
+        <SectionHeader label={t('sectionAppearance')} />
+        <Select inline label={t('uiLanguage')} value={settings.uiLanguage}
+          options={[{ value: 'auto', label: t('uiLangAuto') }, ...UI_LANGUAGE_OPTIONS]}
+          onChange={(e) => update({ uiLanguage: e.currentTarget.value as GlobalSettings['uiLanguage'] })} />
+        <Select inline label={t('themeMode')} value={settings.theme}
+          options={[{ value: 'auto', label: t('themeAuto') }, { value: 'light', label: t('themeLight') }, { value: 'dark', label: t('themeDark') }]}
+          onChange={(e) => update({ theme: e.currentTarget.value as GlobalSettings['theme'] })} />
+        <Select inline label={t('cardWidth')} value={String(settings.cardSize.width)}
+          options={CARD_WIDTH_CHOICES.map((v) => ({ value: String(v), label: `${v} px` }))}
+          onChange={(e) => update({ cardSize: normalizeCardSize({ ...settings.cardSize, width: Number(e.currentTarget.value) }) })} />
+        <Select inline label={t('cardHeight')} value={String(settings.cardSize.height)}
+          options={CARD_HEIGHT_CHOICES.map((v) => ({ value: String(v), label: `${v} px` }))}
+          onChange={(e) => update({ cardSize: normalizeCardSize({ ...settings.cardSize, height: Number(e.currentTarget.value) }) })} />
+      </section>
+      <section class="ap-settings-panel">
+        <SectionHeader label={t('sectionTrigger')} />
+        <Select inline label={t('triggerMode')} value={settings.triggerMode}
+          options={[{ value: 'icon', label: t('iconAfterSelection') }, { value: 'hotkey', label: t('hotkeyOnly') }]}
+          onChange={(e) => update({ triggerMode: e.currentTarget.value as GlobalSettings['triggerMode'] })} />
+        <HotkeyInput inline label={t('hotkey')} value={settings.hotkey} disabled={settings.triggerMode !== 'hotkey'}
+          recordingLabel={t('pressShortcut')} onChange={(hotkey) => update({ hotkey })} />
+        <HotkeyInput inline label={t('fullPageHotkey')} value={settings.fullPageHotkey} disabled={settings.triggerMode !== 'hotkey'}
+          recordingLabel={t('pressShortcut')} onChange={(fullPageHotkey) => update({ fullPageHotkey })} />
+        <p class="mt-1 text-xs leading-relaxed text-ap-muted">{t('hotkeyHint')}</p>
+      </section>
     </div>
   );
 }

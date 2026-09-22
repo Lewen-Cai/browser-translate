@@ -34,13 +34,14 @@ export function EngineRoutingPicker({ engines, providers, onChange, compact = fa
   const usesService = TRANSLATION_SURFACES.some((s) => PROVIDERS[engines[s]].kind === 'service');
 
   return (
-    <div class="space-y-2.5">
+    <div class={compact ? 'ap-route-compact space-y-3' : 'space-y-3'}>
       {TRANSLATION_SURFACES.map((surface) => (
         <ProviderSelect
           key={surface}
+          inline
           label={t(SURFACE_LABEL[surface])}
           value={engines[surface]}
-          options={engineOptions(providers, labels, { keep: engines[surface] })}
+          options={engineOptions(providers, labels, { keep: engines[surface], compact })}
           onChange={(next) => onChange({ ...engines, [surface]: next as ProviderId })}
         />
       ))}
@@ -52,9 +53,10 @@ export function EngineRoutingPicker({ engines, providers, onChange, compact = fa
       )}
 
       {usesService && (
-        <p class="rounded-md border border-ap-border bg-ap-fg/[0.03] px-2.5 py-2 text-2xs leading-relaxed text-ap-muted">
-          {t('engineFreeDisclaimer')}
-        </p>
+        <details class="pt-1 text-xs text-ap-muted">
+          <summary class="cursor-pointer hover:text-ap-fg">{t('engineServiceNote')}</summary>
+          <p class="mt-2 rounded-lg bg-ap-fg/[0.03] p-3 leading-relaxed">{t('engineFreeDisclaimer')}</p>
+        </details>
       )}
     </div>
   );

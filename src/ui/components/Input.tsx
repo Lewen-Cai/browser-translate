@@ -6,13 +6,14 @@ interface Props extends JSX.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   hint?: string;
   mono?: boolean;
+  inline?: boolean;
 }
 
-export function Input({ label, error, hint, mono, class: cls, className, ...rest }: Props) {
+export function Input({ label, error, hint, mono, inline, class: cls, className, ...rest }: Props) {
   return (
-    <label class="block">
+    <label class={inline ? 'ap-setting-row' : 'block'}>
       {label && (
-        <span class="block text-2xs font-mono uppercase tracking-wider text-ap-muted mb-1">{label}</span>
+        <span class={inline ? 'text-sm text-ap-fg' : 'mb-1.5 block text-xs font-medium text-ap-muted'}>{label}</span>
       )}
       <input
         class={cn(

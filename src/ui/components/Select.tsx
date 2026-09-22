@@ -5,14 +5,15 @@ import { cn } from '~/lib/cn';
 interface Props extends JSX.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   hint?: string;
+  inline?: boolean;
   options: readonly { value: string; label: string }[];
 }
 
-export function Select({ label, hint, options, class: cls, className, ...rest }: Props) {
+export function Select({ label, hint, inline, options, class: cls, className, ...rest }: Props) {
   return (
-    <label class="block">
+    <label class={inline ? 'ap-setting-row' : 'block'}>
       {label && (
-        <span class="block text-2xs font-mono uppercase tracking-wider text-ap-muted mb-1">{label}</span>
+        <span class={inline ? 'text-sm text-ap-fg' : 'mb-1.5 block text-xs font-medium text-ap-muted'}>{label}</span>
       )}
       <div class="relative">
         <select
@@ -33,7 +34,7 @@ export function Select({ label, hint, options, class: cls, className, ...rest }:
           class="absolute right-2 top-1/2 -translate-y-1/2 text-ap-fg pointer-events-none"
         />
       </div>
-      {hint && <span class="block text-2xs text-ap-subtle mt-1">{hint}</span>}
+      {hint && <span class="col-span-full block text-xs leading-relaxed text-ap-muted">{hint}</span>}
     </label>
   );
 }

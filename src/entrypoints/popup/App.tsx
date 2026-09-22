@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useAppStore } from '~/storage/store';
-import { Select } from '~/ui/components/Select';
 import { SectionHeader } from '~/ui/components/SectionHeader';
-import { Button } from '~/ui/components/Button';
-import { Settings } from '~/ui/icons';
+import { Switch } from '~/ui/components/Switch';
+import { Settings, Languages } from '~/ui/icons';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
 import { useApplyLocale } from '~/ui/useApplyLocale';
 import { EngineRoutingPicker } from '~/ui/components/EngineRoutingPicker';
-import { TARGET_LANGUAGE_OPTIONS } from '~/core/language/targets';
+import { LanguageSelect } from '~/ui/components/LanguageSelect';
 import type { PageStateResponse } from '~/messaging/types';
+
+type Availability = 'loading' | 'ready' | 'unsupported' | 'refresh';
 
 export function App() {
   const load = useAppStore((s) => s.load);
@@ -20,118 +21,77 @@ export function App() {
   const t = useT();
   useApplyTheme();
   useApplyLocale();
-
   const [pageOn, setPageOn] = useState(false);
+  const [availability, setAvailability] = useState<Availability>('loading');
+  const [tabId, setTabId] = useState<number>();
+  const [busy, setBusy] = useState(false);
 
+  useEffect(() => { void load(); }, [load]);
   useEffect(() => {
-    void load();
-  }, [load]);
-
-  // Query the active tab's current page-translation state to label the toggle.
-  useEffect(() => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const id = tabs[0]?.id;
-      if (id === undefined) return;
-      chrome.tabs.sendMessage(id, { type: 'page:query' }, (resp?: PageStateResponse) => {
-        if (chrome.runtime.lastError) return; // no content script on this page
-        if (resp) setPageOn(resp.translated);
-      });
-    });
+    let live = true;
+    void (async () => {
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!live) return;
+        if (tab?.id === undefined || (tab.url && !/^(https?|file):/i.test(tab.url))) {
+          setAvailability('unsupported');
+          return;
+        }
+        setTabId(tab.id);
+        const reply = await chrome.tabs.sendMessage(tab.id, { type: 'page:query' }) as PageStateResponse | undefined;
+        if (!live) return;
+        if (typeof reply?.translated !== 'boolean') { setAvailability('refresh'); return; }
+        setPageOn(reply.translated);
+        setAvailability('ready');
+      } catch {
+        if (live) setAvailability('refresh');
+      }
+    })();
+    return () => { live = false; };
   }, []);
 
-  function openOptions() {
-    chrome.runtime.openOptionsPage();
-    window.close();
+  async function togglePage() {
+    if (busy || availability !== 'ready' || tabId === undefined) return;
+    setBusy(true);
+    try {
+      const reply = await chrome.tabs.sendMessage(tabId, { type: 'page:toggle' }) as PageStateResponse | undefined;
+      if (typeof reply?.translated === 'boolean') setPageOn(reply.translated);
+      else setAvailability('refresh');
+    } catch {
+      setAvailability('refresh');
+    } finally { setBusy(false); }
   }
 
-  function togglePage() {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const id = tabs[0]?.id;
-      if (id === undefined) return;
-      chrome.tabs.sendMessage(id, { type: 'page:toggle' }, (resp?: PageStateResponse) => {
-        if (chrome.runtime.lastError) return;
-        if (resp) setPageOn(resp.translated);
-      });
-    });
-  }
-
-  if (!loaded) {
-    return <div class="p-4 text-2xs font-mono text-ap-subtle">{t('loading').toUpperCase()}</div>;
-  }
+  if (!loaded) return <div class="p-5 text-sm text-ap-muted">{t('loading')}</div>;
+  const pageHint = availability === 'loading' || busy ? t('loading')
+    : availability === 'unsupported' ? t('pageUnsupported')
+    : availability === 'refresh' ? t('pageRefresh') : undefined;
 
   return (
     <div class="bg-ap-bg text-ap-fg">
-      {/* Hero header */}
-      <header class="relative">
-        <div class="ap-grid-bg absolute inset-0 opacity-50 pointer-events-none" />
-        <div class="relative flex items-stretch">
-          <div class="w-1 bg-ap-brand" />
-          <div class="flex-1 px-4 py-3 flex items-center justify-between">
-            <div>
-              <div class="font-mono text-2xs text-ap-subtle tracking-wider">BROWSERTRANSLATE</div>
-              <div class="font-semibold text-sm">v{chrome.runtime.getManifest().version}</div>
-            </div>
-            <button
-              onClick={openOptions}
-              class="text-ap-muted hover:text-ap-fg transition-colors"
-              title={t('openFullSettings')}
-            >
-              <Settings size={14} />
-            </button>
-          </div>
-        </div>
-        <div class="border-t border-ap-border" />
+      <header class="flex items-center gap-2.5 border-b border-ap-border px-5 py-4">
+        <span class="grid h-8 w-8 place-items-center rounded-lg bg-ap-brand/10 text-ap-brand"><Languages size={18} /></span>
+        <span class="text-sm font-semibold">BrowserTranslate</span>
+        <button type="button" class="ml-auto rounded-md p-1.5 text-ap-muted hover:bg-ap-fg/5 hover:text-ap-fg"
+          aria-label={t('openFullSettings')} title={t('openFullSettings')}
+          onClick={() => { void chrome.runtime.openOptionsPage(); window.close(); }}>
+          <Settings size={17} />
+        </button>
       </header>
-
-      {/* No status strip. Naming one provider could not stand for three, and
-          Routing below already names all of them, each with its own mark. */}
-
-      {/* 01 Translation */}
-      <section class="px-4 pt-3 pb-4 border-b border-ap-border">
-        <SectionHeader number="01" label={t('sectionTranslation').toUpperCase()} />
-        <div class="space-y-2.5">
-          <Select
-            label={t('targetLanguage')}
-            value={settings.targetLanguage}
-            options={TARGET_LANGUAGE_OPTIONS}
-            onChange={(e) =>
-              updateSettings({ targetLanguage: (e.target as HTMLSelectElement).value })
-            }
-          />
-          <Select
-            label={t('triggerMode')}
-            value={settings.triggerMode}
-            options={[
-              { value: 'icon', label: t('iconAfterSelection') },
-              { value: 'hotkey', label: t('hotkeyOnly') },
-            ]}
-            onChange={(e) =>
-              updateSettings({
-                triggerMode: (e.target as HTMLSelectElement).value as 'icon' | 'hotkey',
-              })
-            }
-          />
-          <div class="pt-1">
-            <Button variant="primary" size="sm" onClick={togglePage}>
-              {pageOn ? t('showOriginal') : t('translatePage')}
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* 02 Routing. Setting a provider up is a page of its own now — fifteen
-          of them will not fit in a popup — so this only chooses between the
-          ones already switched on. The gear above is the way to the rest; a
-          second link to the same page would only be clutter. */}
-      <section class="px-4 pt-3 pb-4">
-        <SectionHeader number="02" label={t('sectionRouting').toUpperCase()} />
-        <EngineRoutingPicker
-          engines={settings.engines}
-          providers={providers}
-          onChange={(next) => updateSettings({ engines: next })}
-          compact
-        />
-      </section>
+      <div class="space-y-5 px-5 py-4">
+        <LanguageSelect value={settings.targetLanguage} onChange={(value) => updateSettings({ targetLanguage: value })} />
+        <section class="rounded-xl border border-ap-border bg-ap-surface px-3.5 py-2.5">
+          <p class="mb-1 text-xs text-ap-muted">{t('currentPage')}</p>
+          <Switch checked={pageOn} onChange={() => void togglePage()} label={t('pageBilingual')}
+            disabled={availability !== 'ready' || busy} />
+          {pageHint && <p role="status" class="mt-1 text-xs leading-relaxed text-ap-muted">{pageHint}</p>}
+        </section>
+        <section>
+          <SectionHeader label={t('sectionRouting')} />
+          <EngineRoutingPicker engines={settings.engines} providers={providers}
+            onChange={(next) => updateSettings({ engines: next })} compact />
+        </section>
+      </div>
     </div>
   );
 }

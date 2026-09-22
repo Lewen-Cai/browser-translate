@@ -33,7 +33,7 @@ export function createPageTranslator(deps: PageTranslatorDeps): PageTranslator {
 
   function observeNew(root: ParentNode) {
     if (!io) return;
-    const blocks = collectBlocks(root, deps.getTargetLang());
+    const blocks = collectBlocks(root);
     for (const block of blocks) {
       if (handled.has(block)) continue;
       handled.add(block);

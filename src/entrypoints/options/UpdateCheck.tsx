@@ -72,7 +72,7 @@ export function UpdateCheck() {
 
   return (
     <div class="ml-auto flex shrink-0 flex-col items-end gap-2">
-      <span class="font-mono text-2xs tracking-wider text-ap-subtle">v{version}</span>
+      <span class="text-xs text-ap-muted">v{version}</span>
       <Button variant="secondary" size="sm" disabled={checking} onClick={() => void check()}>
         {checking ? t('checkingForUpdate') : t('checkForUpdate')}
       </Button>

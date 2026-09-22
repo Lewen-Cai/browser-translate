@@ -2,6 +2,8 @@ import type { ProviderId } from '~/core/providers/registry';
 import type { ThinkingDialect } from '~/core/providers/thinking';
 import type { SubtitlePosition, SubtitleStyle } from '~/core/subtitles/style';
 import type { CardSize } from '~/core/card/size';
+import type { PromptSettings } from '~/core/prompt/templates';
+import type { Locale } from '~/i18n/localeInfo';
 
 export const APP_DATA_VERSION = 1 as const;
 
@@ -63,6 +65,7 @@ export type EngineRouting = Record<TranslationSurface, ProviderId>;
 export interface GlobalSettings {
   engines: EngineRouting;
   targetLanguage: string;
+  prompts: PromptSettings;
   triggerMode: 'icon' | 'hotkey';
   hotkey: string;
   fullPageHotkey: string;
@@ -79,7 +82,7 @@ export interface GlobalSettings {
   /** How the on-video subtitles are drawn. */
   subtitleStyle: SubtitleStyle;
   theme: 'light' | 'dark' | 'auto';
-  uiLanguage: 'auto' | 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'ko' | 'es' | 'fr' | 'de';
+  uiLanguage: 'auto' | Locale;
 }
 
 /**

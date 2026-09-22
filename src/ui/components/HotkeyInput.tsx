@@ -7,6 +7,7 @@ interface Props {
   value: string;
   hint?: string;
   disabled?: boolean;
+  inline?: boolean;
   /** Localized "Press shortcut…" text shown while recording. */
   recordingLabel: string;
   onChange: (combo: string) => void;
@@ -17,7 +18,7 @@ interface Props {
  * modifier + key combo; it captures the first valid combo via formatHotkey.
  * Escape (or blur) cancels. Renders like Input; greys out when disabled.
  */
-export function HotkeyInput({ label, value, hint, disabled, recordingLabel, onChange }: Props) {
+export function HotkeyInput({ label, value, hint, disabled, inline, recordingLabel, onChange }: Props) {
   const [recording, setRecording] = useState(false);
   const ref = useRef<HTMLButtonElement>(null);
 
@@ -40,14 +41,15 @@ export function HotkeyInput({ label, value, hint, disabled, recordingLabel, onCh
   }
 
   return (
-    <label class="block">
+    <label class={inline ? 'ap-setting-row' : 'block'}>
       {label && (
-        <span class="block text-2xs font-mono uppercase tracking-wider text-ap-muted mb-1">{label}</span>
+        <span class={inline ? 'text-sm text-ap-fg' : 'mb-1.5 block text-xs font-medium text-ap-muted'}>{label}</span>
       )}
       <button
         ref={ref}
         type="button"
         disabled={disabled}
+        aria-label={label}
         onClick={() => {
           if (!disabled) setRecording(true);
         }}

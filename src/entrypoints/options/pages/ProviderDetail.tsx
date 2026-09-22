@@ -60,7 +60,7 @@ export function ProviderDetail({ id, onBack }: Props) {
         <button
           type="button"
           onClick={onBack}
-          class="flex items-center gap-1 text-2xs font-mono uppercase tracking-wider text-ap-muted transition-colors hover:text-ap-fg"
+          class="flex items-center gap-1 text-xs text-ap-muted transition-colors hover:text-ap-fg"
         >
           <ChevronRight size={12} class="rotate-180" />
           {t('back')}

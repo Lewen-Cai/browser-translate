@@ -55,6 +55,8 @@ export interface ProviderDef {
   id: ProviderId;
   /** Brand name. Locale-invariant, so never an i18n string. */
   label: string;
+  /** Short brand form for narrow routing controls. */
+  shortLabel?: string;
   kind: 'service' | 'llm';
   capabilities: readonly Capability[];
   /** Selectable base URLs. Empty means the user types one. */
@@ -104,6 +106,7 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
   microsoft: {
     id: 'microsoft',
     label: 'Microsoft Translator',
+    shortLabel: 'Microsoft',
     kind: 'service',
     capabilities: SERVICE_CAPABILITIES,
     endpoints: [],
@@ -112,6 +115,7 @@ export const PROVIDERS: Record<ProviderId, ProviderDef> = {
   google: {
     id: 'google',
     label: 'Google Translate',
+    shortLabel: 'Google',
     kind: 'service',
     capabilities: SERVICE_CAPABILITIES,
     endpoints: [],

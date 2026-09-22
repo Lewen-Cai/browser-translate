@@ -7,10 +7,16 @@ import { es } from './locales/es';
 import { fr } from './locales/fr';
 import { de } from './locales/de';
 
-export type Locale = 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'ko' | 'es' | 'fr' | 'de';
-export type { StringKey };
+import { ptBR } from './locales/pt-BR';
+import { it } from './locales/it';
+import { ru } from './locales/ru';
+import { tr } from './locales/tr';
+import { vi } from './locales/vi';
+import { id } from './locales/id';
+import type { Locale } from './localeInfo';
 
-export const LOCALES: readonly Locale[] = ['zh-CN', 'zh-TW', 'en', 'ja', 'ko', 'es', 'fr', 'de'];
+export { LOCALES, type Locale } from './localeInfo';
+export type { StringKey };
 
 export const MESSAGES: Record<Locale, Record<StringKey, string>> = {
   en,
@@ -21,4 +27,10 @@ export const MESSAGES: Record<Locale, Record<StringKey, string>> = {
   es,
   fr,
   de,
+  'pt-BR': ptBR,
+  it,
+  ru,
+  tr,
+  vi,
+  id,
 };

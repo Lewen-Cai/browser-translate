@@ -1,4 +1,4 @@
-/** US / UK IPA. Present only for a single English/Latin word — never for
+/** US / UK IPA. Present only for a single English word — never for
  *  phrases, proper nouns, or non-Latin scripts (no pinyin/romanization). */
 export interface Phonetic {
   us?: string;
@@ -19,8 +19,8 @@ export interface DictionaryEntry {
 /**
  * Parse the dictionary model's JSON response into a DictionaryEntry.
  * Tolerates ```json code fences. Returns null when the text isn't valid JSON,
- * lacks a headword, or is too thin to render structurally — the card then falls
- * back to showing the raw text.
+ * lacks a headword, or is too thin to render structurally. Callers must repair
+ * or report invalid protocol output, never show it as a successful translation.
  */
 export function parseDictionaryEntry(raw: string): DictionaryEntry | null {
   if (!raw) return null;
@@ -64,7 +64,7 @@ export function parseDictionaryEntry(raw: string): DictionaryEntry | null {
     if (source || target) entry.example = { source, target };
   }
 
-  // Too thin to justify the structured layout — let the caller fall back to text.
+  // Too thin to justify the structured layout — the harness must repair it.
   if (entry.senses.length === 0 && !entry.example && !entry.translation) return null;
 
   return entry;

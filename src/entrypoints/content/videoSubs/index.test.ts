@@ -31,7 +31,6 @@ const STRINGS: VideoSubsStrings = {
   titleOn: 'on',
   noCaptions: 'nc',
   enableCc: 'cc',
-  noTranslationNeeded: 'nt',
   live: 'lv',
   failed: 'fail',
   placeholder: 'tr',
@@ -52,16 +51,17 @@ const STRINGS: VideoSubsStrings = {
   fontScale: 'size',
   color: 'color',
   fontFamily: 'font',
+  fontDefault: 'default',
   fontWeight: 'weight',
   reset: 'reset',
   resetAll: 'reset all',
   back: 'back',
 };
 
-function make(overrides: { notify?: (m: string) => void } = {}) {
+function make(overrides: { notify?: (m: string) => void; target?: string } = {}) {
   return createVideoSubTranslator({
     site: createYouTubeSite(),
-    getTargetLang: () => 'zh-CN',
+    getTargetLang: () => overrides.target ?? 'zh-CN',
     strings: STRINGS,
     notify: overrides.notify ?? vi.fn(),
     concurrency: 1,
@@ -135,6 +135,18 @@ describe('createVideoSubTranslator', () => {
     t.teardown();
     expect(t.isOn()).toBe(false);
     expect(document.querySelector('.bt-subs')).toBeNull();
+  });
+
+  it.each(['en', 'en-GB', 'en-AU'])('translates English tracks even when the target is %s', async (target) => {
+    const notify = vi.fn();
+    const t = make({ target, notify });
+    await t.attachButton();
+    turnOn();
+    await flush();
+    expect(t.isOn()).toBe(true);
+    expect(translateBatch).toHaveBeenCalledWith(expect.objectContaining({ targetLang: target }));
+    expect(notify).not.toHaveBeenCalled();
+    t.teardown();
   });
 
   it('mounts the button on a video that only has auto-generated captions', async () => {

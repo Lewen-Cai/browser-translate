@@ -4,14 +4,16 @@ import { TranslationPage } from './pages/TranslationPage';
 import { GeneralPage } from './pages/GeneralPage';
 import { VideoPage } from './pages/VideoPage';
 import { DataPage } from './pages/DataPage';
-import { Captions, Download, Languages, Settings } from '~/ui/icons';
+import { ProvidersPanel } from './pages/ProvidersPanel';
+import { Captions, Download, Languages, Settings, Server } from '~/ui/icons';
 import { cn } from '~/lib/cn';
+import { SectionHeader } from '~/ui/components/SectionHeader';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
 import { useApplyLocale } from '~/ui/useApplyLocale';
 import { UpdateCheck } from './UpdateCheck';
 
-type Tab = 'general' | 'translation' | 'video' | 'data';
+type Tab = 'general' | 'translation' | 'providers' | 'video' | 'data';
 
 export function App() {
   const load = useAppStore((s) => s.load);
@@ -20,65 +22,47 @@ export function App() {
   const t = useT();
   useApplyTheme();
   useApplyLocale();
-
   useEffect(() => { void load(); }, [load]);
+  if (!loaded) return <div class="p-8 text-sm text-ap-muted">{t('loading')}</div>;
 
-  if (!loaded) return <div class="p-8 text-2xs font-mono text-ap-subtle">LOADING…</div>;
-
-  // One page per thing being set up, rather than everything that isn't the API
-  // piled into "general".
-  const TABS: Array<{ id: Tab; num: string; label: string; icon: typeof Settings }> = [
-    { id: 'general',     num: '01', label: t('navGeneral'),     icon: Settings },
-    { id: 'translation', num: '02', label: t('navTranslation'), icon: Languages },
-    { id: 'video',       num: '03', label: t('navVideo'),       icon: Captions },
-    { id: 'data',        num: '04', label: t('navData'),        icon: Download },
+  const tabs: Array<{ id: Tab; label: string; icon: typeof Settings }> = [
+    { id: 'general', label: t('subtitleGeneral'), icon: Settings },
+    { id: 'translation', label: t('sectionTranslation'), icon: Languages },
+    { id: 'providers', label: t('sectionProviders'), icon: Server },
+    { id: 'video', label: t('sectionSubtitles'), icon: Captions },
+    { id: 'data', label: t('sectionData'), icon: Download },
   ];
-
   return (
     <div class="min-h-screen bg-ap-bg text-ap-fg">
-      {/* Hero */}
-      <div class="relative border-b border-ap-border">
-        <div class="ap-grid-bg absolute inset-0 opacity-30 pointer-events-none" />
-        <div class="relative w-[920px] max-w-full mx-auto px-10 py-10 flex items-center gap-6">
-          <div class="w-1 h-16 bg-ap-brand shrink-0" />
-          <div>
-            <div class="font-mono text-2xs uppercase tracking-wider text-ap-subtle">BROWSERTRANSLATE</div>
-            <h1 class="text-3xl font-semibold mt-1">{t('settings')}</h1>
-            <p class="text-xs text-ap-muted mt-2 font-mono">{t('privacyTagline')}</p>
+      <header class="border-b border-ap-border bg-ap-surface">
+        <div class="mx-auto flex max-w-[1040px] items-center gap-3 px-6 py-5">
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-ap-brand/10 text-ap-brand"><Languages size={21} /></span>
+          <div class="min-w-0">
+            <div class="text-base font-semibold">BrowserTranslate</div>
+            <h1 class="mt-0.5 text-sm text-ap-muted">{t('settings')}</h1>
           </div>
-          {/* Opposite the title, where a version number belongs — and where a
-              control that changes nothing about the extension can sit without
-              being mistaken for a setting. */}
           <UpdateCheck />
         </div>
-      </div>
-
-      <div class="w-[920px] max-w-full mx-auto px-10 py-10 flex gap-12">
-        <nav class="w-40 shrink-0">
-          <ul class="space-y-0.5 sticky top-8">
-            {TABS.map((tabItem) => (
-              <li key={tabItem.id}>
-                <button
-                  onClick={() => setTab(tabItem.id)}
-                  class={cn(
-                    'group w-full flex items-center gap-3 px-2 py-2 text-left transition-colors whitespace-nowrap',
-                    tab === tabItem.id ? 'text-ap-fg' : 'text-ap-muted hover:text-ap-fg',
-                  )}
-                >
-                  <span class={cn(
-                    'font-mono text-2xs tracking-wider',
-                    tab === tabItem.id ? 'text-ap-brand' : 'text-ap-subtle',
-                  )}>{tabItem.num}</span>
-                  <tabItem.icon size={17} class={cn('shrink-0', tab === tabItem.id ? 'text-ap-fg' : 'text-ap-subtle group-hover:text-ap-muted')} />
-                  <span class="font-mono text-2xs uppercase tracking-wider">{tabItem.label}</span>
-                </button>
-              </li>
-            ))}
+      </header>
+      <div class="mx-auto flex max-w-[1040px] flex-col gap-6 px-6 py-7 sm:flex-row sm:gap-8">
+        <nav aria-label={t('settings')} class="shrink-0 sm:w-40">
+          <ul class="flex flex-wrap gap-1 sm:sticky sm:top-6 sm:flex-col">
+            {tabs.map((item) => <li key={item.id}>
+              <button type="button" aria-current={tab === item.id ? 'page' : undefined} onClick={() => setTab(item.id)}
+                class={cn('flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm transition-colors',
+                  tab === item.id ? 'bg-ap-brand/10 font-medium text-ap-brand' : 'text-ap-muted hover:bg-ap-fg/5 hover:text-ap-fg')}>
+                <item.icon size={17} class="shrink-0" /><span>{item.label}</span>
+              </button>
+            </li>)}
           </ul>
         </nav>
-        <main class="flex-1 min-w-0 max-w-[640px]">
-          {tab === 'translation' && <TranslationPage />}
+        <main class="min-w-0 flex-1">
           {tab === 'general' && <GeneralPage />}
+          {tab === 'translation' && <TranslationPage />}
+          {tab === 'providers' && <section class="ap-settings-panel">
+            <SectionHeader label={t('sectionProviders')} description={t('openaiCompatible')} />
+            <ProvidersPanel />
+          </section>}
           {tab === 'video' && <VideoPage />}
           {tab === 'data' && <DataPage />}
         </main>

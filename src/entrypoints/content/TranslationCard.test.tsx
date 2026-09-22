@@ -1,16 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/preact';
+import { render, cleanup, waitFor } from '@testing-library/preact';
 
 // The card talks to the background over chrome.runtime. None of that is under
 // test here; what matters is what the card puts on screen for a given state.
 vi.mock('~/messaging/client', () => ({
-  streamTranslate: async function* () { /* never yields — the card stays streaming */ },
+  streamTranslate: vi.fn(async function* () { /* never yields — the card stays streaming */ }),
   abortTranslate: () => {},
 }));
 
 import { TranslationCard } from './TranslationCard';
+import { streamTranslate } from '~/messaging/client';
 import { createDefaultProviders } from '~/storage/defaults';
 import { DEFAULT_CARD_SIZE } from '~/core/card/size';
+import type { TranslateResponse } from '~/messaging/types';
 
 function rect(): DOMRect {
   return {
@@ -21,7 +23,7 @@ function rect(): DOMRect {
 
 const providers = createDefaultProviders();
 
-function open(text: string, targetLang = 'zh-CN', notice?: string) {
+function open(text: string, targetLang = 'zh-CN') {
   return render(
     <TranslationCard
       text={text}
@@ -31,13 +33,14 @@ function open(text: string, targetLang = 'zh-CN', notice?: string) {
       defaultProvider="microsoft"
       defaultTargetLang={targetLang}
       size={DEFAULT_CARD_SIZE}
-      notice={notice}
       onClose={() => {}}
     />,
   );
 }
 
 beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(streamTranslate).mockImplementation(async function* () {});
   vi.stubGlobal('requestAnimationFrame', () => 0);
   vi.stubGlobal('cancelAnimationFrame', () => {});
 });
@@ -60,19 +63,25 @@ describe('TranslationCard header', () => {
     expect(container.querySelector('.bt-card-pair')!.textContent).toContain('日本語');
   });
 
+  it('labels substantial mixed text without declaring it English', () => {
+    const { container } = open('我在花园日志中记录 soil moisture 和 rainfall，然后调整浇水次数。', 'en-AU');
+    expect(container.querySelector('.bt-card-pair-lang')!.textContent).toBe('Mixed languages');
+  });
+
   it('falls back to the card name when there is no language to read', () => {
     const { container } = open('12345 — 67.8%');
     expect(container.querySelector('.bt-card-pair')).toBeNull();
     expect(container.querySelector('.bt-card-brand-mark')).not.toBeNull();
   });
 
-  it('shows the pair over a notice too, which is what explains the notice', () => {
-    // "Already in your target language" is exactly the case where both sides of
-    // the pair read the same, so the line is the reason rather than a repetition.
-    const { container } = open('这是一段中文', 'zh-CN', 'Already in your language');
-    const pair = container.querySelector('.bt-card-pair')!;
-    expect(pair.textContent).toContain('简体中文');
-    expect(container.querySelector('.bt-card-notice')!.textContent).toBe('Already in your language');
+  it.each([
+    ['这是一段中文，其中 includes English words。', 'zh-CN'],
+    ['This English paragraph 包含中文 and must still be translated.', 'en'],
+    ['This colour is already English.', 'en-AU'],
+    ['这是一段中文', 'zh-CN'],
+  ])('sends same-language and mixed selections instead of blocking: %s', async (text, targetLang) => {
+    open(text, targetLang);
+    await waitFor(() => expect(streamTranslate).toHaveBeenCalledWith(expect.objectContaining({ text, targetLang })));
   });
 });
 
@@ -85,12 +94,60 @@ describe('TranslationCard footer', () => {
     expect(buttons[1]!.textContent).toContain('简体中文');
   });
 
-  it('keeps the language control under a notice — it is the way out of one', () => {
-    const { container } = open('这是一段中文', 'zh-CN', 'Already in your language');
-    const buttons = container.querySelectorAll('.bt-card-foot-btn');
-    // Nobody translated anything, so there is nothing to credit; the language
-    // control stays, because picking another one is what clears the notice.
-    expect(buttons).toHaveLength(1);
-    expect(buttons[0]!.className).toContain('bt-card-foot-lang');
+  it('keeps both controls for same-language input', () => {
+    const { container } = open('这是一段中文', 'zh-CN');
+    expect(container.querySelectorAll('.bt-card-foot-btn')).toHaveLength(2);
+  });
+});
+
+function animate() {
+  vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => window.setTimeout(() => cb(0), 1));
+  vi.stubGlobal('cancelAnimationFrame', (id: number) => window.clearTimeout(id));
+}
+function respond(messages: TranslateResponse[]) {
+  vi.mocked(streamTranslate).mockImplementation(async function* () { yield* messages; });
+}
+
+describe('validated result rendering', () => {
+  it('uses explicit dictionary metadata, not a textual fallback', async () => {
+    respond([{ type: 'translate:done', requestId: 'r', cached: false, format: 'dictionary',
+      full: JSON.stringify({ headword: 'rosemary', senses: ['An aromatic herb.'] }) }]);
+    const { container } = open('rosemary');
+    await waitFor(() => expect(container.querySelector('.bt-card-dict')).not.toBeNull());
+    expect(container.textContent).not.toContain('"headword"');
+  });
+  it('does not render or copy malformed typed dictionary JSON', async () => {
+    respond([{ type: 'translate:done', requestId: 'r', cached: false, format: 'dictionary', full: '{"headword":' }]);
+    const { container } = open('rosemary');
+    await waitFor(() => expect(container.querySelector('.bt-card-error')).not.toBeNull());
+    expect(container.textContent).not.toContain('"headword"');
+    expect((container.querySelector('[aria-label="Copy translation"]') as HTMLButtonElement).disabled).toBe(true);
+  });
+  it('rejects a terminal response without a recognized result type', async () => {
+    respond([{ type: 'translate:done', requestId: 'r', cached: false, full: '{"headword":"unexpected"}' } as TranslateResponse]);
+    const { container } = open('rosemary');
+    await waitFor(() => expect(container.querySelector('.bt-card-error')).not.toBeNull());
+    expect(container.textContent).not.toContain('"headword"');
+  });
+  it('keeps literal JSON translations as text when explicitly typed that way', async () => {
+    animate();
+    const full = '{"label":"Hello"}';
+    respond([{ type: 'translate:done', requestId: 'r', cached: false, format: 'text', full }]);
+    const { container } = open('{"label":"Bonjour"}');
+    await waitFor(() => expect(container.querySelector('.bt-card-text')?.textContent).toBe(full));
+    expect(container.querySelector('.bt-card-dict')).toBeNull();
+  });
+  it('resets old chunks and the typewriter cursor before a shorter corrected result', async () => {
+    animate();
+    vi.mocked(streamTranslate).mockImplementation(async function* (): AsyncGenerator<TranslateResponse> {
+      yield { type: 'translate:chunk', requestId: 'r', delta: 'Discard this longer attempt.' };
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      yield { type: 'translate:reset', requestId: 'r' };
+      yield { type: 'translate:chunk', requestId: 'r', delta: 'OK' };
+      yield { type: 'translate:done', requestId: 'r', full: 'OK', format: 'text', cached: false };
+    });
+    const { container } = open('A synthetic passage.');
+    await waitFor(() => expect(container.querySelector('.bt-card-text')?.textContent).toBe('OK'));
+    expect(container.textContent).not.toContain('Discard');
   });
 });

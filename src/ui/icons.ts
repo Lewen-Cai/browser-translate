@@ -27,4 +27,8 @@ export {
   Sparkles,
   Zap,
   Captions,
+  Ellipsis,
+  Lock,
+  FileText,
+  RotateCcw,
 } from 'lucide-preact';

@@ -1,5 +1,3 @@
-import { isSameLanguageAsTarget } from '~/core/language/sameLanguage';
-
 const BLOCK_TAGS = new Set([
   'P', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
   'TD', 'TH', 'BLOCKQUOTE', 'FIGCAPTION', 'DD', 'DT', 'CAPTION', 'SUMMARY',
@@ -34,7 +32,7 @@ function hasDirectText(el: Element): boolean {
 /**
  * Walk `root` and return block-level elements worth translating. Skips
  * code/editable/non-content nodes, already-injected bilingual nodes,
- * whitespace-only/too-short text, and blocks already in the target language.
+ * and whitespace-only/too-short text. Language never suppresses a request.
  *
  * Nesting: a PURE container block (has a block-tag descendant but no meaningful
  * direct text of its own — e.g. a <blockquote> wrapping a <p>) is skipped so the
@@ -44,7 +42,7 @@ function hasDirectText(el: Element): boolean {
  * not translated twice. This prevents the ancestor's direct text from being
  * silently dropped.
  */
-export function collectBlocks(root: ParentNode, targetLang: string): HTMLElement[] {
+export function collectBlocks(root: ParentNode): HTMLElement[] {
   // Prefer the main-content landmark so page chrome is excluded wholesale; fall
   // back to the given root (chrome is still filtered per-element in isSkippable).
   const scope: ParentNode = root.querySelector('main, [role="main"]') ?? root;
@@ -56,7 +54,6 @@ export function collectBlocks(root: ParentNode, targetLang: string): HTMLElement
     if (isSkippable(el)) return;
     const text = (el.textContent ?? '').trim();
     if (text.length < MIN_TEXT_LEN) return;
-    if (isSameLanguageAsTarget(text, targetLang)) return;
     const hasBlockChild = el.querySelector(BLOCK_SELECTOR) !== null;
     if (hasBlockChild && !hasDirectText(el)) return; // pure container — inner block handles it
     candidates.push(el);

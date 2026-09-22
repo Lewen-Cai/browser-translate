@@ -52,11 +52,11 @@ describe('StorageClient', () => {
 
   it('persists writes', async () => {
     const data = await client.loadAppData();
-    data.settings.targetLanguage = 'en';
+    data.settings.targetLanguage = 'en-US';
     data.providers.openai.model = 'gpt-4o-mini';
     await client.saveAppData(data);
     const reloaded = await client.loadAppData();
-    expect(reloaded.settings.targetLanguage).toBe('en');
+    expect(reloaded.settings.targetLanguage).toBe('en-US');
     expect(reloaded.providers.openai.model).toBe('gpt-4o-mini');
   });
 

@@ -14,6 +14,8 @@ export interface CacheKeyInput {
    */
   mode: 'selection' | 'fullpage';
   targetLang: string;
+  /** Effective system instructions; omitted for MT, which has no prompts. */
+  prompt?: string;
 }
 
 /**
@@ -30,6 +32,7 @@ export async function computeCacheKey(input: CacheKeyInput): Promise<string> {
     input.model,
     input.mode,
     input.targetLang,
+    ...(input.prompt === undefined ? [] : [input.prompt]),
   ].join('\0'); // null byte separator — cannot appear in normal text
   const bytes = new TextEncoder().encode(canonical);
   const hashBuf = await crypto.subtle.digest('SHA-256', bytes);

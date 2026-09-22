@@ -39,6 +39,7 @@ export interface SubtitlePanelStrings {
   fontScale: string;
   color: string;
   fontFamily: string;
+  fontDefault: string;
   fontWeight: string;
   reset: string;
   resetAll: string;
@@ -277,7 +278,7 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       colorRow(s.color, value.color, (v) => patchText(which, { color: v })),
       selectRow<SubtitleFontFamily>(
         s.fontFamily, value.fontFamily,
-        SUBTITLE_FONT_FAMILY_IDS.map((id) => ({ value: id, label: FONT_LABELS[id] })),
+        SUBTITLE_FONT_FAMILY_IDS.map((id) => ({ value: id, label: id === 'youtube' ? s.fontDefault : FONT_LABELS[id] })),
         (v) => patchText(which, { fontFamily: v }),
       ),
       sliderRow(

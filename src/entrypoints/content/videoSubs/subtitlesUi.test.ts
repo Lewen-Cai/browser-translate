@@ -36,6 +36,7 @@ const STRINGS: SubtitleUiStrings = {
   fontScale: 'Font scale',
   color: 'Color',
   fontFamily: 'Font',
+  fontDefault: 'Default',
   fontWeight: 'Font weight',
   reset: 'Reset',
   resetAll: 'Reset all settings',

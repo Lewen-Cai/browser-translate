@@ -1,30 +1,32 @@
 import { describe, it, expect } from 'vitest';
 import { parseBatchArray } from './parse';
 
+const encode = (rows: unknown[]) => JSON.stringify(rows);
 describe('parseBatchArray', () => {
-  it('parses a clean JSON array of the expected length', () => {
-    expect(parseBatchArray('["a","b","c"]', 3)).toEqual(['a', 'b', 'c']);
+  it('parses and reorders translations by input id, not response position', () => {
+    expect(parseBatchArray(encode([{ id: 1, translation: 'b' }, { id: 0, translation: 'a' }]), 2)).toEqual(['a', 'b']);
   });
-  it('extracts the array when wrapped in prose / code fences', () => {
-    const raw = 'Sure:\n```json\n["x", "y"]\n```';
-    expect(parseBatchArray(raw, 2)).toEqual(['x', 'y']);
+  it('accepts fences/preamble without returning them', () => {
+    expect(parseBatchArray('Sure:\n```json\n' + encode([{ id: 0, translation: 'x' }]) + '\n```', 1)).toEqual(['x']);
   });
-  it('returns null on length mismatch', () => {
-    expect(parseBatchArray('["only one"]', 2)).toBeNull();
+  it.each([
+    [{ id: 0, translation: 'a' }, { id: 0, translation: 'b' }],
+    [{ id: 0, translation: 'a' }],
+    [{ id: 0, translation: 'a' }, { id: 2, translation: 'b' }],
+    [{ id: '0', translation: 'a' }, { id: 1, translation: 'b' }],
+    [{ id: 0, translation: {} }, { id: 1, translation: 'b' }],
+    [{ id: 0, translation: 3 }, { id: 1, translation: 'b' }],
+    [{ id: -1, translation: 'a' }, { id: 1, translation: 'b' }],
+    [{ id: 0.5, translation: 'a' }, { id: 1, translation: 'b' }],
+    ['a', 'b'],
+  ])('rejects duplicate/missing/invalid ids and non-string content: %j', (...rows) => {
+    expect(parseBatchArray(encode(rows), 2)).toBeNull();
   });
-  it('returns null when not an array', () => {
-    expect(parseBatchArray('{"a":1}', 1)).toBeNull();
+  it('rejects unparseable output and wrong root types', () => {
+    expect(parseBatchArray('not json', 1)).toBeNull();
+    expect(parseBatchArray('{"id":0,"translation":"x"}', 1)).toBeNull();
   });
-  it('returns null on unparseable input', () => {
-    expect(parseBatchArray('not json at all', 1)).toBeNull();
-  });
-  it('coerces non-string elements to strings', () => {
-    expect(parseBatchArray('["a", 2]', 2)).toEqual(['a', '2']);
-  });
-  it('trims trailing prose after the array', () => {
-    expect(parseBatchArray('["a","b"] done!', 2)).toEqual(['a', 'b']);
-  });
-  it('returns null when trailing prose contains a stray bracket', () => {
-    expect(parseBatchArray('["a","b"]\nNote: see item [2]', 2)).toBeNull();
+  it('does not confuse brackets inside the translated content with alignment metadata', () => {
+    expect(parseBatchArray(encode([{ id: 0, translation: 'An [example] and "quotes".' }]), 1)).toEqual(['An [example] and "quotes".']);
   });
 });

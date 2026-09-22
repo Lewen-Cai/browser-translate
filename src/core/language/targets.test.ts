@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   DEFAULT_TARGET_LANGUAGE,
   TARGET_LANGUAGES,
-  TARGET_LANGUAGE_OPTIONS,
   isTargetLanguage,
   languageName,
+  normalizeTargetLanguage,
 } from './targets';
 import { toEngineLang } from '~/core/mt/langCodes';
 import { MT_ENGINE_IDS } from '~/core/mt/types';
@@ -22,10 +22,18 @@ describe('TARGET_LANGUAGES', () => {
 
   it('fills every field', () => {
     for (const l of TARGET_LANGUAGES) {
-      expect(l.code).toMatch(/^[a-z]{2}(-[A-Za-z]{2,4})?$/);
+      expect(l.code).toMatch(/^[a-z]{2,3}(-[A-Za-z]{2,4})?$/);
       expect(l.endonym.length).toBeGreaterThan(0);
       expect(l.english.length).toBeGreaterThan(0);
     }
+  });
+
+  it('offers 56 targets without an ambiguous generic English choice', () => {
+    expect(TARGET_LANGUAGES).toHaveLength(56);
+    expect(isTargetLanguage('en')).toBe(false);
+    for (const code of ['en-US', 'en-GB', 'en-AU', 'fil', 'sr-Cyrl']) expect(isTargetLanguage(code)).toBe(true);
+    expect(normalizeTargetLanguage('en')).toBe('en-US');
+    expect(normalizeTargetLanguage('en-AU')).toBe('en-AU');
   });
 
   it('includes the default', () => {
@@ -80,19 +88,5 @@ describe('isTargetLanguage', () => {
     expect(isTargetLanguage(undefined)).toBe(false);
     expect(isTargetLanguage(42)).toBe(false);
     expect(isTargetLanguage('klingon')).toBe(false);
-  });
-});
-
-describe('TARGET_LANGUAGE_OPTIONS', () => {
-  it('pairs each code with a label', () => {
-    expect(TARGET_LANGUAGE_OPTIONS).toHaveLength(TARGET_LANGUAGES.length);
-    expect(TARGET_LANGUAGE_OPTIONS).toContainEqual({
-      value: 'zh-CN',
-      label: '简体中文 · Chinese (Simplified)',
-    });
-  });
-
-  it('does not repeat a name that is already English', () => {
-    expect(TARGET_LANGUAGE_OPTIONS).toContainEqual({ value: 'en', label: 'English' });
   });
 });

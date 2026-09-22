@@ -10,12 +10,15 @@ import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
 import { TranslationProviderError } from '~/core/providers/types';
 import { computeCacheKey } from '~/core/cache/key';
 import { getMtEngine, isMtEngineId, mtTranslateAll, type MtEngineId } from '~/core/mt';
-import { autoSystemPrompt } from '~/core/dictionary/prompt';
-import { selectionUserPrompt } from '~/core/prompt/style';
+import { selectionUserPrompt, textSystemPrompt } from '~/core/prompt/style';
+import { selectionTask } from '~/core/selection/route';
+import { selectionSystemPrompt } from '~/core/selection/prompt';
+import { InvalidModelOutputError, responseCachePrompt, runSelection, SelectionStreamGate, validateSelectionResult, type ResultFormat } from '~/core/selection/response';
+import { resolveBasePrompt } from '~/core/prompt/templates';
 import { batchSystemPrompt, batchUserPrompt } from '~/core/batch/prompt';
 import { parseBatchArray } from '~/core/batch/parse';
 import { runBatch } from '~/core/batch/runBatch';
-import { languageName } from '~/core/language/targets';
+import { languageName, normalizeTargetLanguage } from '~/core/language/targets';
 import { t as i18nT, resolveLocale } from '~/i18n';
 import { fetchLatestRelease } from '~/core/update/github';
 import { isUpdateAvailable } from '~/core/update/version';
@@ -104,13 +107,17 @@ async function handleTranslate(
       });
       return;
     }
-    const targetLang = msg.targetLang ?? data.settings.targetLanguage;
+    const targetLang = normalizeTargetLanguage(msg.targetLang ?? data.settings.targetLanguage);
+    const task = selectionTask(msg.text);
+    const basePrompt = resolveBasePrompt(data.settings.prompts);
+    const systemPrompt = useMt ? undefined : selectionSystemPrompt(task, targetLang, basePrompt);
 
     let cacheKey: string | undefined;
     if (data.settings.cacheEnabled) {
       cacheKey = await computeCacheKey({
         text: msg.text, engine, model: cfg.model,
         mode: 'selection', targetLang,
+        prompt: systemPrompt ? responseCachePrompt(systemPrompt) : undefined,
       });
       // A refresh still writes its result back — it is asking past the cache,
       // not asking for the answer to go unremembered.
@@ -118,9 +125,12 @@ async function handleTranslate(
         ? undefined
         : await new CacheStore(client, data.settings.cacheTTLDays).get(cacheKey);
       if (cached !== undefined) {
-        send({ type: 'translate:chunk', requestId: msg.requestId, delta: cached });
-        send({ type: 'translate:done', requestId: msg.requestId, full: cached, cached: true });
-        return;
+        const result = useMt ? { full: cached, format: 'text' as const } : validateSelectionResult(cached, msg.text, task);
+        if (result) {
+          if (result.format === 'text') send({ type: 'translate:chunk', requestId: msg.requestId, delta: result.full });
+          send({ type: 'translate:done', requestId: msg.requestId, ...result, cached: true });
+          return;
+        }
       }
     }
 
@@ -128,6 +138,7 @@ async function handleTranslate(
     activeAborts.set(msg.requestId, abortCtl);
 
     let full = '';
+    let format: ResultFormat = 'text';
     try {
       if (useMt) {
         // No streaming to relay: deliver the finished text as a single chunk,
@@ -143,23 +154,29 @@ async function handleTranslate(
         if (full) send({ type: 'translate:chunk', requestId: msg.requestId, delta: full });
       } else {
         const provider = new OpenAICompatibleProvider(llmRequestConfig(engine, cfg));
-        await withRetry(async () => {
-          full = '';
-          for await (const chunk of provider.translate({
-            systemPrompt: autoSystemPrompt(),
-            // The model gets the language's English name, not its code: "pt-BR"
-            // and "nb" mean nothing to it, while the cache key and the free
-            // services keep the code, which is the stable identity.
-            userPrompt: selectionUserPrompt(msg.text, languageName(targetLang)),
-            stream: true,
-            signal: abortCtl.signal,
-          })) {
-            if (chunk.delta) {
-              full += chunk.delta;
-              send({ type: 'translate:chunk', requestId: msg.requestId, delta: chunk.delta });
+        const result = await runSelection(msg.text, task, async (mode, repair) => {
+          let raw = '';
+          await withRetry(async () => {
+            abortCtl.signal.throwIfAborted();
+            // Each attempt replaces, rather than appends to, the previous stream.
+            send({ type: 'translate:reset', requestId: msg.requestId });
+            raw = '';
+            const gate = new SelectionStreamGate();
+            for await (const chunk of provider.translate({
+              systemPrompt: selectionSystemPrompt(mode, targetLang, basePrompt, repair),
+              userPrompt: selectionUserPrompt(msg.text, languageName(targetLang)),
+              stream: true,
+              signal: abortCtl.signal,
+            })) {
+              raw += chunk.delta;
+              const visible = gate.push(chunk.delta);
+              if (visible) send({ type: 'translate:chunk', requestId: msg.requestId, delta: visible });
             }
-          }
-        });
+          });
+          return raw;
+        }, abortCtl.signal);
+        full = result.full;
+        format = result.format;
       }
     } finally {
       activeAborts.delete(msg.requestId);
@@ -169,12 +186,19 @@ async function handleTranslate(
       await new CacheStore(client, data.settings.cacheTTLDays).set(cacheKey, full);
     }
 
-    send({ type: 'translate:done', requestId: msg.requestId, full, cached: false });
+    send({ type: 'translate:done', requestId: msg.requestId, full, format, cached: false });
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    const kind = e instanceof TranslationProviderError ? e.info.kind : 'unknown';
+    const message = translationErrorMessage(e, data.settings.uiLanguage);
+    const kind = e instanceof InvalidModelOutputError ? 'parse' : e instanceof TranslationProviderError ? e.info.kind : 'unknown';
     send({ type: 'translate:error', requestId: msg.requestId, message, kind });
   }
+}
+
+function translationErrorMessage(error: unknown, uiLanguage: string): string {
+  if (error instanceof InvalidModelOutputError) {
+    return i18nT('invalidModelOutput', resolveLocale(uiLanguage, typeof navigator !== 'undefined' ? navigator.language : 'en'));
+  }
+  return error instanceof Error ? error.message : String(error);
 }
 
 async function handleTranslateBatch(
@@ -206,7 +230,8 @@ async function handleTranslateBatch(
       });
       return;
     }
-    const targetLang = msg.targetLang ?? data.settings.targetLanguage;
+    const targetLang = normalizeTargetLanguage(msg.targetLang ?? data.settings.targetLanguage);
+    const systemPrompt = useMt ? undefined : batchSystemPrompt(targetLang, resolveBasePrompt(data.settings.prompts), msg.surface);
 
     // One AbortController for the whole batch request: runBatch may call
     // translateOnce many times (the batch call plus per-segment fallback), and
@@ -215,9 +240,8 @@ async function handleTranslateBatch(
     const abortCtl = new AbortController();
     activeAborts.set(msg.requestId, abortCtl);
 
-    // One call for a set of segments → { parsed, raw }. The MT engines return an
-    // aligned array by construction, so they never need the raw fallback that
-    // exists for an LLM answering with something other than a JSON array.
+    // Batch responses must align by id and contain valid text. A broken batch
+    // gets explicit text-only requests, never a raw-response fallback.
     const translateOnce = useMt
       ? async (segments: string[]) => {
           const parsed = await withRetry(() =>
@@ -227,17 +251,16 @@ async function handleTranslateBatch(
               MT_BATCH_CONCURRENCY,
             ),
           );
-          return { parsed, raw: '' };
+          return parsed;
         }
       : (() => {
-          const systemPrompt = batchSystemPrompt();
           const provider = new OpenAICompatibleProvider(llmRequestConfig(engine, cfg));
           return async (segments: string[]) => {
             let raw = '';
             await withRetry(async () => {
               raw = '';
               for await (const chunk of provider.translate({
-                systemPrompt,
+                systemPrompt: systemPrompt!,
                 userPrompt: batchUserPrompt(segments, languageName(targetLang)),
                 stream: false,
                 signal: abortCtl.signal,
@@ -245,9 +268,35 @@ async function handleTranslateBatch(
                 raw += chunk.delta;
               }
             });
-            return { parsed: parseBatchArray(raw, segments.length), raw };
+            const parsed = parseBatchArray(raw, segments.length);
+            return parsed && parsed.every((text, index) => validateSelectionResult(text, segments[index]!, 'translate'))
+              ? parsed : null;
           };
         })();
+
+    const translateSingle = async (segment: string): Promise<string> => {
+      abortCtl.signal.throwIfAborted();
+      if (useMt) {
+        const results = await withRetry(() => getMtEngine(engine).translate({ texts: [segment], targetLang, signal: abortCtl.signal }));
+        if (results[0] === undefined) throw new InvalidModelOutputError();
+        return results[0];
+      }
+      const provider = new OpenAICompatibleProvider(llmRequestConfig(engine, cfg));
+      let raw = '';
+      await withRetry(async () => {
+        abortCtl.signal.throwIfAborted();
+        raw = '';
+        for await (const chunk of provider.translate({
+          systemPrompt: textSystemPrompt(targetLang, resolveBasePrompt(data.settings.prompts)) +
+            `\nTranslate this one ${msg.surface === 'subtitle' ? 'subtitle' : 'web page'} segment as plain text, without a batch envelope.`,
+          userPrompt: selectionUserPrompt(segment, languageName(targetLang)),
+          stream: false, signal: abortCtl.signal,
+        })) raw += chunk.delta;
+      });
+      const result = validateSelectionResult(raw, segment, 'translate');
+      if (!result) throw new InvalidModelOutputError();
+      return result.full;
+    };
 
     const cacheStore = new CacheStore(client, data.settings.cacheTTLDays);
     const cacheEnabled = data.settings.cacheEnabled;
@@ -261,8 +310,10 @@ async function handleTranslateBatch(
           model: cfg.model,
           mode: 'fullpage',
           targetLang,
+          prompt: systemPrompt ? responseCachePrompt(systemPrompt) : undefined,
         });
-        return cacheStore.get(key);
+        const cached = await cacheStore.get(key);
+        return cached !== undefined && (useMt || validateSelectionResult(cached, segment, 'translate')) ? cached : undefined;
       },
       cacheSet: async (segment: string, translated: string) => {
         if (!cacheEnabled || !translated) return;
@@ -272,10 +323,12 @@ async function handleTranslateBatch(
           model: cfg.model,
           mode: 'fullpage',
           targetLang,
+          prompt: systemPrompt ? responseCachePrompt(systemPrompt) : undefined,
         });
         await cacheStore.set(key, translated);
       },
       translateOnce,
+      translateSingle,
     };
 
     let translations: string[];
@@ -287,8 +340,8 @@ async function handleTranslateBatch(
 
     send({ type: 'translate:batch:done', requestId: msg.requestId, translations });
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    const kind = e instanceof TranslationProviderError ? e.info.kind : 'unknown';
+    const message = translationErrorMessage(e, data.settings.uiLanguage);
+    const kind = e instanceof InvalidModelOutputError ? 'parse' : e instanceof TranslationProviderError ? e.info.kind : 'unknown';
     send({ type: 'translate:batch:error', requestId: msg.requestId, message, kind });
   }
 }

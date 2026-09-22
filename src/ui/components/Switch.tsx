@@ -19,10 +19,11 @@ export function Switch({ checked, onChange, label, description, disabled }: Prop
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={label}
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
         class={cn(
-          'relative h-[18px] w-[34px] rounded-full border transition-colors',
+          'relative h-[18px] w-[34px] shrink-0 rounded-full border transition-colors',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ap-brand/60 focus-visible:ring-offset-1',
           checked
             ? 'bg-ap-brand border-ap-brand'

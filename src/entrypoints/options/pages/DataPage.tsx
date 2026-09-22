@@ -3,6 +3,7 @@ import { useAppStore } from '~/storage/store';
 import { Switch } from '~/ui/components/Switch';
 import { Button } from '~/ui/components/Button';
 import { SectionHeader } from '~/ui/components/SectionHeader';
+import { Input } from '~/ui/components/Input';
 import { ResultBanner } from '~/ui/components/ResultBanner';
 import { useT } from '~/i18n';
 import { exportAppData, importAppData } from '~/storage/transfer';
@@ -11,6 +12,7 @@ import { exportAppData, importAppData } from '~/storage/transfer';
 export function DataPage() {
   const data = useAppStore((s) => s.data);
   const replaceAll = useAppStore((s) => s.replaceAll);
+  const update = useAppStore((s) => s.updateSettings);
   const t = useT();
   const [includeKeys, setIncludeKeys] = useState(false);
   const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -45,9 +47,18 @@ export function DataPage() {
   }
 
   return (
-    <div class="max-w-lg space-y-8">
-      <div>
-        <SectionHeader number="01" label={t('sectionData').toUpperCase()} />
+    <div class="space-y-5">
+      <section class="ap-settings-panel">
+        <SectionHeader label={t('sectionCache')} />
+        <Switch checked={data.settings.cacheEnabled}
+          onChange={(cacheEnabled) => update({ cacheEnabled })}
+          label={t('cacheTranslations')} description={t('cacheDesc')} />
+        <Input inline label={t('cacheTtl')} type="number" min="1" max="365"
+          value={String(data.settings.cacheTTLDays)} disabled={!data.settings.cacheEnabled}
+          onChange={(e) => update({ cacheTTLDays: Math.min(365, Math.max(1, Number(e.currentTarget.value) || 7)) })} />
+      </section>
+      <div class="ap-settings-panel">
+        <SectionHeader label={t('sectionData')} />
         <p class="text-sm text-ap-muted mb-4">{t('dataSectionDesc')}</p>
         <div class="space-y-4">
           <Switch

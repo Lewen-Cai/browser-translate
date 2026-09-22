@@ -4,7 +4,7 @@ import {
 } from '~/ui/icons';
 import { streamTranslate, abortTranslate } from '~/messaging/client';
 import { clampCardPosition, computeCardBasePosition } from './cardLayout';
-import { looksLikeDictionary } from '~/core/dictionary/discriminate';
+import type { ResultFormat } from '~/core/selection/response';
 import { advanceReveal } from './reveal';
 import { parseDictionaryEntry } from '~/core/dictionary/parse';
 import { DictionaryView } from './DictionaryView';
@@ -13,7 +13,8 @@ import { writeClipboard } from './clipboard';
 import { ProviderIcon } from '~/ui/ProviderIcon';
 import { engineOptions } from '~/ui/engineOptions';
 import { translationAttribution } from '~/ui/attribution';
-import { TARGET_LANGUAGES, languageEndonym } from '~/core/language/targets';
+import { languageEndonym } from '~/core/language/targets';
+import { languageChoices } from '~/core/language/search';
 import { identifyLanguage, sourceLanguageEndonym } from '~/core/language/identify';
 import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
 import { t } from '~/i18n';
@@ -26,7 +27,6 @@ interface Props {
   rect: DOMRect;
   locale: Locale;
   onClose: () => void;
-  notice?: string;
   /** Every provider row, so the card can offer the ones switched on. */
   providers: ProvidersConfig;
   /** Who routing picked for the selection surface — the card's starting point. */
@@ -50,7 +50,7 @@ function friendlyError(raw: string, locale: Locale): string {
 }
 
 export function TranslationCard({
-  text, rect, locale, onClose, notice,
+  text, rect, locale, onClose,
   providers, defaultProvider, defaultTargetLang, size, onPinChange,
 }: Props) {
   const [pinned, setPinned] = useState(false);
@@ -73,6 +73,7 @@ export function TranslationCard({
   const [received, setReceived] = useState('');   // full text received so far
   const [displayed, setDisplayed] = useState(''); // progressively revealed slice
   const [streaming, setStreaming] = useState(true);
+  const [format, setFormat] = useState<ResultFormat>('text');
   const [error, setError] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);   // drives open animation
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -102,10 +103,6 @@ export function TranslationCard({
   const provider = providerOverride ?? defaultProvider;
   const targetLang = langOverride ?? defaultTargetLang;
   const attribution = translationAttribution(provider, providers[provider]);
-  // The notice says this selection is already in the target language, which the
-  // content script worked out against the configured one. Asking for a third
-  // language makes that verdict stale, so the card goes and translates instead.
-  const activeNotice = langOverride ? undefined : notice;
 
   useEffect(() => {
     const animId = window.requestAnimationFrame(() => setVisible(true));
@@ -116,7 +113,6 @@ export function TranslationCard({
   // new text, and must translate that text rather than keep showing the old
   // result. Position, pin state and the reveal machinery survive the change.
   useEffect(() => {
-    if (activeNotice) return;
     const token = ++runToken.current;
 
     // Typewriter reveal loop: advance `displayed` toward `received` each frame,
@@ -145,9 +141,9 @@ export function TranslationCard({
       window.cancelAnimationFrame(raf);
       if (currentReqId.current) abortTranslate(currentReqId.current);
     };
-  }, [text, activeNotice, provider, targetLang, attempt]);
+  }, [text, provider, targetLang, attempt]);
 
-  async function run(token: number) {
+  function resetAnswer() {
     setReceived('');
     setDisplayed('');
     setError(null);
@@ -155,6 +151,11 @@ export function TranslationCard({
     receivedRef.current = '';
     displayedLenRef.current = 0;
     doneRef.current = false;
+    setFormat('text');
+  }
+
+  async function run(token: number) {
+    resetAnswer();
     const reqId = `req-${Date.now()}-${++requestSeq}`;
     currentReqId.current = reqId;
     // Consumed here rather than held in state: it belongs to this one attempt,
@@ -176,14 +177,28 @@ export function TranslationCard({
           full += msg.delta;
           receivedRef.current = full;
           setReceived(full);
+        } else if (msg.type === 'translate:reset') {
+          full = '';
+          resetAnswer();
         } else if (msg.type === 'translate:error') {
           setError(friendlyError(msg.message, locale));
           setStreaming(false);
           doneRef.current = true;
           return;
         } else {
+          if ((msg.format !== 'text' && msg.format !== 'dictionary') || typeof msg.full !== 'string') {
+            setError(t('invalidModelOutput', locale));
+            setStreaming(false);
+            doneRef.current = true;
+            return;
+          }
           full = msg.full;
           receivedRef.current = full;
+          // The authoritative final result can be shorter or normalized. Never
+          // leave a longer pre-retry/typewriter string on screen.
+          displayedLenRef.current = Math.min(displayedLenRef.current, full.length);
+          setDisplayed(full.slice(0, displayedLenRef.current));
+          setFormat(msg.format);
           setReceived(full);
           setStreaming(false);
           doneRef.current = true;
@@ -285,10 +300,11 @@ export function TranslationCard({
     ? clampCardPosition(pin.left + offset.x, pin.top + offset.y, size.width, { x: 0, y: 0 })
     : clampCardPosition(base.left + offset.x, base.top + offset.y, size.width);
 
-  // Discriminate on the full received text. Dictionary (JSON, starts with '{')
-  // renders only once complete; translations show the typewriter-revealed slice.
-  const isDict = looksLikeDictionary(received);
+  // The background validates and names the result. Braces in ordinary source
+  // content are not a rendering protocol. Never fall back to raw dictionary JSON.
+  const isDict = format === 'dictionary';
   const dictEntry = isDict && !streaming && !error ? parseDictionaryEntry(received) : null;
+  const displayError = error ?? (isDict && !streaming && !dictEntry ? t('invalidModelOutput', locale) : null);
 
   /**
    * Nothing has come back yet.
@@ -302,12 +318,12 @@ export function TranslationCard({
    * behind the card. So this state is the card saying one thing, at the size of
    * saying it, and the frame arrives with the first words.
    */
-  const awaitingAnswer = !error && !activeNotice && streaming && (isDict || !displayed);
+  const awaitingAnswer = !displayError && streaming && !displayed;
 
   // What the copy button puts on the clipboard: the answer, not the card. A
   // dictionary entry's answer is its formal translation, falling back to the
   // senses — copying the raw JSON would be copying our own plumbing.
-  const copyText = error
+  const copyText = displayError
     ? ''
     : dictEntry
       ? dictEntry.translation || dictEntry.senses.join('; ')
@@ -329,11 +345,12 @@ export function TranslationCard({
       : undefined,
   }));
 
-  const langItems: CardMenuItem[] = TARGET_LANGUAGES.map((l) => ({
+  const langItems: CardMenuItem[] = useMemo(() => languageChoices(locale).map((l) => ({
     value: l.code,
     label: l.endonym,
-    hint: l.endonym === l.english ? undefined : l.english,
-  }));
+    hint: l.localized !== l.endonym ? l.localized : l.endonym !== l.english ? l.english : undefined,
+    searchText: l.searchText,
+  })), [locale]);
 
   return (
     <>
@@ -381,7 +398,7 @@ export function TranslationCard({
           <div class="bt-card-title-row">
             {sourceLang ? (
               <span class="bt-card-pair">
-                <span class="bt-card-pair-lang">{sourceLanguageEndonym(sourceLang)}</span>
+                <span class="bt-card-pair-lang">{sourceLang === 'mixed' ? t('sourceMixed', locale) : sourceLanguageEndonym(sourceLang)}</span>
                 <span class="bt-card-pair-arrow" aria-hidden="true">→</span>
                 <span class="bt-card-pair-lang">{languageEndonym(targetLang)}</span>
               </span>
@@ -406,7 +423,6 @@ export function TranslationCard({
             <button
               onClick={retranslate}
               class="bt-card-close"
-              disabled={Boolean(activeNotice)}
               title={t('cardRetranslate', locale)}
               aria-label={t('cardRetranslate', locale)}
             >
@@ -434,24 +450,22 @@ export function TranslationCard({
               <Loader2 size={13} class="animate-spin" /> {t('loading', locale)}
             </span>
           </div>
-        ) : activeNotice ? (
-          <div class="bt-card-notice">{activeNotice}</div>
         ) : (
           <>
             {/* The source sits above the translation so the two can be read
                 against each other. A dictionary entry already leads with the
                 headword, so repeating it there would be noise. */}
-            {!error && !dictEntry && (
+            {!displayError && !dictEntry && (
               <div class="bt-card-source-row">
                 <div class="bt-card-source">{text}</div>
               </div>
             )}
             <div class="bt-card-result-row">
               <div class="bt-card-result">
-                {error ? (
+                {displayError ? (
                   <div class="bt-card-error">
                     <AlertCircle size={15} class="bt-card-error-icon" />
-                    <span>{error}</span>
+                    <span>{displayError}</span>
                   </div>
                 ) : dictEntry ? (
                   <DictionaryView entry={dictEntry} locale={locale} />
@@ -471,11 +485,7 @@ export function TranslationCard({
       <div class="bt-card-footer">
         {/* The credit line is also the switch. Who answered and who could
             answer instead are the same question, so they are one control
-            rather than a label with a second control beside it. Under a notice
-            nobody answered, so there is nothing to credit — but the language
-            control stays, because it is what makes the notice recoverable:
-            picking a third language is exactly the case the notice got wrong. */}
-        {!activeNotice && (
+            rather than a label with a second control beside it. */}
           <button
             class="bt-card-foot-btn"
             onClick={(e) => toggleMenu('provider', e)}
@@ -486,7 +496,6 @@ export function TranslationCard({
             <span class="bt-card-footer-label">{attribution.label || PROVIDERS[provider].label}</span>
             <ChevronDown size={12} />
           </button>
-        )}
         <button
           class="bt-card-foot-btn bt-card-foot-lang"
           onClick={(e) => toggleMenu('lang', e)}

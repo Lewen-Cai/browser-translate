@@ -12,8 +12,11 @@ import type { MtEngineId } from './types';
  *   region here would answer in the wrong variety without erroring.
  */
 const OVERRIDES: Record<MtEngineId, Record<string, string>> = {
-  microsoft: { 'zh-CN': 'zh-Hans', 'zh-TW': 'zh-Hant', 'pt-PT': 'pt-PT' },
-  google: { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-PT': 'pt-PT' },
+  // Endpoint probes: Microsoft preserves en-GB and sr-Cyrl; en-AU resolves to
+  // en. Google returned generic English for all three English regions.
+  // Unsupported English variants intentionally use the primary-subtag fallback.
+  microsoft: { 'zh-CN': 'zh-Hans', 'zh-TW': 'zh-Hant', 'pt-PT': 'pt-PT', 'en-GB': 'en-GB', 'sr-Cyrl': 'sr-Cyrl' },
+  google: { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-PT': 'pt-PT', fil: 'tl', 'sr-Cyrl': 'sr' },
 };
 
 /** Map an app language code to the engine's own code. */

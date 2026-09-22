@@ -4,6 +4,7 @@ import { DEFAULT_PROVIDER } from '~/core/engines/routing';
 import { DEFAULT_SUBTITLE_POSITION, DEFAULT_SUBTITLE_STYLE } from '~/core/subtitles/style';
 import { DEFAULT_TARGET_LANGUAGE } from '~/core/language/targets';
 import { DEFAULT_CARD_SIZE } from '~/core/card/size';
+import { defaultPromptSettings } from '~/core/prompt/templates';
 
 /**
  * A blank row for `id`. Cloud vendors start on their first endpoint so the
@@ -40,6 +41,7 @@ export function createDefaultAppData(): AppData {
         subtitle: DEFAULT_PROVIDER,
       },
       targetLanguage: DEFAULT_TARGET_LANGUAGE,
+      prompts: defaultPromptSettings(),
       triggerMode: 'icon',
       hotkey: 'Alt+T',
       fullPageHotkey: 'Alt+A',

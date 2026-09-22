@@ -1,15 +1,14 @@
 /**
  * The languages we translate INTO.
  *
- * Deliberately not the interface locales from `~/i18n`. The UI ships in eight
- * languages because each one is a hand-written string table someone had to
- * write; translating *into* a language costs nothing but a code the engine
- * already knows. Tying the two lists together capped the target list at eight
+ * Deliberately not the interface locales from `~/i18n`. Interface
+ * languages require complete string tables; translation targets are independent
+ * and use engine-specific codes. Tying the two lists together capped the target list at eight
  * for no reason, so they are separate now.
  *
- * Every code below was checked against both free engines (2026-08) by asking
- * for a sentence whose translation differs visibly between neighbouring
- * languages, and confirming the answer came back in the language requested.
+ * Base languages have been smoke-tested against both free endpoints with
+ * synthetic text. English variants are primarily LLM instructions: unsupported
+ * service variants intentionally fall back to generic English without a warning.
  * Notes from that pass:
  *
  * - Hebrew is `he`. Google also accepts the legacy `iw`, Microsoft returns 400
@@ -37,24 +36,39 @@ export interface TargetLanguage {
 export const TARGET_LANGUAGES: readonly TargetLanguage[] = [
   { code: 'ar', endonym: 'العربية', english: 'Arabic' },
   { code: 'bn', endonym: 'বাংলা', english: 'Bengali' },
+  { code: 'bg', endonym: 'Български', english: 'Bulgarian' },
+  { code: 'ca', endonym: 'Català', english: 'Catalan' },
   { code: 'zh-CN', endonym: '简体中文', english: 'Chinese (Simplified)' },
   { code: 'zh-TW', endonym: '繁體中文', english: 'Chinese (Traditional)' },
+  { code: 'hr', endonym: 'Hrvatski', english: 'Croatian' },
   { code: 'cs', endonym: 'Čeština', english: 'Czech' },
   { code: 'da', endonym: 'Dansk', english: 'Danish' },
   { code: 'nl', endonym: 'Nederlands', english: 'Dutch' },
-  { code: 'en', endonym: 'English', english: 'English' },
+  { code: 'en-AU', endonym: 'English (Australia)', english: 'English (Australia)' },
+  { code: 'en-GB', endonym: 'English (United Kingdom)', english: 'English (United Kingdom)' },
+  { code: 'en-US', endonym: 'English (United States)', english: 'English (United States)' },
+  { code: 'et', endonym: 'Eesti', english: 'Estonian' },
+  { code: 'fil', endonym: 'Filipino', english: 'Filipino' },
   { code: 'fi', endonym: 'Suomi', english: 'Finnish' },
   { code: 'fr', endonym: 'Français', english: 'French' },
   { code: 'de', endonym: 'Deutsch', english: 'German' },
   { code: 'el', endonym: 'Ελληνικά', english: 'Greek' },
+  { code: 'gu', endonym: 'ગુજરાતી', english: 'Gujarati' },
   { code: 'he', endonym: 'עברית', english: 'Hebrew' },
   { code: 'hi', endonym: 'हिन्दी', english: 'Hindi' },
   { code: 'hu', endonym: 'Magyar', english: 'Hungarian' },
+  { code: 'is', endonym: 'Íslenska', english: 'Icelandic' },
   { code: 'id', endonym: 'Bahasa Indonesia', english: 'Indonesian' },
+  { code: 'ga', endonym: 'Gaeilge', english: 'Irish' },
   { code: 'it', endonym: 'Italiano', english: 'Italian' },
   { code: 'ja', endonym: '日本語', english: 'Japanese' },
+  { code: 'km', endonym: 'ខ្មែរ', english: 'Khmer' },
   { code: 'ko', endonym: '한국어', english: 'Korean' },
+  { code: 'lv', endonym: 'Latviešu', english: 'Latvian' },
+  { code: 'lt', endonym: 'Lietuvių', english: 'Lithuanian' },
   { code: 'ms', endonym: 'Bahasa Melayu', english: 'Malay' },
+  { code: 'mr', endonym: 'मराठी', english: 'Marathi' },
+  { code: 'ne', endonym: 'नेपाली', english: 'Nepali' },
   { code: 'nb', endonym: 'Norsk bokmål', english: 'Norwegian Bokmål' },
   { code: 'fa', endonym: 'فارسی', english: 'Persian' },
   { code: 'pl', endonym: 'Polski', english: 'Polish' },
@@ -62,13 +76,20 @@ export const TARGET_LANGUAGES: readonly TargetLanguage[] = [
   { code: 'pt-PT', endonym: 'Português (Portugal)', english: 'Portuguese (Portugal)' },
   { code: 'ro', endonym: 'Română', english: 'Romanian' },
   { code: 'ru', endonym: 'Русский', english: 'Russian' },
+  { code: 'sr-Cyrl', endonym: 'Српски (ћирилица)', english: 'Serbian (Cyrillic)' },
+  { code: 'sk', endonym: 'Slovenčina', english: 'Slovak' },
+  { code: 'sl', endonym: 'Slovenščina', english: 'Slovenian' },
   { code: 'es', endonym: 'Español', english: 'Spanish' },
+  { code: 'sw', endonym: 'Kiswahili', english: 'Swahili' },
   { code: 'sv', endonym: 'Svenska', english: 'Swedish' },
+  { code: 'ta', endonym: 'தமிழ்', english: 'Tamil' },
+  { code: 'te', endonym: 'తెలుగు', english: 'Telugu' },
   { code: 'th', endonym: 'ไทย', english: 'Thai' },
   { code: 'tr', endonym: 'Türkçe', english: 'Turkish' },
   { code: 'uk', endonym: 'Українська', english: 'Ukrainian' },
   { code: 'ur', endonym: 'اردو', english: 'Urdu' },
   { code: 'vi', endonym: 'Tiếng Việt', english: 'Vietnamese' },
+  { code: 'cy', endonym: 'Cymraeg', english: 'Welsh' },
 ];
 
 /** What a store falls back to when its target language is missing or unknown. */
@@ -79,6 +100,12 @@ const BY_CODE = new Map(TARGET_LANGUAGES.map((l) => [l.code, l]));
 /** True when `code` is one we offer. */
 export function isTargetLanguage(code: unknown): code is string {
   return typeof code === 'string' && BY_CODE.has(code);
+}
+
+/** Older settings offered generic English; preserve their intent as US English. */
+export function normalizeTargetLanguage(code: unknown): string {
+  if (code === 'en') return 'en-US';
+  return isTargetLanguage(code) ? code : DEFAULT_TARGET_LANGUAGE;
 }
 
 /**
@@ -96,17 +123,3 @@ export function languageName(code: string): string {
 export function languageEndonym(code: string): string {
   return BY_CODE.get(code)?.endonym ?? code;
 }
-
-/**
- * `{ value, label }` pairs for a Select. The endonym leads, because a reader
- * looking for their own language scans for its own name; the English name
- * follows so the list stays searchable from a keyboard that cannot type the
- * endonym. Built once — the list never changes at runtime.
- */
-export const TARGET_LANGUAGE_OPTIONS: readonly { value: string; label: string }[] =
-  TARGET_LANGUAGES.map((l) => ({
-    value: l.code,
-    // A middle dot, not parentheses: several English names carry their own
-    // parenthetical already ("Chinese (Simplified)"), and nesting them reads badly.
-    label: l.endonym === l.english ? l.endonym : `${l.endonym} · ${l.english}`,
-  }));

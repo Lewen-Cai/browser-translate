@@ -1,23 +1,17 @@
 export interface BatchDeps {
   cacheGet: (segment: string) => Promise<string | undefined>;
   cacheSet: (segment: string, translated: string) => Promise<void>;
-  /**
-   * Translate a set of segments in one provider call. `parsed` is the aligned
-   * array (length === segs.length) or null if parsing/alignment failed; `raw` is
-   * the model's raw text content (used as a best-effort fallback for a single
-   * segment).
-   */
-  translateOnce: (segments: string[]) => Promise<{ parsed: string[] | null; raw: string }>;
+  /** Return validated, aligned text or null for a protocol failure. */
+  translateOnce: (segments: string[]) => Promise<string[] | null>;
+  /** A separate text-only request, validated before returning. No raw fallback. */
+  translateSingle: (segment: string) => Promise<string>;
 }
 
 async function translateWithFallback(segments: string[], deps: BatchDeps): Promise<string[]> {
-  const { parsed, raw } = await deps.translateOnce(segments);
+  const parsed = await deps.translateOnce(segments);
   if (parsed && parsed.length === segments.length) return parsed;
-  if (segments.length === 1) return [raw.trim()];
   const out: string[] = [];
-  for (const seg of segments) {
-    out.push((await translateWithFallback([seg], deps))[0]!);
-  }
+  for (const seg of segments) out.push(await deps.translateSingle(seg));
   return out;
 }
 
