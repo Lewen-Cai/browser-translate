@@ -2,6 +2,57 @@
 
 All notable changes will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.2] — 2026-09-23
+
+### Added
+- **Complete READMEs in all 14 interface languages**, with a centered project
+  header, language navigation and links to installation, configuration and
+  project activity. Localized files use `README_<locale>.md`; the Simplified
+  Chinese entry is now `README_zh-CN.md` instead of `README_CN.md`.
+- **Custom base prompts** with a template library and editor. The default is
+  visible and read-only; create from it or from a blank template through New.
+  Save & apply in one step, or save without applying for later. Internal
+  dictionary and output-format rules remain managed by the extension.
+- **56 translation targets**, including US, UK and Australian English, and
+  **14 interface languages**. New UI locales: Brazilian Portuguese, Italian,
+  Russian, Turkish, Vietnamese and Indonesian. Search target languages by
+  native, English or localized name, code, or common English-region aliases.
+- **Subtitle preview and compact controls** for both lines, with exact size
+  and opacity inputs, a small color palette, HEX entry and a visible reset
+  button.
+
+### Changed
+- **A compact interface** with system UI fonts and five settings pages:
+  General, Translation, Providers, Subtitles and Data. Provider setup is
+  separate from translation policy; cache controls now live under Data.
+- Popup focuses on target language, a current-page bilingual switch and
+  compact engine choices. Trigger mode stays in settings. Version and update
+  controls appear only in settings, using the same font as the interface, and
+  what a check finds lands in a full-width strip below the header rather than
+  inside it — so the header keeps one height and long localized instructions
+  are not squeezed into a narrow column.
+- Removed same-language blocking for selections, pages and subtitles so
+  mixed-language text and regional rewrites can be requested normally.
+- Generic English targets migrate to US English. Unsupported English
+  varieties on free services silently fall back to generic English without
+  switching providers. LLMs receive explicit regional instructions.
+
+### Fixed
+- **Passages no longer enter dictionary mode.** Short terms retain automatic
+  lookup, but dictionary entries must match the whole selection. Suspect
+  structured output is validated before rendering; invalid output gets one
+  text-only correction and is never exposed as raw protocol JSON or cached.
+- **Page and subtitle batches align by ID.** Missing/duplicate IDs and invalid
+  value types are rejected. A failed batch uses validated text-only fallbacks
+  instead of displaying raw responses. Retry attempts replace earlier streamed
+  text rather than appending to it.
+- Substantial mixed-script source text can display a mixed-language label
+  instead of being confidently identified as English by character count.
+- Prompt edits use separate LLM cache entries. Page and subtitle instructions
+  are also isolated; free-service caches are independent of custom prompts.
+- Subtitle settings show valid values from the player instead of blank
+  dropdowns when a value is absent from a short preset list.
+
 ## [0.2.1] — 2026-08-30
 
 ### Added
