@@ -11,7 +11,7 @@ import { SectionHeader } from '~/ui/components/SectionHeader';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
 import { useApplyLocale } from '~/ui/useApplyLocale';
-import { UpdateCheck } from './UpdateCheck';
+import { UpdateCheck, UpdateNotice, useUpdateCheck } from './UpdateCheck';
 
 type Tab = 'general' | 'translation' | 'providers' | 'video' | 'data';
 
@@ -22,6 +22,10 @@ export function App() {
   const t = useT();
   useApplyTheme();
   useApplyLocale();
+  // Beside the other header concerns, and before the loading return, because
+  // hooks cannot be called conditionally. It reads the manifest and, at most,
+  // the result of a check the user asked for earlier.
+  const update = useUpdateCheck();
   useEffect(() => { void load(); }, [load]);
   if (!loaded) return <div class="p-8 text-sm text-ap-muted">{t('loading')}</div>;
 
@@ -41,9 +45,10 @@ export function App() {
             <div class="text-base font-semibold">BrowserTranslate</div>
             <h1 class="mt-0.5 text-sm text-ap-muted">{t('settings')}</h1>
           </div>
-          <UpdateCheck />
+          <UpdateCheck version={update.version} checking={update.checking} onCheck={() => void update.check()} />
         </div>
       </header>
+      <UpdateNotice outcome={update.outcome} />
       <div class="mx-auto flex max-w-[1040px] flex-col gap-6 px-6 py-7 sm:flex-row sm:gap-8">
         <nav aria-label={t('settings')} class="shrink-0 sm:w-40">
           <ul class="flex flex-wrap gap-1 sm:sticky sm:top-6 sm:flex-col">
