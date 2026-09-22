@@ -1,26 +1,26 @@
-<p align="center"><img src="./assets/banner.png" alt="BrowserTranslate — 개인정보 보호 중심의 브라우저 번역" width="900"></p>
+<p align="center"><img src="../assets/banner.png" alt="BrowserTranslate — 개인정보 보호 중심의 브라우저 번역" width="900"></p>
 <h1 align="center">BrowserTranslate</h1>
 <p align="center"><strong>원하는 모델로 웹페이지와 영상 자막을 읽으세요.</strong><br>오픈 소스 · 직접 준비한 API 키 · 중계 서버 없음 · 원격 측정 없음</p>
 <p align="center">
-  <a href="./README.md"><kbd>English</kbd></a>
-  <a href="./README_zh-CN.md"><kbd>简体中文</kbd></a>
-  <a href="./README_zh-TW.md"><kbd>繁體中文</kbd></a>
-  <a href="./README_ja.md"><kbd>日本語</kbd></a>
-  <a href="./README_ko.md"><kbd><b>한국어</b></kbd></a>
-  <a href="./README_es.md"><kbd>Español</kbd></a>
-  <a href="./README_fr.md"><kbd>Français</kbd></a><br>
-  <a href="./README_de.md"><kbd>Deutsch</kbd></a>
-  <a href="./README_pt-BR.md"><kbd>Português (Brasil)</kbd></a>
-  <a href="./README_it.md"><kbd>Italiano</kbd></a>
-  <a href="./README_ru.md"><kbd>Русский</kbd></a>
-  <a href="./README_tr.md"><kbd>Türkçe</kbd></a>
-  <a href="./README_vi.md"><kbd>Tiếng Việt</kbd></a>
-  <a href="./README_id.md"><kbd>Bahasa Indonesia</kbd></a>
+  <a href="../README.md"><kbd>English</kbd></a>
+  <a href="./zh-CN.md"><kbd>简体中文</kbd></a>
+  <a href="./zh-TW.md"><kbd>繁體中文</kbd></a>
+  <a href="./ja.md"><kbd>日本語</kbd></a>
+  <a href="./ko.md"><kbd><b>한국어</b></kbd></a>
+  <a href="./es.md"><kbd>Español</kbd></a>
+  <a href="./fr.md"><kbd>Français</kbd></a><br>
+  <a href="./de.md"><kbd>Deutsch</kbd></a>
+  <a href="./pt-BR.md"><kbd>Português (Brasil)</kbd></a>
+  <a href="./it.md"><kbd>Italiano</kbd></a>
+  <a href="./ru.md"><kbd>Русский</kbd></a>
+  <a href="./tr.md"><kbd>Türkçe</kbd></a>
+  <a href="./vi.md"><kbd>Tiếng Việt</kbd></a>
+  <a href="./id.md"><kbd>Bahasa Indonesia</kbd></a>
 </p>
-<p align="center"><a href="#installation">설치</a> · <a href="#configuration">설정</a> · <a href="./CHANGELOG.md">변경 기록</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">문제 신고</a></p>
+<p align="center"><a href="#installation">설치</a> · <a href="#configuration">설정</a> · <a href="../CHANGELOG.md">변경 기록</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">문제 신고</a></p>
 <p align="center">
   <a href="https://github.com/Lewen-Cai/browser-translate/releases/latest"><img src="https://img.shields.io/github/v/release/Lewen-Cai/browser-translate?style=flat-square&amp;color=2563eb" alt="최신 릴리스"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml"><img src="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/stargazers"><img src="https://img.shields.io/github/stars/Lewen-Cai/browser-translate?style=flat-square" alt="GitHub stars"></a>
 </p>
@@ -69,7 +69,7 @@
 <a id="architecture"></a>
 ## 구조
 
-<p align="center"><img src="./assets/framework.png" alt="BrowserTranslate 구조 및 제공업체 직접 연결" width="760"></p>
+<p align="center"><img src="../assets/framework.png" alt="BrowserTranslate 구조 및 제공업체 직접 연결" width="760"></p>
 
 LLM과 기계 번역 요청은 **백그라운드 서비스 워커**에서 실행합니다. 웹사이트 JavaScript에는 API 키를 제공하지 않습니다. 콘텐츠 스크립트가 결과 표시와 페이지／플레이어 통합을 담당하며, 사이트별 자막 가져오기는 콘텐츠 또는 페이지 컨텍스트에서 실행될 수도 있습니다. 프로젝트가 운영하는 중계 서버는 없습니다.
 
@@ -167,7 +167,7 @@ pnpm lint
 pnpm build        # 프로덕션: .output/chrome-mv3/
 ```
 
-출력 폴더를 압축 해제 확장으로 로드하세요. 빌드를 바꾸면 확장과 대상 페이지를 다시 로드합니다. [CHANGELOG.md](./CHANGELOG.md)에서 변경 내역을 보고 [Issues](https://github.com/Lewen-Cai/browser-translate/issues)에 문제와 제안을 남길 수 있습니다. 보고에서 API 키와 비공개 페이지 내용을 제거해 주세요.
+출력 폴더를 압축 해제 확장으로 로드하세요. 빌드를 바꾸면 확장과 대상 페이지를 다시 로드합니다. [CHANGELOG.md](../CHANGELOG.md)에서 변경 내역을 보고 [Issues](https://github.com/Lewen-Cai/browser-translate/issues)에 문제와 제안을 남길 수 있습니다. 보고에서 API 키와 비공개 페이지 내용을 제거해 주세요.
 
 <a id="acknowledgements"></a>
 ## 감사의 말
@@ -178,4 +178,4 @@ pnpm build        # 프로덕션: .output/chrome-mv3/
 <a id="license"></a>
 ## 라이선스
 
-[GPL-3.0](./LICENSE). 파생물을 배포할 때는 소스 코드 제공과 라이선스 의무를 준수해야 합니다. 타사 자산에는 각자의 라이선스가 적용됩니다.
+[GPL-3.0](../LICENSE). 파생물을 배포할 때는 소스 코드 제공과 라이선스 의무를 준수해야 합니다. 타사 자산에는 각자의 라이선스가 적용됩니다.

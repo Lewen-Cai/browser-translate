@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/banner.png" alt="BrowserTranslate — 隐私优先的浏览器翻译" width="900">
+  <img src="../assets/banner.png" alt="BrowserTranslate — 隐私优先的浏览器翻译" width="900">
 </p>
 <h1 align="center">BrowserTranslate</h1>
 <p align="center">
@@ -7,27 +7,27 @@
   开源浏览器翻译 · 自带 API Key · 零中转 · 零遥测
 </p>
 <p align="center">
-  <a href="./README.md"><kbd>English</kbd></a>
-  <a href="./README_zh-CN.md"><kbd><b>简体中文</b></kbd></a>
-  <a href="./README_zh-TW.md"><kbd>繁體中文</kbd></a>
-  <a href="./README_ja.md"><kbd>日本語</kbd></a>
-  <a href="./README_ko.md"><kbd>한국어</kbd></a>
-  <a href="./README_es.md"><kbd>Español</kbd></a>
-  <a href="./README_fr.md"><kbd>Français</kbd></a><br>
-  <a href="./README_de.md"><kbd>Deutsch</kbd></a>
-  <a href="./README_pt-BR.md"><kbd>Português (Brasil)</kbd></a>
-  <a href="./README_it.md"><kbd>Italiano</kbd></a>
-  <a href="./README_ru.md"><kbd>Русский</kbd></a>
-  <a href="./README_tr.md"><kbd>Türkçe</kbd></a>
-  <a href="./README_vi.md"><kbd>Tiếng Việt</kbd></a>
-  <a href="./README_id.md"><kbd>Bahasa Indonesia</kbd></a>
+  <a href="../README.md"><kbd>English</kbd></a>
+  <a href="./zh-CN.md"><kbd><b>简体中文</b></kbd></a>
+  <a href="./zh-TW.md"><kbd>繁體中文</kbd></a>
+  <a href="./ja.md"><kbd>日本語</kbd></a>
+  <a href="./ko.md"><kbd>한국어</kbd></a>
+  <a href="./es.md"><kbd>Español</kbd></a>
+  <a href="./fr.md"><kbd>Français</kbd></a><br>
+  <a href="./de.md"><kbd>Deutsch</kbd></a>
+  <a href="./pt-BR.md"><kbd>Português (Brasil)</kbd></a>
+  <a href="./it.md"><kbd>Italiano</kbd></a>
+  <a href="./ru.md"><kbd>Русский</kbd></a>
+  <a href="./tr.md"><kbd>Türkçe</kbd></a>
+  <a href="./vi.md"><kbd>Tiếng Việt</kbd></a>
+  <a href="./id.md"><kbd>Bahasa Indonesia</kbd></a>
 </p>
 <p align="center">
-  <a href="#installation">安装</a> · <a href="#configuration">配置</a> · <a href="./CHANGELOG.md">更新日志</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">问题反馈</a>
+  <a href="#installation">安装</a> · <a href="#configuration">配置</a> · <a href="../CHANGELOG.md">更新日志</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">问题反馈</a>
 </p>
 <p align="center">
   <a href="https://github.com/Lewen-Cai/browser-translate/releases/latest"><img src="https://img.shields.io/github/v/release/Lewen-Cai/browser-translate?style=flat-square&amp;color=2563eb" alt="最新发布版本"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml"><img src="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/stargazers"><img src="https://img.shields.io/github/stars/Lewen-Cai/browser-translate?style=flat-square" alt="GitHub stars"></a>
 </p>
@@ -77,7 +77,7 @@
 ## 架构
 
 <p align="center">
-  <img src="./assets/framework.png" alt="BrowserTranslate 架构与直连服务商的数据流" width="760">
+  <img src="../assets/framework.png" alt="BrowserTranslate 架构与直连服务商的数据流" width="760">
 </p>
 
 LLM 与机器翻译请求由**后台 Service Worker**发起，不向网站 JavaScript 提供你的 API Key。内容脚本负责显示结果及页面／播放器集成；特定站点的字幕获取也可能在内容脚本或页面上下文执行。本项目没有中转服务器。
@@ -176,7 +176,7 @@ pnpm lint
 pnpm build        # 生产构建：.output/chrome-mv3/
 ```
 
-将开发或生产输出目录作为已解压扩展加载；更换构建后重新加载扩展并刷新网页。[CHANGELOG.md](./CHANGELOG.md) 记录版本变化，[Issues](https://github.com/Lewen-Cai/browser-translate/issues) 接收问题和建议。反馈时请移除 API Key 和私人网页内容。
+将开发或生产输出目录作为已解压扩展加载；更换构建后重新加载扩展并刷新网页。[CHANGELOG.md](../CHANGELOG.md) 记录版本变化，[Issues](https://github.com/Lewen-Cai/browser-translate/issues) 接收问题和建议。反馈时请移除 API Key 和私人网页内容。
 
 <a id="acknowledgements"></a>
 ## 致谢
@@ -187,4 +187,4 @@ pnpm build        # 生产构建：.output/chrome-mv3/
 <a id="license"></a>
 ## 许可证
 
-[GPL-3.0](./LICENSE)。分发派生作品时须遵守对应的源代码与许可义务；第三方素材保留各自许可证。
+[GPL-3.0](../LICENSE)。分发派生作品时须遵守对应的源代码与许可义务；第三方素材保留各自许可证。

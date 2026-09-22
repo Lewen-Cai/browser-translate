@@ -7,7 +7,17 @@ import { MESSAGES } from './strings';
 // pnpm/Vitest run from the repository root; Vite may rewrite import.meta.url
 // to an HTTP URL in jsdom, so do not treat it as a filesystem URL here.
 const root = process.cwd();
-const filename = (locale: string) => locale === 'en' ? 'README.md' : `README_${locale}.md`;
+// English stays at the repository root, which is the only place GitHub reads a
+// landing page from. Every other language lives in readmes/, under its own
+// locale code.
+const pathFor = (locale: string) => locale === 'en' ? 'README.md' : `readmes/${locale}.md`;
+const others = LOCALES.filter((l) => l !== 'en');
+
+/** Where a language chip should point, from the document doing the pointing. */
+const navTarget = (from: string, to: string) => {
+  if (to === 'en') return from === 'en' ? './README.md' : '../README.md';
+  return from === 'en' ? `./readmes/${to}.md` : `./${to}.md`;
+};
 const sections = [
   'why', 'features', 'subtitles', 'languages', 'architecture', 'installation',
   'configuration', 'prompts', 'validation', 'free-engines', 'privacy',
@@ -27,15 +37,16 @@ function existsWithExactCase(relative: string): boolean {
 }
 
 describe('localized README coverage', () => {
-  it('has exactly one README per interface locale with standardized filenames', () => {
-    const files = readdirSync(root).filter((name) => /^README(?:_[^.]+)?\.md$/.test(name));
-    expect(files.sort()).toEqual(LOCALES.map(filename).sort());
-    expect(files).not.toContain('README_CN.md');
+  it('keeps English at the root and every other language in readmes/', () => {
+    expect(readdirSync(root).filter((name) => /^README.*\.md$/.test(name))).toEqual(['README.md']);
+    expect(readdirSync(path.join(root, 'readmes')).filter((name) => name.endsWith('.md')).sort())
+      .toEqual([...others].sort().map((l) => `${l}.md`));
+    expect(readdirSync(root)).not.toContain('README_CN.md');
   });
 
   for (const locale of LOCALES) {
     describe(locale, () => {
-      const content = readFileSync(path.join(root, filename(locale)), 'utf8');
+      const content = readFileSync(path.join(root, pathFor(locale)), 'utf8');
       const headerText = content.slice(0, content.indexOf('<a id="why">'));
       const header = document.createElement('div');
       header.innerHTML = headerText;
@@ -43,10 +54,11 @@ describe('localized README coverage', () => {
       it('centers the hero and links every language exactly once, marking itself', () => {
         expect(header.querySelector('h1[align="center"]')?.textContent).toBe('BrowserTranslate');
         const links = Array.from(header.querySelectorAll<HTMLAnchorElement>('a')).filter((a) => a.querySelector('kbd'));
-        expect(links.map((a) => a.getAttribute('href')).sort()).toEqual(LOCALES.map((l) => `./${filename(l)}`).sort());
+        const hrefs = links.map((a) => a.getAttribute('href'));
+        expect(hrefs.sort()).toEqual(LOCALES.map((l) => navTarget(locale, l)).sort());
         const current = header.querySelector('kbd > b');
         expect(current?.textContent).toBe(LOCALE_LABELS[locale]);
-        expect(current?.closest('a')?.getAttribute('href')).toBe(`./${filename(locale)}`);
+        expect(current?.closest('a')?.getAttribute('href')).toBe(navTarget(locale, locale));
         for (const link of links) expect(link.closest('p')?.getAttribute('align')).toBe('center');
         for (const image of header.querySelectorAll('img')) expect(image.getAttribute('alt')?.trim()).toBeTruthy();
       });
@@ -76,17 +88,21 @@ describe('localized README coverage', () => {
           ...[...content.matchAll(/(?:href|src)="([^"]+)"/g)].map((m) => m[1]!),
           ...[...content.matchAll(/\]\(([^\s)]+)\)/g)].map((m) => m[1]!),
         ];
+        // Relative links resolve against the document's own directory, which is
+        // `readmes/` for every language but English.
+        const dir = path.posix.dirname(pathFor(locale));
         for (const link of links) {
           if (/^https:\/\//.test(link)) continue;
           if (link.startsWith('#')) {
             expect(sections, link).toContain(link.slice(1));
           } else {
-            expect(existsWithExactCase(link), `${filename(locale)} -> ${link}`).toBe(true);
+            const target = path.posix.normalize(path.posix.join(dir, link));
+            expect(existsWithExactCase(target), `${pathFor(locale)} -> ${link}`).toBe(true);
           }
         }
         expect(content).not.toContain('README_CN.md');
-        expect(content).toContain('./assets/banner.png');
-        expect(content).toContain('./assets/framework.png');
+        expect(content).toContain(`${locale === 'en' ? '.' : '..'}/assets/banner.png`);
+        expect(content).toContain(`${locale === 'en' ? '.' : '..'}/assets/framework.png`);
       });
     });
   }

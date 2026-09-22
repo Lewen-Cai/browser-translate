@@ -1,26 +1,26 @@
-<p align="center"><img src="./assets/banner.png" alt="BrowserTranslate — traduction dans le navigateur, respectueuse de la vie privée" width="900"></p>
+<p align="center"><img src="../assets/banner.png" alt="BrowserTranslate — traduction dans le navigateur, respectueuse de la vie privée" width="900"></p>
 <h1 align="center">BrowserTranslate</h1>
 <p align="center"><strong>Lisez les pages et les sous-titres avec le modèle de votre choix.</strong><br>Open source · Votre propre clé API · Aucun relais · Aucune télémétrie</p>
 <p align="center">
-  <a href="./README.md"><kbd>English</kbd></a>
-  <a href="./README_zh-CN.md"><kbd>简体中文</kbd></a>
-  <a href="./README_zh-TW.md"><kbd>繁體中文</kbd></a>
-  <a href="./README_ja.md"><kbd>日本語</kbd></a>
-  <a href="./README_ko.md"><kbd>한국어</kbd></a>
-  <a href="./README_es.md"><kbd>Español</kbd></a>
-  <a href="./README_fr.md"><kbd><b>Français</b></kbd></a><br>
-  <a href="./README_de.md"><kbd>Deutsch</kbd></a>
-  <a href="./README_pt-BR.md"><kbd>Português (Brasil)</kbd></a>
-  <a href="./README_it.md"><kbd>Italiano</kbd></a>
-  <a href="./README_ru.md"><kbd>Русский</kbd></a>
-  <a href="./README_tr.md"><kbd>Türkçe</kbd></a>
-  <a href="./README_vi.md"><kbd>Tiếng Việt</kbd></a>
-  <a href="./README_id.md"><kbd>Bahasa Indonesia</kbd></a>
+  <a href="../README.md"><kbd>English</kbd></a>
+  <a href="./zh-CN.md"><kbd>简体中文</kbd></a>
+  <a href="./zh-TW.md"><kbd>繁體中文</kbd></a>
+  <a href="./ja.md"><kbd>日本語</kbd></a>
+  <a href="./ko.md"><kbd>한국어</kbd></a>
+  <a href="./es.md"><kbd>Español</kbd></a>
+  <a href="./fr.md"><kbd><b>Français</b></kbd></a><br>
+  <a href="./de.md"><kbd>Deutsch</kbd></a>
+  <a href="./pt-BR.md"><kbd>Português (Brasil)</kbd></a>
+  <a href="./it.md"><kbd>Italiano</kbd></a>
+  <a href="./ru.md"><kbd>Русский</kbd></a>
+  <a href="./tr.md"><kbd>Türkçe</kbd></a>
+  <a href="./vi.md"><kbd>Tiếng Việt</kbd></a>
+  <a href="./id.md"><kbd>Bahasa Indonesia</kbd></a>
 </p>
-<p align="center"><a href="#installation">Installer</a> · <a href="#configuration">Configurer</a> · <a href="./CHANGELOG.md">Changements</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Signaler un problème</a></p>
+<p align="center"><a href="#installation">Installer</a> · <a href="#configuration">Configurer</a> · <a href="../CHANGELOG.md">Changements</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Signaler un problème</a></p>
 <p align="center">
   <a href="https://github.com/Lewen-Cai/browser-translate/releases/latest"><img src="https://img.shields.io/github/v/release/Lewen-Cai/browser-translate?style=flat-square&amp;color=2563eb" alt="Dernière version"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml"><img src="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/stargazers"><img src="https://img.shields.io/github/stars/Lewen-Cai/browser-translate?style=flat-square" alt="GitHub stars"></a>
 </p>
@@ -69,7 +69,7 @@ L’anglais distingue **États-Unis, Royaume-Uni et Australie** ; l’ancien `en
 <a id="architecture"></a>
 ## Architecture
 
-<p align="center"><img src="./assets/framework.png" alt="Architecture de BrowserTranslate et connexions directes aux fournisseurs" width="760"></p>
+<p align="center"><img src="../assets/framework.png" alt="Architecture de BrowserTranslate et connexions directes aux fournisseurs" width="760"></p>
 
 Les requêtes LLM et de traduction automatique passent par le **service worker d’arrière-plan**. Le JavaScript du site ne reçoit pas votre clé API. Les scripts de contenu affichent les résultats et s’intègrent aux pages/lecteurs ; certaines récupérations de sous-titres s’exécutent aussi dans le contexte de contenu ou de page. Aucun relais n’est exploité par le projet.
 
@@ -167,7 +167,7 @@ pnpm lint
 pnpm build        # Production : .output/chrome-mv3/
 ```
 
-Chargez le dossier de sortie comme extension non empaquetée. Rechargez l’extension et les pages après un changement de build. Consultez [CHANGELOG.md](./CHANGELOG.md) et signalez problèmes ou demandes dans [Issues](https://github.com/Lewen-Cai/browser-translate/issues), sans clé API ni contenu privé.
+Chargez le dossier de sortie comme extension non empaquetée. Rechargez l’extension et les pages après un changement de build. Consultez [CHANGELOG.md](../CHANGELOG.md) et signalez problèmes ou demandes dans [Issues](https://github.com/Lewen-Cai/browser-translate/issues), sans clé API ni contenu privé.
 
 <a id="acknowledgements"></a>
 ## Remerciements
@@ -178,4 +178,4 @@ Chargez le dossier de sortie comme extension non empaquetée. Rechargez l’exte
 <a id="license"></a>
 ## Licence
 
-[GPL-3.0](./LICENSE). Les œuvres dérivées distribuées doivent respecter les obligations de code source et de licence. Les ressources tierces conservent leurs licences respectives.
+[GPL-3.0](../LICENSE). Les œuvres dérivées distribuées doivent respecter les obligations de code source et de licence. Les ressources tierces conservent leurs licences respectives.

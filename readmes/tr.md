@@ -1,26 +1,26 @@
-<p align="center"><img src="./assets/banner.png" alt="BrowserTranslate — gizlilik odaklı tarayıcı çevirisi" width="900"></p>
+<p align="center"><img src="../assets/banner.png" alt="BrowserTranslate — gizlilik odaklı tarayıcı çevirisi" width="900"></p>
 <h1 align="center">BrowserTranslate</h1>
 <p align="center"><strong>Web sayfalarını ve altyazıları seçtiğiniz modelle okuyun.</strong><br>Açık kaynak · Kendi API anahtarınız · Aracı sunucu yok · Telemetri yok</p>
 <p align="center">
-  <a href="./README.md"><kbd>English</kbd></a>
-  <a href="./README_zh-CN.md"><kbd>简体中文</kbd></a>
-  <a href="./README_zh-TW.md"><kbd>繁體中文</kbd></a>
-  <a href="./README_ja.md"><kbd>日本語</kbd></a>
-  <a href="./README_ko.md"><kbd>한국어</kbd></a>
-  <a href="./README_es.md"><kbd>Español</kbd></a>
-  <a href="./README_fr.md"><kbd>Français</kbd></a><br>
-  <a href="./README_de.md"><kbd>Deutsch</kbd></a>
-  <a href="./README_pt-BR.md"><kbd>Português (Brasil)</kbd></a>
-  <a href="./README_it.md"><kbd>Italiano</kbd></a>
-  <a href="./README_ru.md"><kbd>Русский</kbd></a>
-  <a href="./README_tr.md"><kbd><b>Türkçe</b></kbd></a>
-  <a href="./README_vi.md"><kbd>Tiếng Việt</kbd></a>
-  <a href="./README_id.md"><kbd>Bahasa Indonesia</kbd></a>
+  <a href="../README.md"><kbd>English</kbd></a>
+  <a href="./zh-CN.md"><kbd>简体中文</kbd></a>
+  <a href="./zh-TW.md"><kbd>繁體中文</kbd></a>
+  <a href="./ja.md"><kbd>日本語</kbd></a>
+  <a href="./ko.md"><kbd>한국어</kbd></a>
+  <a href="./es.md"><kbd>Español</kbd></a>
+  <a href="./fr.md"><kbd>Français</kbd></a><br>
+  <a href="./de.md"><kbd>Deutsch</kbd></a>
+  <a href="./pt-BR.md"><kbd>Português (Brasil)</kbd></a>
+  <a href="./it.md"><kbd>Italiano</kbd></a>
+  <a href="./ru.md"><kbd>Русский</kbd></a>
+  <a href="./tr.md"><kbd><b>Türkçe</b></kbd></a>
+  <a href="./vi.md"><kbd>Tiếng Việt</kbd></a>
+  <a href="./id.md"><kbd>Bahasa Indonesia</kbd></a>
 </p>
-<p align="center"><a href="#installation">Kurulum</a> · <a href="#configuration">Yapılandırma</a> · <a href="./CHANGELOG.md">Değişiklikler</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Sorun bildir</a></p>
+<p align="center"><a href="#installation">Kurulum</a> · <a href="#configuration">Yapılandırma</a> · <a href="../CHANGELOG.md">Değişiklikler</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Sorun bildir</a></p>
 <p align="center">
   <a href="https://github.com/Lewen-Cai/browser-translate/releases/latest"><img src="https://img.shields.io/github/v/release/Lewen-Cai/browser-translate?style=flat-square&amp;color=2563eb" alt="Son sürüm"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml"><img src="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/stargazers"><img src="https://img.shields.io/github/stars/Lewen-Cai/browser-translate?style=flat-square" alt="GitHub stars"></a>
 </p>
@@ -69,7 +69,7 @@ Oynatıcı menüsü ve **Ayarlar → Altyazılar**, iki dilli/yalnızca özgün/
 <a id="architecture"></a>
 ## Mimari
 
-<p align="center"><img src="./assets/framework.png" alt="BrowserTranslate mimarisi ve sağlayıcılara doğrudan bağlantılar" width="760"></p>
+<p align="center"><img src="../assets/framework.png" alt="BrowserTranslate mimarisi ve sağlayıcılara doğrudan bağlantılar" width="760"></p>
 
 LLM ve makine çevirisi istekleri **arka plan service worker** üzerinden yapılır. Web sitesi JavaScript'ine API anahtarınız verilmez. İçerik betikleri sonuçları gösterir ve sayfa/oynatıcıyla bütünleşir; siteye özgü altyazı alma işlemleri içerik veya sayfa bağlamında da çalışabilir. Projeye ait bir aracı sunucu yoktur.
 
@@ -167,7 +167,7 @@ pnpm lint
 pnpm build        # Üretim: .output/chrome-mv3/
 ```
 
-Çıktı klasörünü paketlenmemiş uzantı olarak yükleyin. Derleme değişince uzantıyı ve sayfaları yenileyin. Değişiklikler [CHANGELOG.md](./CHANGELOG.md), sorun ve istekler [Issues](https://github.com/Lewen-Cai/browser-translate/issues) üzerinden izlenir. Raporlardan anahtarları ve özel sayfa içeriğini çıkarın.
+Çıktı klasörünü paketlenmemiş uzantı olarak yükleyin. Derleme değişince uzantıyı ve sayfaları yenileyin. Değişiklikler [CHANGELOG.md](../CHANGELOG.md), sorun ve istekler [Issues](https://github.com/Lewen-Cai/browser-translate/issues) üzerinden izlenir. Raporlardan anahtarları ve özel sayfa içeriğini çıkarın.
 
 <a id="acknowledgements"></a>
 ## Teşekkürler
@@ -178,4 +178,4 @@ pnpm build        # Üretim: .output/chrome-mv3/
 <a id="license"></a>
 ## Lisans
 
-[GPL-3.0](./LICENSE). Dağıtılan türev çalışmalar kaynak kod ve lisans yükümlülüklerine uymalıdır. Üçüncü taraf varlıklar kendi lisanslarını korur.
+[GPL-3.0](../LICENSE). Dağıtılan türev çalışmalar kaynak kod ve lisans yükümlülüklerine uymalıdır. Üçüncü taraf varlıklar kendi lisanslarını korur.

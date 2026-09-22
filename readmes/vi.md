@@ -1,26 +1,26 @@
-<p align="center"><img src="./assets/banner.png" alt="BrowserTranslate — dịch trong trình duyệt, ưu tiên quyền riêng tư" width="900"></p>
+<p align="center"><img src="../assets/banner.png" alt="BrowserTranslate — dịch trong trình duyệt, ưu tiên quyền riêng tư" width="900"></p>
 <h1 align="center">BrowserTranslate</h1>
 <p align="center"><strong>Đọc trang web và phụ đề bằng mô hình bạn lựa chọn.</strong><br>Mã nguồn mở · Khóa API của bạn · Không máy chủ trung gian · Không thu thập dữ liệu đo lường</p>
 <p align="center">
-  <a href="./README.md"><kbd>English</kbd></a>
-  <a href="./README_zh-CN.md"><kbd>简体中文</kbd></a>
-  <a href="./README_zh-TW.md"><kbd>繁體中文</kbd></a>
-  <a href="./README_ja.md"><kbd>日本語</kbd></a>
-  <a href="./README_ko.md"><kbd>한국어</kbd></a>
-  <a href="./README_es.md"><kbd>Español</kbd></a>
-  <a href="./README_fr.md"><kbd>Français</kbd></a><br>
-  <a href="./README_de.md"><kbd>Deutsch</kbd></a>
-  <a href="./README_pt-BR.md"><kbd>Português (Brasil)</kbd></a>
-  <a href="./README_it.md"><kbd>Italiano</kbd></a>
-  <a href="./README_ru.md"><kbd>Русский</kbd></a>
-  <a href="./README_tr.md"><kbd>Türkçe</kbd></a>
-  <a href="./README_vi.md"><kbd><b>Tiếng Việt</b></kbd></a>
-  <a href="./README_id.md"><kbd>Bahasa Indonesia</kbd></a>
+  <a href="../README.md"><kbd>English</kbd></a>
+  <a href="./zh-CN.md"><kbd>简体中文</kbd></a>
+  <a href="./zh-TW.md"><kbd>繁體中文</kbd></a>
+  <a href="./ja.md"><kbd>日本語</kbd></a>
+  <a href="./ko.md"><kbd>한국어</kbd></a>
+  <a href="./es.md"><kbd>Español</kbd></a>
+  <a href="./fr.md"><kbd>Français</kbd></a><br>
+  <a href="./de.md"><kbd>Deutsch</kbd></a>
+  <a href="./pt-BR.md"><kbd>Português (Brasil)</kbd></a>
+  <a href="./it.md"><kbd>Italiano</kbd></a>
+  <a href="./ru.md"><kbd>Русский</kbd></a>
+  <a href="./tr.md"><kbd>Türkçe</kbd></a>
+  <a href="./vi.md"><kbd><b>Tiếng Việt</b></kbd></a>
+  <a href="./id.md"><kbd>Bahasa Indonesia</kbd></a>
 </p>
-<p align="center"><a href="#installation">Cài đặt</a> · <a href="#configuration">Cấu hình</a> · <a href="./CHANGELOG.md">Nhật ký thay đổi</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Báo lỗi</a></p>
+<p align="center"><a href="#installation">Cài đặt</a> · <a href="#configuration">Cấu hình</a> · <a href="../CHANGELOG.md">Nhật ký thay đổi</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Báo lỗi</a></p>
 <p align="center">
   <a href="https://github.com/Lewen-Cai/browser-translate/releases/latest"><img src="https://img.shields.io/github/v/release/Lewen-Cai/browser-translate?style=flat-square&amp;color=2563eb" alt="Bản phát hành mới nhất"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml"><img src="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/stargazers"><img src="https://img.shields.io/github/stars/Lewen-Cai/browser-translate?style=flat-square" alt="GitHub stars"></a>
 </p>
@@ -69,7 +69,7 @@ Tiếng Anh chia thành **Hoa Kỳ, Vương quốc Anh và Úc**; thiết lập 
 <a id="architecture"></a>
 ## Kiến trúc
 
-<p align="center"><img src="./assets/framework.png" alt="Kiến trúc BrowserTranslate và kết nối trực tiếp tới nhà cung cấp" width="760"></p>
+<p align="center"><img src="../assets/framework.png" alt="Kiến trúc BrowserTranslate và kết nối trực tiếp tới nhà cung cấp" width="760"></p>
 
 Yêu cầu LLM và dịch máy được gửi từ **service worker nền**. JavaScript của website không nhận khóa API của bạn. Content script hiển thị kết quả và tích hợp trang/trình phát; việc lấy phụ đề theo từng website cũng có thể chạy trong ngữ cảnh nội dung hoặc trang. Dự án không có máy chủ trung gian.
 
@@ -167,7 +167,7 @@ pnpm lint
 pnpm build        # Bản sản xuất: .output/chrome-mv3/
 ```
 
-Tải thư mục đầu ra như tiện ích đã giải nén. Khi đổi bản build, tải lại tiện ích và trang mục tiêu. Xem [CHANGELOG.md](./CHANGELOG.md), gửi lỗi hoặc đề xuất tại [Issues](https://github.com/Lewen-Cai/browser-translate/issues); loại bỏ khóa API và nội dung riêng tư khỏi báo cáo.
+Tải thư mục đầu ra như tiện ích đã giải nén. Khi đổi bản build, tải lại tiện ích và trang mục tiêu. Xem [CHANGELOG.md](../CHANGELOG.md), gửi lỗi hoặc đề xuất tại [Issues](https://github.com/Lewen-Cai/browser-translate/issues); loại bỏ khóa API và nội dung riêng tư khỏi báo cáo.
 
 <a id="acknowledgements"></a>
 ## Lời cảm ơn
@@ -178,4 +178,4 @@ Tải thư mục đầu ra như tiện ích đã giải nén. Khi đổi bản b
 <a id="license"></a>
 ## Giấy phép
 
-[GPL-3.0](./LICENSE). Tác phẩm phái sinh được phân phối phải tuân thủ nghĩa vụ về mã nguồn và giấy phép. Tài nguyên bên thứ ba giữ giấy phép riêng.
+[GPL-3.0](../LICENSE). Tác phẩm phái sinh được phân phối phải tuân thủ nghĩa vụ về mã nguồn và giấy phép. Tài nguyên bên thứ ba giữ giấy phép riêng.

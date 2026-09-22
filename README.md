@@ -9,19 +9,19 @@
 
 <p align="center">
   <a href="./README.md"><kbd><b>English</b></kbd></a>
-  <a href="./README_zh-CN.md"><kbd>简体中文</kbd></a>
-  <a href="./README_zh-TW.md"><kbd>繁體中文</kbd></a>
-  <a href="./README_ja.md"><kbd>日本語</kbd></a>
-  <a href="./README_ko.md"><kbd>한국어</kbd></a>
-  <a href="./README_es.md"><kbd>Español</kbd></a>
-  <a href="./README_fr.md"><kbd>Français</kbd></a><br>
-  <a href="./README_de.md"><kbd>Deutsch</kbd></a>
-  <a href="./README_pt-BR.md"><kbd>Português (Brasil)</kbd></a>
-  <a href="./README_it.md"><kbd>Italiano</kbd></a>
-  <a href="./README_ru.md"><kbd>Русский</kbd></a>
-  <a href="./README_tr.md"><kbd>Türkçe</kbd></a>
-  <a href="./README_vi.md"><kbd>Tiếng Việt</kbd></a>
-  <a href="./README_id.md"><kbd>Bahasa Indonesia</kbd></a>
+  <a href="./readmes/zh-CN.md"><kbd>简体中文</kbd></a>
+  <a href="./readmes/zh-TW.md"><kbd>繁體中文</kbd></a>
+  <a href="./readmes/ja.md"><kbd>日本語</kbd></a>
+  <a href="./readmes/ko.md"><kbd>한국어</kbd></a>
+  <a href="./readmes/es.md"><kbd>Español</kbd></a>
+  <a href="./readmes/fr.md"><kbd>Français</kbd></a><br>
+  <a href="./readmes/de.md"><kbd>Deutsch</kbd></a>
+  <a href="./readmes/pt-BR.md"><kbd>Português (Brasil)</kbd></a>
+  <a href="./readmes/it.md"><kbd>Italiano</kbd></a>
+  <a href="./readmes/ru.md"><kbd>Русский</kbd></a>
+  <a href="./readmes/tr.md"><kbd>Türkçe</kbd></a>
+  <a href="./readmes/vi.md"><kbd>Tiếng Việt</kbd></a>
+  <a href="./readmes/id.md"><kbd>Bahasa Indonesia</kbd></a>
 </p>
 <p align="center">
   <a href="#installation">Install</a> · <a href="#configuration">Configure</a> · <a href="./CHANGELOG.md">Changelog</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Issues</a>

@@ -1,26 +1,26 @@
-<p align="center"><img src="./assets/banner.png" alt="BrowserTranslate — перевод в браузере с уважением к приватности" width="900"></p>
+<p align="center"><img src="../assets/banner.png" alt="BrowserTranslate — перевод в браузере с уважением к приватности" width="900"></p>
 <h1 align="center">BrowserTranslate</h1>
 <p align="center"><strong>Читайте страницы и субтитры с выбранной вами моделью.</strong><br>Открытый код · Свой API-ключ · Без промежуточного сервера · Без телеметрии</p>
 <p align="center">
-  <a href="./README.md"><kbd>English</kbd></a>
-  <a href="./README_zh-CN.md"><kbd>简体中文</kbd></a>
-  <a href="./README_zh-TW.md"><kbd>繁體中文</kbd></a>
-  <a href="./README_ja.md"><kbd>日本語</kbd></a>
-  <a href="./README_ko.md"><kbd>한국어</kbd></a>
-  <a href="./README_es.md"><kbd>Español</kbd></a>
-  <a href="./README_fr.md"><kbd>Français</kbd></a><br>
-  <a href="./README_de.md"><kbd>Deutsch</kbd></a>
-  <a href="./README_pt-BR.md"><kbd>Português (Brasil)</kbd></a>
-  <a href="./README_it.md"><kbd>Italiano</kbd></a>
-  <a href="./README_ru.md"><kbd><b>Русский</b></kbd></a>
-  <a href="./README_tr.md"><kbd>Türkçe</kbd></a>
-  <a href="./README_vi.md"><kbd>Tiếng Việt</kbd></a>
-  <a href="./README_id.md"><kbd>Bahasa Indonesia</kbd></a>
+  <a href="../README.md"><kbd>English</kbd></a>
+  <a href="./zh-CN.md"><kbd>简体中文</kbd></a>
+  <a href="./zh-TW.md"><kbd>繁體中文</kbd></a>
+  <a href="./ja.md"><kbd>日本語</kbd></a>
+  <a href="./ko.md"><kbd>한국어</kbd></a>
+  <a href="./es.md"><kbd>Español</kbd></a>
+  <a href="./fr.md"><kbd>Français</kbd></a><br>
+  <a href="./de.md"><kbd>Deutsch</kbd></a>
+  <a href="./pt-BR.md"><kbd>Português (Brasil)</kbd></a>
+  <a href="./it.md"><kbd>Italiano</kbd></a>
+  <a href="./ru.md"><kbd><b>Русский</b></kbd></a>
+  <a href="./tr.md"><kbd>Türkçe</kbd></a>
+  <a href="./vi.md"><kbd>Tiếng Việt</kbd></a>
+  <a href="./id.md"><kbd>Bahasa Indonesia</kbd></a>
 </p>
-<p align="center"><a href="#installation">Установка</a> · <a href="#configuration">Настройка</a> · <a href="./CHANGELOG.md">Изменения</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Сообщить о проблеме</a></p>
+<p align="center"><a href="#installation">Установка</a> · <a href="#configuration">Настройка</a> · <a href="../CHANGELOG.md">Изменения</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Сообщить о проблеме</a></p>
 <p align="center">
   <a href="https://github.com/Lewen-Cai/browser-translate/releases/latest"><img src="https://img.shields.io/github/v/release/Lewen-Cai/browser-translate?style=flat-square&amp;color=2563eb" alt="Последний выпуск"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml"><img src="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/stargazers"><img src="https://img.shields.io/github/stars/Lewen-Cai/browser-translate?style=flat-square" alt="GitHub stars"></a>
 </p>
@@ -69,7 +69,7 @@
 <a id="architecture"></a>
 ## Архитектура
 
-<p align="center"><img src="./assets/framework.png" alt="Архитектура BrowserTranslate и прямые соединения с провайдерами" width="760"></p>
+<p align="center"><img src="../assets/framework.png" alt="Архитектура BrowserTranslate и прямые соединения с провайдерами" width="760"></p>
 
 LLM- и машинный перевод выполняют запросы через **фоновый service worker**. JavaScript сайта не получает API-ключ. Контентные скрипты показывают результаты и интегрируются со страницей/плеером; получение субтитров конкретного сайта может идти также в контекстах контентного скрипта или страницы. У проекта нет промежуточного сервера.
 
@@ -167,7 +167,7 @@ pnpm lint
 pnpm build        # Рабочая сборка: .output/chrome-mv3/
 ```
 
-Загрузите папку результата как распакованное расширение. При смене сборки перезагрузите расширение и страницы. Изменения описаны в [CHANGELOG.md](./CHANGELOG.md), проблемы и пожелания — в [Issues](https://github.com/Lewen-Cai/browser-translate/issues). Удаляйте из отчётов ключи и личное содержимое страниц.
+Загрузите папку результата как распакованное расширение. При смене сборки перезагрузите расширение и страницы. Изменения описаны в [CHANGELOG.md](../CHANGELOG.md), проблемы и пожелания — в [Issues](https://github.com/Lewen-Cai/browser-translate/issues). Удаляйте из отчётов ключи и личное содержимое страниц.
 
 <a id="acknowledgements"></a>
 ## Благодарности
@@ -178,4 +178,4 @@ pnpm build        # Рабочая сборка: .output/chrome-mv3/
 <a id="license"></a>
 ## Лицензия
 
-[GPL-3.0](./LICENSE). При распространении производных работ необходимо соблюдать требования к исходному коду и лицензированию. Сторонние материалы сохраняют свои лицензии.
+[GPL-3.0](../LICENSE). При распространении производных работ необходимо соблюдать требования к исходному коду и лицензированию. Сторонние материалы сохраняют свои лицензии.

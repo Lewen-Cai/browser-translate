@@ -1,26 +1,26 @@
-<p align="center"><img src="./assets/banner.png" alt="BrowserTranslate — traducción con privacidad en el navegador" width="900"></p>
+<p align="center"><img src="../assets/banner.png" alt="BrowserTranslate — traducción con privacidad en el navegador" width="900"></p>
 <h1 align="center">BrowserTranslate</h1>
 <p align="center"><strong>Lee páginas y subtítulos con el modelo que tú elijas.</strong><br>Código abierto · Tu propia clave API · Sin servidor intermediario · Sin telemetría</p>
 <p align="center">
-  <a href="./README.md"><kbd>English</kbd></a>
-  <a href="./README_zh-CN.md"><kbd>简体中文</kbd></a>
-  <a href="./README_zh-TW.md"><kbd>繁體中文</kbd></a>
-  <a href="./README_ja.md"><kbd>日本語</kbd></a>
-  <a href="./README_ko.md"><kbd>한국어</kbd></a>
-  <a href="./README_es.md"><kbd><b>Español</b></kbd></a>
-  <a href="./README_fr.md"><kbd>Français</kbd></a><br>
-  <a href="./README_de.md"><kbd>Deutsch</kbd></a>
-  <a href="./README_pt-BR.md"><kbd>Português (Brasil)</kbd></a>
-  <a href="./README_it.md"><kbd>Italiano</kbd></a>
-  <a href="./README_ru.md"><kbd>Русский</kbd></a>
-  <a href="./README_tr.md"><kbd>Türkçe</kbd></a>
-  <a href="./README_vi.md"><kbd>Tiếng Việt</kbd></a>
-  <a href="./README_id.md"><kbd>Bahasa Indonesia</kbd></a>
+  <a href="../README.md"><kbd>English</kbd></a>
+  <a href="./zh-CN.md"><kbd>简体中文</kbd></a>
+  <a href="./zh-TW.md"><kbd>繁體中文</kbd></a>
+  <a href="./ja.md"><kbd>日本語</kbd></a>
+  <a href="./ko.md"><kbd>한국어</kbd></a>
+  <a href="./es.md"><kbd><b>Español</b></kbd></a>
+  <a href="./fr.md"><kbd>Français</kbd></a><br>
+  <a href="./de.md"><kbd>Deutsch</kbd></a>
+  <a href="./pt-BR.md"><kbd>Português (Brasil)</kbd></a>
+  <a href="./it.md"><kbd>Italiano</kbd></a>
+  <a href="./ru.md"><kbd>Русский</kbd></a>
+  <a href="./tr.md"><kbd>Türkçe</kbd></a>
+  <a href="./vi.md"><kbd>Tiếng Việt</kbd></a>
+  <a href="./id.md"><kbd>Bahasa Indonesia</kbd></a>
 </p>
-<p align="center"><a href="#installation">Instalación</a> · <a href="#configuration">Configuración</a> · <a href="./CHANGELOG.md">Cambios</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Incidencias</a></p>
+<p align="center"><a href="#installation">Instalación</a> · <a href="#configuration">Configuración</a> · <a href="../CHANGELOG.md">Cambios</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Incidencias</a></p>
 <p align="center">
   <a href="https://github.com/Lewen-Cai/browser-translate/releases/latest"><img src="https://img.shields.io/github/v/release/Lewen-Cai/browser-translate?style=flat-square&amp;color=2563eb" alt="Última versión"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml"><img src="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/stargazers"><img src="https://img.shields.io/github/stars/Lewen-Cai/browser-translate?style=flat-square" alt="GitHub stars"></a>
 </p>
@@ -69,7 +69,7 @@ El inglés distingue **Estados Unidos, Reino Unido y Australia**; el antiguo `en
 <a id="architecture"></a>
 ## Arquitectura
 
-<p align="center"><img src="./assets/framework.png" alt="Arquitectura de BrowserTranslate y conexiones directas" width="760"></p>
+<p align="center"><img src="../assets/framework.png" alt="Arquitectura de BrowserTranslate y conexiones directas" width="760"></p>
 
 Las solicitudes LLM y de traducción automática se realizan en el **service worker de fondo**. El JavaScript del sitio no recibe tu clave API. Los scripts de contenido muestran resultados e integran páginas y reproductores; la obtención de subtítulos puede ejecutarse también en el contexto de contenido o de la página. No hay intermediario del proyecto.
 
@@ -167,7 +167,7 @@ pnpm lint
 pnpm build        # Producción: .output/chrome-mv3/
 ```
 
-Carga la carpeta de salida como extensión descomprimida. Recarga extensión y páginas tras cambiar la compilación. Consulta [CHANGELOG.md](./CHANGELOG.md) y comunica problemas o sugerencias en [Issues](https://github.com/Lewen-Cai/browser-translate/issues), sin claves API ni contenido privado.
+Carga la carpeta de salida como extensión descomprimida. Recarga extensión y páginas tras cambiar la compilación. Consulta [CHANGELOG.md](../CHANGELOG.md) y comunica problemas o sugerencias en [Issues](https://github.com/Lewen-Cai/browser-translate/issues), sin claves API ni contenido privado.
 
 <a id="acknowledgements"></a>
 ## Agradecimientos
@@ -178,4 +178,4 @@ Carga la carpeta de salida como extensión descomprimida. Recarga extensión y p
 <a id="license"></a>
 ## Licencia
 
-[GPL-3.0](./LICENSE). Las obras derivadas distribuidas deben cumplir sus obligaciones de código fuente y licencia. Los recursos de terceros conservan sus respectivas licencias.
+[GPL-3.0](../LICENSE). Las obras derivadas distribuidas deben cumplir sus obligaciones de código fuente y licencia. Los recursos de terceros conservan sus respectivas licencias.

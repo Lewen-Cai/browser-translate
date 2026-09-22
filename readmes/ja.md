@@ -1,26 +1,26 @@
-<p align="center"><img src="./assets/banner.png" alt="BrowserTranslate — プライバシーを重視したブラウザ翻訳" width="900"></p>
+<p align="center"><img src="../assets/banner.png" alt="BrowserTranslate — プライバシーを重視したブラウザ翻訳" width="900"></p>
 <h1 align="center">BrowserTranslate</h1>
 <p align="center"><strong>好きなモデルで、ウェブページと動画字幕を読む。</strong><br>オープンソース · 自分の API キー · 中継サーバーなし · テレメトリなし</p>
 <p align="center">
-  <a href="./README.md"><kbd>English</kbd></a>
-  <a href="./README_zh-CN.md"><kbd>简体中文</kbd></a>
-  <a href="./README_zh-TW.md"><kbd>繁體中文</kbd></a>
-  <a href="./README_ja.md"><kbd><b>日本語</b></kbd></a>
-  <a href="./README_ko.md"><kbd>한국어</kbd></a>
-  <a href="./README_es.md"><kbd>Español</kbd></a>
-  <a href="./README_fr.md"><kbd>Français</kbd></a><br>
-  <a href="./README_de.md"><kbd>Deutsch</kbd></a>
-  <a href="./README_pt-BR.md"><kbd>Português (Brasil)</kbd></a>
-  <a href="./README_it.md"><kbd>Italiano</kbd></a>
-  <a href="./README_ru.md"><kbd>Русский</kbd></a>
-  <a href="./README_tr.md"><kbd>Türkçe</kbd></a>
-  <a href="./README_vi.md"><kbd>Tiếng Việt</kbd></a>
-  <a href="./README_id.md"><kbd>Bahasa Indonesia</kbd></a>
+  <a href="../README.md"><kbd>English</kbd></a>
+  <a href="./zh-CN.md"><kbd>简体中文</kbd></a>
+  <a href="./zh-TW.md"><kbd>繁體中文</kbd></a>
+  <a href="./ja.md"><kbd><b>日本語</b></kbd></a>
+  <a href="./ko.md"><kbd>한국어</kbd></a>
+  <a href="./es.md"><kbd>Español</kbd></a>
+  <a href="./fr.md"><kbd>Français</kbd></a><br>
+  <a href="./de.md"><kbd>Deutsch</kbd></a>
+  <a href="./pt-BR.md"><kbd>Português (Brasil)</kbd></a>
+  <a href="./it.md"><kbd>Italiano</kbd></a>
+  <a href="./ru.md"><kbd>Русский</kbd></a>
+  <a href="./tr.md"><kbd>Türkçe</kbd></a>
+  <a href="./vi.md"><kbd>Tiếng Việt</kbd></a>
+  <a href="./id.md"><kbd>Bahasa Indonesia</kbd></a>
 </p>
-<p align="center"><a href="#installation">インストール</a> · <a href="#configuration">設定</a> · <a href="./CHANGELOG.md">変更履歴</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">問題の報告</a></p>
+<p align="center"><a href="#installation">インストール</a> · <a href="#configuration">設定</a> · <a href="../CHANGELOG.md">変更履歴</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">問題の報告</a></p>
 <p align="center">
   <a href="https://github.com/Lewen-Cai/browser-translate/releases/latest"><img src="https://img.shields.io/github/v/release/Lewen-Cai/browser-translate?style=flat-square&amp;color=2563eb" alt="最新リリース"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml"><img src="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/stargazers"><img src="https://img.shields.io/github/stars/Lewen-Cai/browser-translate?style=flat-square" alt="GitHub stars"></a>
 </p>
@@ -69,7 +69,7 @@
 <a id="architecture"></a>
 ## アーキテクチャ
 
-<p align="center"><img src="./assets/framework.png" alt="BrowserTranslate の構成とプロバイダーへの直接接続" width="760"></p>
+<p align="center"><img src="../assets/framework.png" alt="BrowserTranslate の構成とプロバイダーへの直接接続" width="760"></p>
 
 LLM・機械翻訳の要求は**バックグラウンドの Service Worker**が送信し、ウェブサイトの JavaScript に API キーを渡しません。コンテンツスクリプトが結果表示とページ／プレーヤー統合を担当します。サイト固有の字幕取得はコンテンツまたはページのコンテキストで動作する場合もあります。プロジェクトの中継サーバーはありません。
 
@@ -167,7 +167,7 @@ pnpm lint
 pnpm build        # 本番ビルド：.output/chrome-mv3/
 ```
 
-出力フォルダーを展開済み拡張として読み込み、ビルド変更後は拡張と対象ページを再読み込みしてください。[CHANGELOG.md](./CHANGELOG.md) に変更履歴、[Issues](https://github.com/Lewen-Cai/browser-translate/issues) に不具合や要望を記載できます。報告から API キーや非公開のページ内容を取り除いてください。
+出力フォルダーを展開済み拡張として読み込み、ビルド変更後は拡張と対象ページを再読み込みしてください。[CHANGELOG.md](../CHANGELOG.md) に変更履歴、[Issues](https://github.com/Lewen-Cai/browser-translate/issues) に不具合や要望を記載できます。報告から API キーや非公開のページ内容を取り除いてください。
 
 <a id="acknowledgements"></a>
 ## 謝辞
@@ -178,4 +178,4 @@ pnpm build        # 本番ビルド：.output/chrome-mv3/
 <a id="license"></a>
 ## ライセンス
 
-[GPL-3.0](./LICENSE)。派生物を配布する際は、対応するソースコード提供・ライセンス上の義務を守る必要があります。第三者の素材にはそれぞれのライセンスが適用されます。
+[GPL-3.0](../LICENSE)。派生物を配布する際は、対応するソースコード提供・ライセンス上の義務を守る必要があります。第三者の素材にはそれぞれのライセンスが適用されます。

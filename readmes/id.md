@@ -1,26 +1,26 @@
-<p align="center"><img src="./assets/banner.png" alt="BrowserTranslate — terjemahan browser yang mengutamakan privasi" width="900"></p>
+<p align="center"><img src="../assets/banner.png" alt="BrowserTranslate — terjemahan browser yang mengutamakan privasi" width="900"></p>
 <h1 align="center">BrowserTranslate</h1>
 <p align="center"><strong>Baca halaman dan subtitel dengan model pilihan Anda.</strong><br>Sumber terbuka · Kunci API sendiri · Tanpa server perantara · Tanpa telemetri</p>
 <p align="center">
-  <a href="./README.md"><kbd>English</kbd></a>
-  <a href="./README_zh-CN.md"><kbd>简体中文</kbd></a>
-  <a href="./README_zh-TW.md"><kbd>繁體中文</kbd></a>
-  <a href="./README_ja.md"><kbd>日本語</kbd></a>
-  <a href="./README_ko.md"><kbd>한국어</kbd></a>
-  <a href="./README_es.md"><kbd>Español</kbd></a>
-  <a href="./README_fr.md"><kbd>Français</kbd></a><br>
-  <a href="./README_de.md"><kbd>Deutsch</kbd></a>
-  <a href="./README_pt-BR.md"><kbd>Português (Brasil)</kbd></a>
-  <a href="./README_it.md"><kbd>Italiano</kbd></a>
-  <a href="./README_ru.md"><kbd>Русский</kbd></a>
-  <a href="./README_tr.md"><kbd>Türkçe</kbd></a>
-  <a href="./README_vi.md"><kbd>Tiếng Việt</kbd></a>
-  <a href="./README_id.md"><kbd><b>Bahasa Indonesia</b></kbd></a>
+  <a href="../README.md"><kbd>English</kbd></a>
+  <a href="./zh-CN.md"><kbd>简体中文</kbd></a>
+  <a href="./zh-TW.md"><kbd>繁體中文</kbd></a>
+  <a href="./ja.md"><kbd>日本語</kbd></a>
+  <a href="./ko.md"><kbd>한국어</kbd></a>
+  <a href="./es.md"><kbd>Español</kbd></a>
+  <a href="./fr.md"><kbd>Français</kbd></a><br>
+  <a href="./de.md"><kbd>Deutsch</kbd></a>
+  <a href="./pt-BR.md"><kbd>Português (Brasil)</kbd></a>
+  <a href="./it.md"><kbd>Italiano</kbd></a>
+  <a href="./ru.md"><kbd>Русский</kbd></a>
+  <a href="./tr.md"><kbd>Türkçe</kbd></a>
+  <a href="./vi.md"><kbd>Tiếng Việt</kbd></a>
+  <a href="./id.md"><kbd><b>Bahasa Indonesia</b></kbd></a>
 </p>
-<p align="center"><a href="#installation">Instalasi</a> · <a href="#configuration">Konfigurasi</a> · <a href="./CHANGELOG.md">Perubahan</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Laporkan masalah</a></p>
+<p align="center"><a href="#installation">Instalasi</a> · <a href="#configuration">Konfigurasi</a> · <a href="../CHANGELOG.md">Perubahan</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Laporkan masalah</a></p>
 <p align="center">
   <a href="https://github.com/Lewen-Cai/browser-translate/releases/latest"><img src="https://img.shields.io/github/v/release/Lewen-Cai/browser-translate?style=flat-square&amp;color=2563eb" alt="Rilis terbaru"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml"><img src="https://github.com/Lewen-Cai/browser-translate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Lewen-Cai/browser-translate/stargazers"><img src="https://img.shields.io/github/stars/Lewen-Cai/browser-translate?style=flat-square" alt="GitHub stars"></a>
 </p>
@@ -69,7 +69,7 @@ Bahasa Inggris dibedakan menjadi **Amerika Serikat, Britania Raya, dan Australia
 <a id="architecture"></a>
 ## Arsitektur
 
-<p align="center"><img src="./assets/framework.png" alt="Arsitektur BrowserTranslate dan koneksi langsung ke penyedia" width="760"></p>
+<p align="center"><img src="../assets/framework.png" alt="Arsitektur BrowserTranslate dan koneksi langsung ke penyedia" width="760"></p>
 
 Permintaan LLM dan terjemahan mesin berjalan melalui **service worker latar belakang**. JavaScript situs tidak menerima kunci API Anda. Skrip konten menampilkan hasil dan mengintegrasikan halaman/pemutar; pengambilan subtitel khusus situs juga bisa berjalan dalam konteks konten atau halaman. Tidak ada relay milik proyek.
 
@@ -167,7 +167,7 @@ pnpm lint
 pnpm build        # Produksi: .output/chrome-mv3/
 ```
 
-Muat folder keluaran sebagai ekstensi yang belum dipaketkan. Muat ulang ekstensi dan halaman setelah mengganti build. Lihat [CHANGELOG.md](./CHANGELOG.md), dan kirim masalah atau saran melalui [Issues](https://github.com/Lewen-Cai/browser-translate/issues). Hapus kunci API dan isi halaman pribadi dari laporan.
+Muat folder keluaran sebagai ekstensi yang belum dipaketkan. Muat ulang ekstensi dan halaman setelah mengganti build. Lihat [CHANGELOG.md](../CHANGELOG.md), dan kirim masalah atau saran melalui [Issues](https://github.com/Lewen-Cai/browser-translate/issues). Hapus kunci API dan isi halaman pribadi dari laporan.
 
 <a id="acknowledgements"></a>
 ## Ucapan terima kasih
@@ -178,4 +178,4 @@ Muat folder keluaran sebagai ekstensi yang belum dipaketkan. Muat ulang ekstensi
 <a id="license"></a>
 ## Lisensi
 
-[GPL-3.0](./LICENSE). Karya turunan yang didistribusikan harus memenuhi kewajiban kode sumber dan lisensi. Aset pihak ketiga mempertahankan lisensinya masing-masing.
+[GPL-3.0](../LICENSE). Karya turunan yang didistribusikan harus memenuhi kewajiban kode sumber dan lisensi. Aset pihak ketiga mempertahankan lisensinya masing-masing.
