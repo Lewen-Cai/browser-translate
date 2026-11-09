@@ -16,6 +16,29 @@ export default defineConfig({
   vite: () => ({
     plugins: [preact()],
   }),
+  zip: {
+    // AMO asks for the source of a bundled add-on. An allowlist (WXT 0.21:
+    // zipped = includeSources - excludeSources): the repository root also holds
+    // local-only material (docs/, CLAUDE.md, scratch logs) that must never be
+    // uploaded, and a new file of that kind should stay out without anyone
+    // remembering to exclude it. Tests stay in: Tailwind scans every file
+    // under src/ for class names, so leaving them out changes the CSS and the
+    // reviewer's rebuild would no longer match the submitted package.
+    includeSources: [
+      'src/**',
+      'public/**',
+      'scripts/**',
+      'package.json',
+      'pnpm-lock.yaml',
+      'pnpm-workspace.yaml',
+      'wxt.config.ts',
+      'tsconfig.json',
+      'tailwind.config.ts',
+      'postcss.config.js',
+      'README.md',
+      'LICENSE',
+    ],
+  },
   hooks: {
     // `pnpm dev` grants <all_urls> for its reloader, which already covers every
     // optional host. Chrome then flags each optional one as redundant on every

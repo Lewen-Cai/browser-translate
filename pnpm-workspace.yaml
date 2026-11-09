@@ -1,8 +1,21 @@
 packages:
   - '.'
 
-# pnpm >= 10 blocks dependency build scripts unless approved here.
+# pnpm >= 10 blocks dependency build scripts unless approved here. sharp is not
+# a dependency; it is added only while regenerating public/icon/*.png.
 allowBuilds:
   esbuild: true
-  spawn-sync: true
   sharp: true
+
+# Install only versions that have been public for at least a week. The npm
+# worms of 2026 (Shai-Hulud and its successors) spread through versions
+# installed within hours of being published; they are usually pulled long
+# before seven days are up. In minutes.
+minimumReleaseAge: 10080
+
+# Transitive dependencies still pulled in at vulnerable versions (pnpm audit,
+# 2026-11-09), forced to their patched releases. Neither ships in the
+# extension; both only run during the build.
+overrides:
+  browserslist: ^4.28.7
+  baseline-browser-mapping: ^2.11.0

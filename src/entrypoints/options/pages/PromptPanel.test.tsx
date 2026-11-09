@@ -25,7 +25,7 @@ function open(initial = defaultPromptSettings(), onSave?: () => Promise<void>) {
 const instructions = () => screen.getByRole('textbox', { name: 'Base instructions' }) as HTMLTextAreaElement;
 const row = (name: string) => within(screen.getByRole('group', { name: 'Templates' })).getByRole('button', { name });
 function createFromDefault() {
-  fireEvent.click(screen.getByRole('button', { name: 'New', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'New' }));
   fireEvent.click(screen.getByRole('menuitem', { name: 'Create from default' }));
 }
 function action(name: string) {
@@ -70,7 +70,7 @@ describe('PromptPanel workspace', () => {
 
   it('offers a clearly named blank draft, required-field hint and cancellation', () => {
     const changes = open();
-    fireEvent.click(screen.getByRole('button', { name: 'New', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'New' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Start from scratch' }));
     expect(instructions().value).toBe('');
     expect((screen.getByRole('button', { name: 'Save & apply' }) as HTMLButtonElement).disabled).toBe(true);
@@ -145,7 +145,7 @@ describe('PromptPanel workspace', () => {
 
   it('supports menu arrows and Escape with focus return', () => {
     open();
-    const trigger = screen.getByRole('button', { name: 'New', exact: true });
+    const trigger = screen.getByRole('button', { name: 'New' });
     fireEvent.click(trigger);
     expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Create from default' }));
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
@@ -157,7 +157,7 @@ describe('PromptPanel workspace', () => {
 
   it('keeps existing templates editable when the creation limit is reached', () => {
     open({ activeId: 'default', templates: Array.from({ length: MAX_PROMPT_TEMPLATES }, (_, i) => ({ ...academic, id: String(i), name: `Template ${i}` })) });
-    expect((screen.getByRole('button', { name: 'New', exact: true }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'New' }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(row('Template 0'));
     expect(instructions().readOnly).toBe(false);
   });

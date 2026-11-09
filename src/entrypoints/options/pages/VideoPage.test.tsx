@@ -85,9 +85,9 @@ describe('subtitle editor', () => {
     const { container } = render(<VideoPage />);
     fireEvent.click(screen.getByRole('button', { name: 'Above' }));
     expect(container.querySelector('[data-preview-line]')?.getAttribute('data-preview-line')).toBe('translation');
-    fireEvent.click(screen.getByRole('button', { name: 'Translation only', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Translation only' }));
     expect(container.querySelector('[data-preview-line="main"]')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Reset', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     await waitFor(() => expect(useAppStore.getState().data.settings.subtitleStyle).toEqual(DEFAULT_SUBTITLE_STYLE));
   });
 });

@@ -1,7 +1,10 @@
 import type { Config } from 'tailwindcss';
 
 export default {
-  content: ['./src/**/*.{ts,tsx,html}'],
+  // Tests are not scanned: a class name in an assertion is not a class the
+  // product uses, and scanning them made the CSS depend on files the Firefox
+  // sources archive leaves out — so a reviewer's rebuild would not match.
+  content: ['./src/**/*.{ts,tsx,html}', '!./src/**/*.test.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
