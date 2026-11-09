@@ -17,7 +17,12 @@
   <a href="./vi.md"><kbd>Tiếng Việt</kbd></a>
   <a href="./id.md"><kbd>Bahasa Indonesia</kbd></a>
 </p>
-<p align="center"><a href="#installation">Installer</a> · <a href="#configuration">Configurer</a> · <a href="../CHANGELOG.md">Changements</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Signaler un problème</a></p>
+<p align="center"><a href="#installation">Installer</a> · <a href="#quick-start">Démarrage rapide</a> · <a href="./develop/README.md">Documentation</a> · <a href="../CHANGELOG.md">Changements</a> · <a href="https://github.com/Lewen-Cai/browser-translate/issues">Signaler un problème</a></p>
+<p align="center">
+  <a href="#install-chrome"><img src="https://img.shields.io/badge/Chrome-supported-4285F4?style=flat-square&amp;logo=googlechrome&amp;logoColor=white" alt="Compatible avec Chrome"></a>
+  <a href="#install-edge"><img src="https://img.shields.io/badge/Edge-supported-0078D7?style=flat-square&amp;logo=microsoftedge&amp;logoColor=white" alt="Compatible avec Edge"></a>
+  <a href="#install-firefox"><img src="https://img.shields.io/badge/Firefox-supported-FF7139?style=flat-square&amp;logo=firefoxbrowser&amp;logoColor=white" alt="Compatible avec Firefox"></a>
+</p>
 <p align="center">
   <a href="https://github.com/Lewen-Cai/browser-translate/releases/latest"><img src="https://img.shields.io/github/v/release/Lewen-Cai/browser-translate?style=flat-square&amp;color=2563eb" alt="Dernière version"></a>
   <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-2563eb?style=flat-square" alt="GPL-3.0"></a>
@@ -28,154 +33,76 @@
 <a id="why"></a>
 ## Pourquoi BrowserTranslate ?
 
-Utilisez votre fournisseur préféré sans abonnement obligatoire à cette extension ni serveur intermédiaire exploité par notre projet.
-
-- **Votre modèle et votre clé** : connectez un endpoint compatible OpenAI ou un environnement local. La compatibilité dépend du serveur et du modèle.
-- **Connexion directe** : le texte part du navigateur vers le fournisseur choisi. Nous n’exploitons aucun relais.
-- **Aucune télémétrie** : pas de statistiques d’utilisation, de rapports d’erreur distants ni de journalisation distante par l’extension.
-- **Prompt de base modifiable** : consultez le modèle par défaut et créez vos variantes. Une même base sert à tous les modes LLM ; l’extension conserve les règles internes du dictionnaire et du format.
+- **Votre modèle, votre clé.** Connectez une API cloud, n’importe quel endpoint compatible OpenAI ou un environnement local — ou commencez avec les services gratuits de Microsoft et Google, sans clé.
+- **En direct, sans relais.** Le texte part de votre navigateur directement vers le fournisseur choisi. Ce projet n’exploite aucun serveur et ne collecte aucune télémétrie.
+- **Conçu pour la lecture.** Texte sélectionné, pages entières et sous-titres vidéo, chacun avec son propre fournisseur et son propre modèle.
 
 <a id="features"></a>
 ## Fonctionnalités
 
-- **Démarrage sans clé API** : Microsoft et Google sont activés dès l’installation ; les trois modes utilisent initialement Microsoft. Il s’agit d’endpoints publics non officiels : consultez l’[avertissement](#free-engines).
-- **Un moteur par usage** : sélection, page entière et sous-titres peuvent utiliser des fournisseurs différents. Plusieurs configurations sont conservées pour éviter de ressaisir les identifiants à chaque changement.
-- **Traduction de sélection** : sélectionnez du texte puis cliquez sur l’icône flottante, ou utilisez le mode raccourcis. Le texte ordinaire arrive en streaming, avec l’original au-dessus. La carte propose copie, nouvelle traduction et choix ponctuel du fournisseur ou de la langue. Ces choix ne modifient pas les réglages globaux ; retraduire contourne le cache.
-- **Carte stable et déplaçable** : dimensions réglables dans Général → Apparence. Original et traduction défilent séparément, l’original occupant au plus 30 % du corps partagé. L’attente utilise une vue compacte. Épinglez la carte pour la garder ouverte pendant le défilement ou les clics extérieurs, puis déplacez-la par sa poignée.
-- **Page bilingue** : la traduction s’insère sous le texte original du contenu principal, en excluant généralement navigation, en-têtes et pieds de page. Le traitement progresse autour de la zone visible. Utilisez Page actuelle → Traduction bilingue dans le popup, ou **Alt+A** en mode raccourcis.
-- **Dictionnaire pour les sélections courtes** : un modèle peut fournir traduction, prononciation, catégorie grammaticale, sens et exemple. Les paragraphes manifestes, sélections multilignes ou ressemblant à du code sont uniquement traduits. Les services classiques ne génèrent pas de fiches de dictionnaire.
-- **Texte multilingue autorisé** : une langue source identique à la cible ne bloque jamais une demande. La réécriture régionale dépend du modèle ou du service.
-- **Configuration et cache locaux** : durée de conservation réglable dans Paramètres → Données. Import/export JSON des réglages et prompts ; le cache est exclu, ainsi que les clés API sauf choix explicite.
-- **Interface compacte** : thème clair/sombre manuel ou système, cinq pages — Général, Traduction, Fournisseurs, Sous-titres, Données. Polices système pour l’interface et chasse fixe pour code et endpoints.
-
-<a id="subtitles"></a>
-### Sous-titres vidéo
-
-Traduction des pistes existantes sur **YouTube**, les **enregistrements cloud Zoom**, les **enregistrements de cours Canvas** et les lecteurs compatibles exposant des sous-titres via `<track>`/TextTrack. Le fonctionnement dépend du lecteur et de l’accès à la piste ; tous les lecteurs intégrés n’ont pas été testés. **Aucune transcription audio n’est effectuée.**
-
-Cliquez sur l’icône de traduction du lecteur, puis activez les sous-titres traduits. Sans barre de commandes adaptée, le bouton apparaît dans un coin de la vidéo. Sur YouTube, activez d’abord les sous-titres natifs (CC) pour charger la piste ; d’autres lecteurs peuvent aussi exiger son activation. Les pistes du créateur et les sous-titres automatiques compatibles sont acceptés ; les fragments ASR déroulants sont regroupés en phrases.
-
-Les deux lignes sont superposées au lecteur et se déplacent par leur poignée. La position est mémorisée, y compris en plein écran, et évite les commandes visibles. La traduction privilégie les répliques proches de la lecture en cours et se réorganise après un déplacement dans la vidéo. Les noms de locuteurs reconnus sont conservés tels quels. La latence dépend du fournisseur et de la vidéo, sans délai fixe garanti.
-
-Le menu du lecteur et **Paramètres → Sous-titres** règlent affichage bilingue/original seul/traduction seule, ordre, opacité, taille, couleur, police et graisse de chaque ligne. La page de réglages comprend aperçu en direct, valeurs précises, petite palette, saisie HEX et bouton de réinitialisation.
-
-<a id="languages"></a>
-### Langues
-
-**56 cibles de traduction** sont indépendantes des **14 langues d’interface** proposées ci-dessus. L’interface peut suivre la langue du navigateur. Les sélecteurs du popup, des paramètres et de la carte recherchent noms natifs, anglais ou localisés, codes et alias régionaux de l’anglais. Les noms RTL conservent leur sens de lecture sans désaligner les lignes.
-
-L’anglais distingue **États-Unis, Royaume-Uni et Australie** ; l’ancien `en` générique devient l’anglais américain. Le chinois distingue **simplifié et traditionnel**. Les LLM reçoivent des consignes d’orthographe et de vocabulaire régionales. Un service gratuit non compatible avec la variante utilise silencieusement l’anglais générique, sans changer de fournisseur.
-
-<a id="architecture"></a>
-## Architecture
-
-<p align="center"><img src="../assets/framework.png" alt="Architecture de BrowserTranslate et connexions directes aux fournisseurs" width="760"></p>
-
-Les requêtes LLM et de traduction automatique passent par le **service worker d’arrière-plan**. Le JavaScript du site ne reçoit pas votre clé API. Les scripts de contenu affichent les résultats et s’intègrent aux pages/lecteurs ; certaines récupérations de sous-titres s’exécutent aussi dans le contexte de contenu ou de page. Aucun relais n’est exploité par le projet.
+- **Carte de sélection** — sélectionnez du texte et cliquez sur l’icône, ou appuyez sur **Alt+T** en mode raccourci clavier. La réponse s’affiche au fil de l’eau dans une carte que vous pouvez épingler et déplacer ; une sélection courte peut donner une entrée de dictionnaire.
+- **Traduction bilingue de pages entières** — les traductions apparaissent sous l’original à mesure que vous faites défiler. Activez-la depuis la fenêtre contextuelle, ou avec **Alt+A** en mode raccourci clavier.
+- **Sous-titres vidéo** — sous-titres bilingues sur YouTube, les enregistrements Zoom et Canvas et les lecteurs HTML5 standard. Aucune transcription audio.
+- **De nombreux fournisseurs, plusieurs modèles chacun** — OpenAI, Claude, Gemini, DeepSeek, OpenRouter, Qwen et d’autres, ainsi que LM Studio, Ollama et d’autres environnements locaux. Gardez plusieurs modèles par fournisseur et choisissez-en un pour chaque mode.
+- **Votre propre prompt de base** — consultez celui par défaut et rédigez vos propres modèles de prompt.
+- **56 langues cibles**, une interface en **14 langues**, thèmes clair et sombre.
 
 <a id="installation"></a>
 ## Installation
 
-Pour les **navigateurs de bureau basés sur Chromium**, dont Chrome, Edge, Brave et Arc. Firefox n’est pas actuellement pris en charge.
+**Chrome**, **Edge** et **Firefox** sur ordinateur. Téléchargez les paquets depuis [Releases](https://github.com/Lewen-Cai/browser-translate/releases) ; l’extension n’est dans la boutique d’aucun navigateur. Brave, Arc et les autres navigateurs Chromium utilisent le paquet Chrome. Safari n’est pas pris en charge.
 
-1. Téléchargez le dernier `.zip` depuis [Releases](https://github.com/Lewen-Cai/browser-translate/releases).
-2. Décompressez-le dans un dossier à conserver.
-3. Ouvrez `chrome://extensions` ou la page des extensions, activez le **mode développeur**, choisissez **Charger l’extension non empaquetée**, puis ce dossier.
+<a id="install-chrome"></a>
+### Chrome
 
-### Mise à jour manuelle
+1. Téléchargez le dernier `…-chrome.zip` et décompressez-le dans un dossier que vous conserverez.
+2. Ouvrez `chrome://extensions`, activez le **mode développeur**, cliquez sur **Charger l’extension non empaquetée** et sélectionnez le dossier.
 
-Une extension non empaquetée ne se met pas à jour automatiquement. Décompressez la nouvelle archive par-dessus le dossier existant, cliquez sur **Recharger**, puis actualisez les pages ouvertes. Sous Windows/macOS, l’installation gérée d’extensions auto-hébergées nécessite généralement une politique d’entreprise ; charger un dossier non empaqueté est une autre procédure.
+<a id="install-edge"></a>
+### Edge
 
-L’en-tête des paramètres affiche la version et une vérification manuelle. GitHub n’est interrogé qu’au clic ; si une version plus récente existe, l’archive est proposée, sans installation automatique. Le popup n’affiche pas à nouveau la version.
+Téléchargez le dernier `…-edge.zip` (la même version que le paquet Chrome) et décompressez-le dans un dossier que vous conserverez. Ensuite, ouvrez `edge://extensions`, activez le **mode développeur** dans la barre latérale gauche, cliquez sur **Charger l’extension non empaquetée** et sélectionnez le dossier.
 
-<a id="configuration"></a>
-## Configuration
+<a id="install-firefox"></a>
+### Firefox
 
-Microsoft est utilisé initialement pour tous les modes. Pour votre propre modèle :
+Firefox 140 ou version ultérieure. Téléchargez le dernier `…-firefox.xpi` — signé par Mozilla —, ouvrez-le dans Firefox et confirmez.
 
-1. Ouvrez le popup puis son icône de paramètres.
-2. Dans **Fournisseurs**, activez un service et renseignez endpoint, modèle et clé API. Les environnements locaux n’exigent pas de clé. Les lignes actives affichent état/latence au moyen d’une vérification qui contacte le fournisseur.
-3. Dans **Traduction → Moteurs de traduction**, affectez séparément sélection, page entière et sous-titres.
-4. Choisissez une cible et sélectionnez du texte sur une page compatible. Pour le clavier, activez le mode raccourcis dans **Général** : **Alt+T** pour la sélection, **Alt+A** pour la page entière. Les deux ne fonctionnent que dans ce mode.
+**Mise à jour :** la page des paramètres comporte un bouton **Rechercher les mises à jour** qui trouve le paquet adapté à votre navigateur. Sous Chrome et Edge, décompressez la nouvelle version par-dessus l’ancien dossier et cliquez sur **Recharger** dans la page des extensions ; sous Firefox, ouvrez le nouveau `.xpi`. Dans les deux cas, vos paramètres sont conservés.
 
-Le popup garde cible, interrupteur de la page actuelle et moteurs. Mode d’activation et raccourcis restent dans les paramètres. Les pages non compatibles désactivent la traduction ; un script absent entraîne une invitation à actualiser. Prompts et affectations sont dans Traduction, identifiants dans Fournisseurs, apparence des sous-titres dans Sous-titres, cache et import/export dans Données.
+<a id="quick-start"></a>
+## Démarrage rapide
 
-### Fournisseurs et raisonnement
+1. Dès l’installation, l’extension traduit avec le service gratuit de Microsoft : sélectionnez du texte sur une page web et cliquez sur l’icône bleue.
+2. Pour utiliser votre propre modèle, cliquez sur l’icône des paramètres dans la fenêtre contextuelle, ouvrez **Fournisseurs**, choisissez un fournisseur et collez sa clé API. Ses modèles s’affichent : ajoutez ceux que vous voulez et marquez votre modèle par défaut d’une étoile. Le fournisseur s’active de lui-même.
+3. Dans **Traduction → Moteurs de traduction**, choisissez un fournisseur et un modèle pour les cartes de sélection, les pages entières et les sous-titres.
 
-Préréglages : **OpenAI, Claude, Gemini, DeepSeek, Moonshot, Zhipu, Qwen, SiliconFlow, OpenRouter, Mistral, opencode**. En local : **LM Studio, Ollama, llama.cpp, vLLM**. Les autres services compatibles utilisent un endpoint personnalisé.
-
-Les régions et offres sont distinctes : opencode Zen/Go, Qwen à Pékin, Singapour, Hong Kong et en Virginie, ainsi que Token Plan. Comptes, clés et catalogues ne sont pas forcément interchangeables. Certains fournisseurs acceptent une URL propre à un espace de travail.
-
-Lorsque le contrôle est pris en charge, l’extension demande par défaut de désactiver le raisonnement et propose **Low / Medium / High / XHigh / Max**, adaptés aux paramètres du fournisseur. Pour un serveur personnalisé/local, choisissez son format de paramètre ou **Ne rien envoyer**. Sans contrôle compatible, le réglage du serveur s’applique. Support, latence et facturation des tokens de raisonnement dépendent du modèle/endpoint, pas seulement de l’interface.
-
-<a id="prompts"></a>
-### Prompt de base
-
-Dans **Traduction → Prompt de base**, bibliothèque et éditeur sont côte à côte, ou empilés dans une fenêtre étroite. Le modèle par défaut est visible et en lecture seule. **Nouveau** permet de partir du défaut ou d’un document vide ; l’aide se trouve sous l’éditeur, dans la carte. Sélectionner un modèle l’ouvre seulement ; le prompt actif est indiqué séparément.
-
-- **Enregistrer et appliquer** sauvegarde le brouillon et l’utilise immédiatement.
-- **Enregistrer les modifications** met à jour le prompt déjà actif.
-- **Appliquer le prompt** utilise un modèle enregistré ; désactivé s’il est déjà actif.
-- **Annuler** abandonne les modifications locales.
-- **Actions du modèle** regroupe enregistrement sans application, duplication, remplacement du brouillon par le texte par défaut et suppression. Les opérations destructives demandent confirmation ; supprimer le modèle actif rétablit le défaut.
-
-Vos instructions **remplacent** la base au lieu de s’y ajouter. L’extension fournit encore langue cible, conventions régionales, routage et format ; les protocoles internes ne sont pas modifiables. Des consignes contradictoires ou un modèle moins capable peuvent produire un résultat imparfait. `{{...}}` reste littéral : aucun remplacement de variables.
-
-Jusqu’à **20 modèles personnalisés**, chacun limité à **12 000 caractères**, stockés localement. Ils n’affectent que les LLM, pas Microsoft/Google classiques. Une modification utilise un cache distinct ; l’export inclut modèles et choix actif.
-
-<a id="validation"></a>
-### Validation des réponses
-
-Les passages manifestes ne reçoivent pas de consignes de dictionnaire. Pour une sélection courte, l’entrée doit correspondre à toute la sélection et non à un mot extrait. Les sorties structurées suspectes sont retenues puis vérifiées ; la carte reçoit un type explicite au lieu de le deviner à partir de `{`.
-
-Une réponse de sélection invalide autorise au plus **une requête corrective en texte brut**. Un lot page/sous-titres invalide revient à **une requête texte par segment non mis en cache**. Cela peut consommer davantage de tokens ; les reprises réseau sont distinctes. Un échec persistant affiche une erreur, jamais le JSON du protocole comme traduction, et n’est pas mis en cache.
-
-Les identifiants de lot doivent être uniques et complets ; les réponses sont remises dans l’ordre d’entrée, sans convertir artificiellement nombres ou objets en texte. Les clés de cache liées au protocole et la validation à la lecture isolent les anciens résultats non vérifiés. Les structures présentes dans le texte source restent traduisibles comme texte.
-
-**La validation du format ne garantit pas le sens ni la détection de toutes les omissions.** Les étiquettes de langue sont des indications locales, avec un marquage prudent des écritures mixtes ; elles ne bloquent ni ne routent les requêtes.
-
-<a id="free-engines"></a>
-### Services de traduction gratuits
-
-Microsoft et Google utilisent `edge.microsoft.com` et `translate-pa.googleapis.com`.
-
-- **Pas des API officielles** : ces endpoints servent leurs propres fonctions web/navigateur, sans contrat public pour cette extension.
-- **Aucune affiliation ni approbation** : le projet n’est ni affilié, ni sponsorisé, ni approuvé par Microsoft ou Google. Les marques appartiennent à leurs titulaires et identifient seulement le service.
-- **Disponibilité non garantie** : changement ou arrêt possible sans préavis. Vous pouvez passer à votre modèle, dont la disponibilité dépend de son fournisseur.
-- **Texte envoyé au service** : ses conditions et sa politique de confidentialité s’appliquent. Pour du contenu sensible, choisissez un endpoint approprié sous votre contrôle.
-- **Aucune garantie** : fourni en l’état, à vos risques. Pour un usage commercial ou intensif, utilisez des API officielles dûment autorisées.
-
-Microsoft est le défaut pour une première utilisation immédiate. Affecter un mode à votre modèle arrête l’usage de ces endpoints publics pour ce mode.
+Les paramètres sont répartis entre **Général**, **Traduction**, **Fournisseurs**, **Sous-titres** et **Données**. Le [guide d’utilisation](./develop/usage.md) (en anglais) détaille chaque fonctionnalité.
 
 <a id="privacy"></a>
-## Confidentialité et données locales
+## Confidentialité
 
-L’absence de relais et de télémétrie **ne signifie pas que tout est traité localement**. Les fournisseurs cloud reçoivent le texte soumis ; un environnement local peut conserver le traitement du modèle sur votre ordinateur. La récupération de sous-titres contacte le site vidéo ; les vérifications manuelles contactent GitHub. Ces services reçoivent les métadonnées réseau habituelles, comme votre adresse IP.
+Aucun serveur relais, aucune mesure d’audience, aucune journalisation à distance. Le texte que vous traduisez n’est envoyé qu’au service choisi. Les paramètres et les clés API restent dans le stockage local des extensions du navigateur et **ne sont pas chiffrés**. Les options gratuites Microsoft et Google passent par des endpoints publics non officiels, sans affiliation ni garantie : lisez l’[avertissement](./develop/free-services.md) avant de vous y fier.
 
-Réglages, clés et cache sont stockés dans `chrome.storage.local`. **L’extension ne chiffre pas les clés API.** Les exports les excluent par défaut ; les inclure crée un fichier en clair à protéger. Le cache n’est pas exporté et aucun historique de traduction consultable n’est maintenu.
+<a id="documentation"></a>
+## Documentation
 
-<a id="development"></a>
-## Développement
+En anglais, dans [`readmes/develop/`](./develop/README.md) :
 
-```bash
-pnpm install
-pnpm dev          # Compilation continue : .output/chrome-mv3-dev/
-pnpm test         # Tests en mode surveillance
-pnpm test:run     # Une exécution des tests
-pnpm typecheck    # Types WXT + TypeScript
-pnpm lint
-pnpm build        # Production : .output/chrome-mv3/
-```
+- [Guide d’utilisation](./develop/usage.md) — toutes les fonctionnalités, fournisseurs et modèles, contrôle de la réflexion, prompts de base
+- [Services de traduction gratuits](./develop/free-services.md)
+- [Architecture, confidentialité et validation](./develop/architecture.md)
+- [Compiler depuis les sources](./develop/building.md) — `pnpm dev`, le build Firefox, l’empaquetage
 
-Chargez le dossier de sortie comme extension non empaquetée. Rechargez l’extension et les pages après un changement de build. Consultez [CHANGELOG.md](../CHANGELOG.md) et signalez problèmes ou demandes dans [Issues](https://github.com/Lewen-Cai/browser-translate/issues), sans clé API ni contenu privé.
+Les notes de version se trouvent dans le [journal des modifications](../CHANGELOG.md) ; bugs et demandes sont à signaler dans les [Issues](https://github.com/Lewen-Cai/browser-translate/issues).
 
 <a id="acknowledgements"></a>
 ## Remerciements
 
-- [read-frog](https://github.com/mengxi-ream/read-frog) — GPL-3.0 ; un excellent projet dont nous nous sommes inspirés pour apprendre.
-- [Lobe Icons](https://github.com/lobehub/lobe-icons) — MIT ; logos des fournisseurs. Les marques restent la propriété de leurs titulaires et servent uniquement à identifier les services.
+- [read-frog](https://github.com/mengxi-ream/read-frog) — GPL-3.0 ; un excellent projet qui nous a beaucoup appris pendant la création de cette extension.
+- [Lobe Icons](https://github.com/lobehub/lobe-icons) — MIT ; logos des fournisseurs, icônes des éditeurs de modèles et la table qui associe chaque modèle à son icône. Les marques appartiennent à leurs propriétaires respectifs et servent uniquement à identifier le service choisi.
 
 <a id="license"></a>
 ## Licence
 
-[GPL-3.0](../LICENSE). Les œuvres dérivées distribuées doivent respecter les obligations de code source et de licence. Les ressources tierces conservent leurs licences respectives.
+[GPL-3.0](../LICENSE). Toute œuvre dérivée distribuée doit respecter les obligations de cette licence, notamment en matière de code source. Les ressources tierces conservent leurs licences respectives.

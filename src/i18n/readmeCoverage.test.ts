@@ -18,12 +18,19 @@ const navTarget = (from: string, to: string) => {
   if (to === 'en') return from === 'en' ? './README.md' : '../README.md';
   return from === 'en' ? `./readmes/${to}.md` : `./${to}.md`;
 };
+
+/**
+ * The README is the short entry point: what it is, how to install it, how to
+ * start. Detail lives in English under readmes/develop/ and every README links
+ * there, so the READMEs stay short in all fourteen languages.
+ */
 const sections = [
-  'why', 'features', 'subtitles', 'languages', 'architecture', 'installation',
-  'configuration', 'prompts', 'validation', 'free-engines', 'privacy',
-  'development', 'acknowledgements', 'license',
+  'why', 'features', 'installation', 'install-chrome', 'install-edge', 'install-firefox',
+  'quick-start', 'privacy', 'documentation', 'acknowledgements', 'license',
 ];
-const commands = ['pnpm install', 'pnpm dev', 'pnpm test', 'pnpm test:run', 'pnpm typecheck', 'pnpm lint', 'pnpm build'];
+const DEVELOP = 'readmes/develop';
+const developDocs = ['README.md', 'usage.md', 'free-services.md', 'architecture.md', 'building.md'];
+const commands = ['pnpm install', 'pnpm dev', 'pnpm dev:firefox', 'pnpm test', 'pnpm test:run', 'pnpm typecheck', 'pnpm lint', 'pnpm build', 'pnpm build:firefox', 'pnpm zip', 'pnpm zip:firefox'];
 
 /** Check spelling/case even on Windows, where existsSync alone is case-insensitive. */
 function existsWithExactCase(relative: string): boolean {
@@ -36,20 +43,49 @@ function existsWithExactCase(relative: string): boolean {
   return existsSync(current);
 }
 
+/** Every local link and image in a markdown/HTML document. */
+function localLinks(content: string): string[] {
+  return [
+    ...[...content.matchAll(/(?:href|src)="([^"]+)"/g)].map((m) => m[1]!),
+    ...[...content.matchAll(/\]\(([^\s)]+)\)/g)].map((m) => m[1]!),
+  ].filter((link) => !/^https:\/\//.test(link));
+}
+
+/** GitHub's heading anchor: lowercase, punctuation dropped, spaces to hyphens. */
+function headingIds(content: string): string[] {
+  return [...content.matchAll(/^#{1,6}\s+(.+)$/gm)]
+    .map((m) => m[1]!.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').trim().replace(/\s/g, '-'));
+}
+
+/** Resolve a link from a document, failing on a missing file or fragment. */
+function checkLink(fromFile: string, link: string, fragments: string[]) {
+  if (link.startsWith('#')) {
+    expect(fragments, `${fromFile} -> ${link}`).toContain(link.slice(1));
+    return;
+  }
+  const [file] = link.split('#');
+  const target = path.posix.normalize(path.posix.join(path.posix.dirname(fromFile), file!));
+  expect(existsWithExactCase(target), `${fromFile} -> ${link}`).toBe(true);
+}
+
 describe('localized README coverage', () => {
-  it('keeps English at the root and every other language in readmes/', () => {
+  it('keeps English at the root, every other language in readmes/, and docs in readmes/develop/', () => {
     expect(readdirSync(root).filter((name) => /^README.*\.md$/.test(name))).toEqual(['README.md']);
     expect(readdirSync(path.join(root, 'readmes')).filter((name) => name.endsWith('.md')).sort())
       .toEqual([...others].sort().map((l) => `${l}.md`));
+    expect(readdirSync(path.join(root, DEVELOP)).sort()).toEqual([...developDocs].sort());
     expect(readdirSync(root)).not.toContain('README_CN.md');
   });
 
   for (const locale of LOCALES) {
     describe(locale, () => {
-      const content = readFileSync(path.join(root, pathFor(locale)), 'utf8');
+      const file = pathFor(locale);
+      const content = readFileSync(path.join(root, file), 'utf8');
       const headerText = content.slice(0, content.indexOf('<a id="why">'));
+      const body = content.slice(headerText.length);
       const header = document.createElement('div');
       header.innerHTML = headerText;
+      const up = locale === 'en' ? '.' : '..';
 
       it('centers the hero and links every language exactly once, marking itself', () => {
         expect(header.querySelector('h1[align="center"]')?.textContent).toBe('BrowserTranslate');
@@ -63,47 +99,65 @@ describe('localized README coverage', () => {
         for (const image of header.querySelectorAll('img')) expect(image.getAttribute('alt')?.trim()).toBeTruthy();
       });
 
-      it('contains the full section structure and the same product limits', () => {
+      it('shows a badge for each supported browser, linking to its install steps', () => {
+        for (const browser of ['chrome', 'edge', 'firefox']) {
+          const badge = header.querySelector(`a[href="#install-${browser}"] img`);
+          expect(badge?.getAttribute('src'), browser).toMatch(/^https:\/\/img\.shields\.io\/badge\//);
+        }
+      });
+
+      it('has the short structure and the facts a first reader needs', () => {
         const ids = [...content.matchAll(/<a id="([^"]+)"><\/a>/g)].map((m) => m[1]);
         expect(ids).toEqual(sections);
-        const body = content.slice(headerText.length);
-        expect(body.length).toBeGreaterThan(3500);
+        // Short is the point: the long README this replaced ran to nearly
+        // 15,000 characters of body in English alone. The floor only catches a
+        // translation that lost whole sections — CJK scripts say the same in far
+        // fewer characters, so theirs is lower.
+        const cjk = ['zh-CN', 'zh-TW', 'ja', 'ko'].includes(locale);
+        expect(body.length).toBeGreaterThan(cjk ? 1800 : 2500);
+        expect(body.length).toBeLessThan(7500);
         // "todo" is ordinary Portuguese/Spanish, not necessarily a TODO marker.
         expect(content).not.toMatch(/<!--\s*TODO\b|\bTODO:/);
-        expect(body).toContain('56');
-        expect(body).toContain('14');
-        expect(body).toContain('20');
-        expect(body).toMatch(/12[,.\s]?000/);
-        for (const value of ['Alt+T', 'Alt+A', '{{...}}', 'chrome.storage.local', 'edge.microsoft.com', 'translate-pa.googleapis.com', 'GPL-3.0']) {
+        for (const value of ['56', '14', 'Alt+T', 'Alt+A', 'chrome://extensions', 'edge://extensions', '.xpi', '140', 'GPL-3.0']) {
           expect(body, value).toContain(value);
         }
-        for (const command of commands) expect(body).toContain(command);
-        for (const key of ['subtitleGeneral', 'sectionTranslation', 'sectionProviders', 'sectionSubtitles', 'sectionData'] as const) {
+        for (const key of ['subtitleGeneral', 'sectionTranslation', 'sectionProviders', 'sectionSubtitles', 'sectionData', 'sectionRouting', 'checkForUpdate'] as const) {
           expect(body, `settings label: ${key}`).toContain(MESSAGES[locale][key]);
+        }
+        for (const doc of ['usage.md', 'free-services.md', 'architecture.md', 'building.md']) {
+          expect(body, `links ${doc}`).toContain(`${locale === 'en' ? './readmes' : '.'}/develop/${doc}`);
         }
       });
 
       it('uses valid local links, images and stable fragment targets', () => {
-        const links = [
-          ...[...content.matchAll(/(?:href|src)="([^"]+)"/g)].map((m) => m[1]!),
-          ...[...content.matchAll(/\]\(([^\s)]+)\)/g)].map((m) => m[1]!),
-        ];
-        // Relative links resolve against the document's own directory, which is
-        // `readmes/` for every language but English.
-        const dir = path.posix.dirname(pathFor(locale));
-        for (const link of links) {
-          if (/^https:\/\//.test(link)) continue;
-          if (link.startsWith('#')) {
-            expect(sections, link).toContain(link.slice(1));
-          } else {
-            const target = path.posix.normalize(path.posix.join(dir, link));
-            expect(existsWithExactCase(target), `${pathFor(locale)} -> ${link}`).toBe(true);
-          }
-        }
+        for (const link of localLinks(content)) checkLink(file, link, sections);
         expect(content).not.toContain('README_CN.md');
-        expect(content).toContain(`${locale === 'en' ? '.' : '..'}/assets/banner.png`);
-        expect(content).toContain(`${locale === 'en' ? '.' : '..'}/assets/framework.png`);
+        expect(content).toContain(`${up}/assets/banner.png`);
       });
     });
   }
+});
+
+describe('English documentation in readmes/develop/', () => {
+  const read = (name: string) => readFileSync(path.join(root, DEVELOP, name), 'utf8');
+  const all = developDocs.map(read).join('\n');
+
+  for (const name of developDocs) {
+    it(`${name}: local links and in-page anchors resolve`, () => {
+      const content = read(name);
+      for (const link of localLinks(content)) {
+        const fragments = link.startsWith('#') ? headingIds(content) : [];
+        checkLink(`${DEVELOP}/${name}`, link, fragments);
+      }
+    });
+  }
+
+  it('keeps the detail the README no longer carries', () => {
+    for (const value of ['56', '14', '20', '{{...}}', 'chrome.storage.local', 'edge.microsoft.com', 'translate-pa.googleapis.com', 'about:debugging', '.xpi', 'Alt+T', 'Alt+A']) {
+      expect(all, value).toContain(value);
+    }
+    expect(all).toMatch(/12[,.\s]?000/);
+    for (const command of commands) expect(all, command).toContain(command);
+    expect(all).toContain('../../assets/framework.png');
+  });
 });
