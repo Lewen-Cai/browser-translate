@@ -2,6 +2,85 @@
 
 All notable changes will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.3] — 2026-11-09
+
+### Added
+- **Firefox and Edge support.** Each release now has a package for Chrome,
+  Edge and Firefox. Firefox needs version 140 or later and gets an `.xpi`
+  signed by Mozilla for self-distribution, so it installs for good rather
+  than as a temporary add-on; its install prompt declares that website
+  content is sent elsewhere — the text you translate, going to the service
+  you chose. The Edge package is the same build as Chrome's, which Brave and
+  Arc also use. The update check offers Firefox the `.xpi` and the other
+  browsers the Chromium package.
+- **Several models per provider.** Each provider keeps a list of models, and
+  selection cards, full pages and subtitles each choose a provider *and* a
+  model — a strong model for selections and a cheap one for whole pages under
+  the same key, say. The card's provider menu lists every model as well, and
+  each model's answers are cached apart. Existing settings carry over: a
+  provider's single model becomes a one-item list, and each mode keeps the
+  provider and model it was using.
+- **The endpoint's own model list.** Once a provider's key works, the models
+  its endpoint offers are listed beside yours, with a search box; click one
+  to add or remove it. A provider being set up switches itself on as soon as
+  its key works and a model is chosen — one you have switched off stays off.
+- **Vendor icons for models**, from LobeHub's own model table: about a
+  hundred vendors, matched by model name on any provider — OpenRouter,
+  SiliconFlow, a local runtime or a vendor's own API.
+
+### Changed
+- **Nothing is switched on or chosen in a new installation.** Microsoft and
+  Google start switched off like every other provider, and no mode has an
+  engine, so no text leaves the browser until you choose where it goes. For
+  a key-free start, switch one on under Providers and choose it for each
+  mode under Translation engines. Existing installations keep their
+  settings.
+- **A mode whose provider or model goes away is not configured, with no
+  fallback.** If no engine is chosen for a mode, the provider it uses is
+  switched off — by hand, or because its last model was removed, which now
+  switches it off — or its model is removed or no longer offered by the
+  provider, the engine picker shows *Not configured*, with one note below the
+  pickers explaining it, and the card, the page and the subtitles report it
+  instead of translating. Nothing is sent anywhere until you choose again;
+  switching the provider back on does not restore the old choice.
+  Switched-off providers no longer appear among the choices.
+- **Redesigned settings.** General shows one live preview — the card at its
+  chosen size over a page, with the trigger icon or your shortcut — above
+  plain rows, and the shortcut fields appear only in hotkey mode. Data uses
+  segmented steps for cache age and tiles for export and import. A provider
+  opens into separate cards for connection, models and reasoning.
+- **Providers are grouped** into free translation services, cloud APIs
+  (bring your own key) and local or custom endpoints. The notice about the
+  free services moved there, shown on request, and no longer sits under the
+  engine pickers.
+- **The popup leads with the current page:** the site's name, a larger
+  Translate full page switch and a line saying which state the page is in.
+  The engines sit in a card of their own; in hotkey mode the footer shows
+  both shortcuts.
+- **Shorter READMEs** in all 14 languages, with a badge for each supported
+  browser and install steps per browser. Localized READMEs live in
+  `readmes/<locale>.md`; the detail moved to English documentation in
+  `readmes/develop/`.
+- **Safer dependencies.** Build and test tooling is patched — `pnpm audit`
+  went from 92 findings to 2, none of them in code the extension ships —
+  ESLint moves to 10 and WXT to 0.21, and installs take only releases that
+  have been public for at least a week. CI now builds with pnpm 11 and
+  Node 22, as the new install settings require.
+
+### Fixed
+- **A switched-off provider was still used.** Turning a provider off only
+  removed it from the pickers: modes already routed to it — Microsoft
+  included — kept sending text to it. A switched-off provider is now never
+  used.
+- A change made in the popup could be undone by the settings page: with
+  both open, the next change made on the settings page wrote back its older
+  copy of everything else. Each page now writes only what it changes and
+  shows changes made on the other.
+- The Kimi icon was invisible on a light background; only its blue dot
+  showed.
+- The trigger-mode label no longer carries a "(default)" note that ran past
+  the edge of its control.
+
 ## [0.2.2] — 2026-09-23
 
 ### Added
