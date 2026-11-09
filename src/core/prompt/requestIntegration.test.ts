@@ -25,7 +25,11 @@ beforeEach(async () => {
   vi.resetModules();
   const initial = createDefaultAppData();
   initial.providers.local = { baseUrl: 'https://test.invalid/v1', apiKey: '', model: 'fixture', models: ['fixture'], enabled: true };
-  initial.settings.engines = { selection: { provider: 'local' }, fullPage: { provider: 'local' }, subtitle: { provider: 'local' } };
+  initial.settings.engines = {
+    selection: { provider: 'local', model: 'fixture' },
+    fullPage: { provider: 'local', model: 'fixture' },
+    subtitle: { provider: 'local', model: 'fixture' },
+  };
   initial.settings.targetLanguage = 'en-AU';
   initial.settings.prompts = { activeId: 'mine', templates: [{ id: 'mine', name: 'Mine', body: 'Use precise fixture terminology.' }] };
   stored = { 'app:data': initial };
@@ -201,6 +205,7 @@ describe('background prompt integration', () => {
 
   it('does not let the base prompt alter MT requests or invalidate their cache', async () => {
     data().settings.engines.selection = { provider: 'microsoft' };
+    data().providers.microsoft.enabled = true;
     fetchMock.mockImplementation(async () => Response.json([{ translations: [{ text: 'MT fixture', to: 'en' }] }]));
     const request = { type: 'translate' as const, text: '中文 with English' };
     await ask(request);
@@ -236,10 +241,27 @@ describe('per-route models (v0.2.3)', () => {
     expect([sentModel(0), sentModel(1)]).toEqual(['other', 'fixture']);
   });
 
-  it('falls back to the default for a model since removed from the list', async () => {
+  it('reports a removed model as not configured, with no fallback and no request', async () => {
     data().settings.engines.selection = { provider: 'local', model: 'gone' };
-    await ask({ type: 'translate', text: 'Another sentence here.' });
-    expect(sentModel(0)).toBe('fixture');
+    const reply = await ask({ type: 'translate', text: 'Another sentence here.' }, true);
+    expect(reply.message).toContain('not configured');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('reports a switched-off provider as not configured, with no fallback', async () => {
+    data().providers.local.enabled = false;
+    data().providers.microsoft.enabled = true;
+    const reply = await ask({ type: 'translate:batch', surface: 'subtitle', segments: ['One segment here'] }, true);
+    expect(reply.message).toMatch(/Provider not configured/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('never uses a switched-off service, even when it is the one routed', async () => {
+    data().settings.engines.selection = { provider: 'microsoft' };
+    data().providers.microsoft.enabled = false;
+    const reply = await ask({ type: 'translate', text: 'A sentence here.' }, true);
+    expect(reply.message).toMatch(/Provider not configured/);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("honours the card's on-the-spot model", async () => {

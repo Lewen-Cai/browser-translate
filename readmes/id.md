@@ -73,8 +73,8 @@ Memerlukan Firefox 140 atau lebih baru. Unduh `…-firefox.xpi` terbaru — suda
 <a id="quick-start"></a>
 ## Mulai cepat
 
-1. Begitu terpasang, ekstensi langsung menerjemahkan dengan layanan gratis Microsoft: pilih teks di halaman web dan klik ikon biru.
-2. Untuk memakai model Anda sendiri, klik ikon pengaturan di popup, buka **Penyedia**, pilih penyedia, lalu tempel kunci API-nya. Daftar modelnya langsung tersedia — tambahkan yang Anda inginkan dan beri bintang pada model bawaan. Penyedia akan aktif dengan sendirinya.
+1. Semuanya dimulai dalam keadaan mati dan belum ada mesin yang dipilih, jadi tidak ada teks yang keluar dari browser sebelum Anda memilihnya. Untuk mulai cepat tanpa kunci, klik ikon pengaturan di popup, buka **Penyedia**, aktifkan Microsoft atau Google, lalu pilih untuk setiap mode di **Mesin terjemahan** pada popup; setelah itu pilih teks di halaman web dan klik ikon biru.
+2. Untuk memakai model Anda sendiri, klik ikon pengaturan di popup, buka **Penyedia**, pilih penyedia, lalu tempel kunci API-nya. Daftar modelnya langsung tersedia — tambahkan yang Anda inginkan. Penyedia akan aktif dengan sendirinya.
 3. Di **Terjemahan → Mesin terjemahan**, pilih penyedia dan model untuk kartu seleksi, halaman penuh, dan subtitel.
 
 Pengaturan terbagi menjadi halaman **Umum**, **Terjemahan**, **Penyedia**, **Subtitel**, dan **Data**. [Panduan penggunaan](./develop/usage.md) (bahasa Inggris) membahas setiap fitur secara rinci.

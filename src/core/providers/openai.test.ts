@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { OpenAICompatibleProvider } from './openai';
+import { OpenAICompatibleProvider, isModelGoneError } from './openai';
 import { TranslationProviderError } from './types';
 
 const prompts = {
@@ -234,5 +234,20 @@ describe('OpenAICompatibleProvider (streaming)', () => {
     const p = makeProvider();
     const result = await collect(p.translate({ ...prompts, temperature: 0.3, stream: true }));
     expect(result.sawDone).toBe(true);
+  });
+});
+
+describe('isModelGoneError', () => {
+  it('recognises the ways providers say a model is not offered', () => {
+    expect(isModelGoneError(404, 'model_not_found invalid_request_error', 'The model `gpt-9` does not exist or you do not have access to it.')).toBe(true);
+    expect(isModelGoneError(400, '', 'Model Not Exist')).toBe(true);
+    expect(isModelGoneError(400, 'model_decommissioned', 'The model `x` has been decommissioned')).toBe(true);
+    expect(isModelGoneError(404, '', 'model "qwen3" not found, try pulling it first')).toBe(true);
+  });
+
+  it('leaves other failures alone', () => {
+    expect(isModelGoneError(404, '', 'HTTP 404')).toBe(false);
+    expect(isModelGoneError(400, '', 'max_tokens is too large for this model')).toBe(false);
+    expect(isModelGoneError(500, 'model_not_found', 'model not found')).toBe(false);
   });
 });

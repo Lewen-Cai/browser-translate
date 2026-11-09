@@ -13,7 +13,8 @@ export interface TranslationChunk {
 }
 
 export interface ProviderError {
-  kind: 'auth' | 'network' | 'rate-limit' | 'server' | 'aborted' | 'parse' | 'unknown';
+  /** `model-gone`: the provider no longer offers the model (retired, renamed, never existed). */
+  kind: 'auth' | 'network' | 'rate-limit' | 'server' | 'aborted' | 'parse' | 'model-gone' | 'unknown';
   message: string;
   retryable: boolean;
   status?: number;

@@ -10,4 +10,4 @@ Microsoft and Google use public endpoints at `edge.microsoft.com` and `translate
 - **Text is sent to the selected service:** its terms and privacy policy apply. Use your own appropriate endpoint for sensitive content.
 - **No warranty:** provided as-is, at your own risk. For commercial or high-volume use, choose official, licensed APIs.
 
-Microsoft is the default for a useful first-run experience. Routing a mode to your own model means that mode no longer uses these public translation endpoints. The same notice is available in **Providers**, beside the free-services group.
+Both are switched off on a new installation: nothing is sent to them until you switch one on in **Providers** and choose it for a mode under **Translation engines**. A switched-off service is never used. Routing a mode to your own model means that mode no longer uses these public translation endpoints. The same notice is available in **Providers**, beside the free-services group.

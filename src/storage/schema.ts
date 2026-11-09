@@ -73,16 +73,16 @@ export type TranslationSurface = (typeof TRANSLATION_SURFACES)[number];
 
 /**
  * Who answers one surface: a provider, and for a model-backed one optionally
- * which of its models. No model — or one since removed from the provider's
- * list — means the provider's default.
+ * which of its models. A route whose provider is switched off, or whose model
+ * is no longer on the provider's list, is not configured — nothing stands in.
  */
 export interface EngineRoute {
   provider: ProviderId;
   model?: string;
 }
 
-/** Which provider (and model) serves each surface. */
-export type EngineRouting = Record<TranslationSurface, EngineRoute>;
+/** Which provider (and model) serves each surface; `null` until the user chooses. */
+export type EngineRouting = Record<TranslationSurface, EngineRoute | null>;
 
 export interface GlobalSettings {
   engines: EngineRouting;

@@ -1,6 +1,5 @@
 import { APP_DATA_VERSION, type AppData, type ProviderConfig, type ProvidersConfig } from './schema';
 import { PROVIDERS, PROVIDER_IDS, type ProviderId } from '~/core/providers/registry';
-import { DEFAULT_PROVIDER } from '~/core/engines/routing';
 import { DEFAULT_SUBTITLE_POSITION, DEFAULT_SUBTITLE_STYLE } from '~/core/subtitles/style';
 import { DEFAULT_TARGET_LANGUAGE } from '~/core/language/targets';
 import { DEFAULT_CARD_SIZE } from '~/core/card/size';
@@ -11,8 +10,9 @@ import { defaultPromptSettings } from '~/core/prompt/templates';
  * field is filled in before the user opens it; the free services and the
  * hand-entered ones have nothing to pre-fill.
  *
- * Only the free services are on by default: they need no key, so a fresh
- * install translates immediately, while every model waits to be configured.
+ * Everything starts switched off, the free services included: no text leaves
+ * the browser until the user has chosen where it goes. (Until v0.2.3 the free
+ * services were on from the start; stores from then keep what they had.)
  */
 export function defaultProviderConfig(id: ProviderId): ProviderConfig {
   const def = PROVIDERS[id];
@@ -21,7 +21,7 @@ export function defaultProviderConfig(id: ProviderId): ProviderConfig {
     apiKey: '',
     model: '',
     models: [],
-    enabled: def.kind === 'service',
+    enabled: false,
   };
 }
 
@@ -36,11 +36,9 @@ export function createDefaultAppData(): AppData {
     version: APP_DATA_VERSION,
     providers: createDefaultProviders(),
     settings: {
-      engines: {
-        selection: { provider: DEFAULT_PROVIDER },
-        fullPage: { provider: DEFAULT_PROVIDER },
-        subtitle: { provider: DEFAULT_PROVIDER },
-      },
+      // Nothing is chosen in a new installation: no text leaves the browser
+      // until the user picks an engine for a mode.
+      engines: { selection: null, fullPage: null, subtitle: null },
       targetLanguage: DEFAULT_TARGET_LANGUAGE,
       prompts: defaultPromptSettings(),
       triggerMode: 'icon',

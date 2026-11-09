@@ -29,6 +29,14 @@ export class StorageClient {
     await this.local.set({ [KEY_APP]: data });
   }
 
+  /** Call `listener` with the stored data whenever any page writes it. */
+  watchAppData(listener: (data: AppData) => void): void {
+    chrome.storage?.onChanged?.addListener((changes, area) => {
+      const next = area === 'local' ? (changes[KEY_APP]?.newValue as AppData | undefined) : undefined;
+      if (next) listener(migrateAppData(next));
+    });
+  }
+
   /**
    * Merge a settings patch into stored data. Re-reads first, so a write from a
    * content script (which holds no store) can't clobber a setting changed in

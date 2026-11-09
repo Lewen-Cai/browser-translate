@@ -46,7 +46,8 @@ describe('StorageClient', () => {
     expect(data.providers.deepseek.apiKey).toBe('');
     expect(data.providers.deepseek.model).toBe('');
     // Only the key-less services start switched on.
-    expect(data.providers.microsoft.enabled).toBe(true);
+    // Nothing leaves the browser until the user switches a provider on.
+    expect(data.providers.microsoft.enabled).toBe(false);
     expect(data.providers.deepseek.enabled).toBe(false);
   });
 

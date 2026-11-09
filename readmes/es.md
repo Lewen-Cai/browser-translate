@@ -73,8 +73,8 @@ Firefox 140 o posterior. Descarga el `…-firefox.xpi` más reciente (firmado po
 <a id="quick-start"></a>
 ## Inicio rápido
 
-1. Recién instalada, la extensión ya traduce con el servicio gratuito de Microsoft: selecciona un texto en una página web y haz clic en el icono azul.
-2. Para usar tu propio modelo, haz clic en el icono de ajustes de la ventana emergente, abre **Proveedores**, elige un proveedor y pega su clave API. Verás la lista de sus modelos: añade los que quieras y marca uno con una estrella como predeterminado. El proveedor se activa solo.
+1. Todo empieza desactivado y sin motor elegido, así que ningún texto sale del navegador hasta que eliges uno. Para empezar sin clave, haz clic en el icono de ajustes de la ventana emergente, abre **Proveedores** y activa Microsoft o Google; luego elígelo para cada modo en **Motores de traducción** de la ventana emergente. Después selecciona un texto en una página web y haz clic en el icono azul.
+2. Para usar tu propio modelo, haz clic en el icono de ajustes de la ventana emergente, abre **Proveedores**, elige un proveedor y pega su clave API. Verás la lista de sus modelos: añade los que quieras. El proveedor se activa solo.
 3. En **Traducción → Motores de traducción**, elige proveedor y modelo para las tarjetas de selección, las páginas completas y los subtítulos.
 
 Los ajustes se dividen en **General**, **Traducción**, **Proveedores**, **Subtítulos** y **Datos**. La [guía de uso](./develop/usage.md) (en inglés) explica cada función en detalle.

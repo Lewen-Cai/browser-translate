@@ -1,9 +1,8 @@
 import { ProviderSelect } from '~/ui/components/ProviderSelect';
 import { routeOptions } from '~/ui/engineOptions';
-import { effectiveRouteKey, parseRouteKey } from '~/core/engines/routing';
+import { effectiveRouteKey, parseRouteKey, routeProblem } from '~/core/engines/routing';
 import { useT } from '~/i18n';
 import { AppWindow, Captions, FileText } from '~/ui/icons';
-import { PROVIDERS } from '~/core/providers/registry';
 import { TRANSLATION_SURFACES, type TranslationSurface } from '~/storage/schema';
 import type { EngineRouting, ProvidersConfig } from '~/storage/schema';
 import type { StringKey } from '~/i18n/strings';
@@ -12,7 +11,7 @@ interface Props {
   engines: EngineRouting;
   providers: ProvidersConfig;
   onChange: (next: EngineRouting) => void;
-  /** Drop the explanatory notes, for the popup's tighter layout. */
+  /** The popup's tighter layout: model ids shown without the provider name. */
   compact?: boolean;
 }
 
@@ -36,30 +35,39 @@ export function EngineRoutingPicker({ engines, providers, onChange, compact = fa
   const t = useT();
   const labels = { services: t('engineGroupServices'), models: t('engineGroupModel') };
 
+  const anyProblem = TRANSLATION_SURFACES.some((s) => routeProblem(engines[s], providers));
+
   return (
     <div class={compact ? 'ap-route-compact space-y-3' : 'space-y-3'}>
-      {TRANSLATION_SURFACES.map((surface) => (
-        <ProviderSelect
-          key={surface}
-          inline
-          label={t(SURFACE_LABEL[surface])}
-          labelIcon={SURFACE_ICON[surface]}
-          value={effectiveRouteKey(engines[surface], providers)}
-          options={routeOptions(providers, labels, { keep: engines[surface], compact })}
-          preferDetail={compact}
-          onChange={(next) => {
-            const route = parseRouteKey(next);
-            if (route) onChange({ ...engines, [surface]: route });
-          }}
-        />
-      ))}
+      {TRANSLATION_SURFACES.map((surface) => {
+        const route = engines[surface];
+        const problem = routeProblem(route, providers);
+        return (
+          <ProviderSelect
+            key={surface}
+            inline
+            label={t(SURFACE_LABEL[surface])}
+            labelIcon={SURFACE_ICON[surface]}
+            // A surface that is not configured shows a placeholder rather
+            // than a provider that will not be used.
+            value={problem || !route ? '' : effectiveRouteKey(route)}
+            options={routeOptions(providers, labels, { compact })}
+            placeholder={t('notConfigured')}
+            emptyText={t('routeNoProviders')}
+            preferDetail={compact}
+            onChange={(next) => {
+              const picked = parseRouteKey(next);
+              if (picked) onChange({ ...engines, [surface]: picked });
+            }}
+          />
+        );
+      })}
 
-      {/* Only worth saying where the choice was just made, and only when it
-          costs the reader something they might not expect. */}
-      {!compact && PROVIDERS[engines.selection.provider].kind === 'service' && (
-        <p class="text-2xs leading-relaxed text-ap-subtle">{t('dictionaryNeedsModel')}</p>
+      {/* One explanation for every "Not configured" above, said once under
+          the controls that fix it rather than repeated under each. */}
+      {anyProblem && (
+        <p role="status" class="text-2xs leading-relaxed text-ap-danger">{t('routeNotConfiguredNote')}</p>
       )}
-
     </div>
   );
 }

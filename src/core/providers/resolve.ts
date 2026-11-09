@@ -91,12 +91,12 @@ export function resolveRequestedProvider(
  */
 export function resolveRequestedRoute(
   requested: { provider?: string; model?: string },
-  routed: EngineRoute,
+  routed: EngineRoute | null,
   providers: ProvidersConfig,
-): EngineRoute {
-  if (!requested.provider) return routed;
-  const provider = resolveRequestedProvider(requested.provider, routed.provider, providers);
-  if (provider !== requested.provider) return routed;
+): EngineRoute | null {
+  if (!requested.provider || !(requested.provider in PROVIDERS)) return routed;
+  const provider = requested.provider as ProviderId;
+  if (!providers[provider]?.enabled) return routed;
   const model = PROVIDERS[provider].kind === 'llm' ? requested.model : undefined;
   return model ? { provider, model } : { provider };
 }

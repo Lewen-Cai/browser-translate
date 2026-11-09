@@ -138,18 +138,14 @@ describe('isProviderReady', () => {
 describe('enabledProviders', () => {
   it('lists what is switched on, in registry order', () => {
     const providers = createDefaultProviders();
+    providers.google.enabled = true;
     providers.anthropic.enabled = true;
     providers.deepseek.enabled = true;
-    expect(enabledProviders(providers)).toEqual([
-      'microsoft',
-      'google',
-      'anthropic',
-      'deepseek',
-    ]);
+    expect(enabledProviders(providers)).toEqual(['google', 'anthropic', 'deepseek']);
   });
 
-  it('starts with only the free services', () => {
-    expect(enabledProviders(createDefaultProviders())).toEqual(['microsoft', 'google']);
+  it('starts with nothing switched on — the free services included', () => {
+    expect(enabledProviders(createDefaultProviders())).toEqual([]);
   });
 });
 
@@ -199,6 +195,7 @@ describe('resolveRequestedRoute', () => {
   });
 
   it('can pick another model of the routed provider', () => {
+    providers.openrouter.enabled = true;
     expect(resolveRequestedRoute({ provider: 'openrouter', model: 'b' }, routed, providers)).toEqual({
       provider: 'openrouter',
       model: 'b',
@@ -207,6 +204,14 @@ describe('resolveRequestedRoute', () => {
 
   it("falls back to routing's provider and model when the named one is off", () => {
     expect(resolveRequestedRoute({ provider: 'deepseek', model: 'x' }, routed, providers)).toBe(routed);
+  });
+
+  it('honours a named provider when routing has none chosen', () => {
+    expect(resolveRequestedRoute({ provider: 'anthropic', model: 'x' }, null, providers)).toEqual({
+      provider: 'anthropic',
+      model: 'x',
+    });
+    expect(resolveRequestedRoute({ provider: 'deepseek', model: 'x' }, null, providers)).toBeNull();
   });
 
   it('drops a model named for a service', () => {

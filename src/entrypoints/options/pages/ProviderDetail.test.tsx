@@ -99,3 +99,16 @@ describe('ProviderDetail auto-enable, already-usable providers', () => {
     await waitFor(() => expect(row().enabled).toBe(true), { timeout: 3000 });
   });
 });
+
+describe('ProviderDetail with no models left', () => {
+  it('switches itself off when the last model is removed, and back on when one is added', async () => {
+    seed({ apiKey: 'sk', model: 'm', models: ['m'], enabled: true });
+    render(<ProviderDetail id="openrouter" onBack={() => {}} />);
+    await waitFor(() => expect(screen.getByText('Connected')).toBeTruthy());
+    fireEvent.click(screen.getByLabelText('Remove m'));
+    await waitFor(() => expect(row().enabled).toBe(false));
+    expect(screen.getByText(/it has no models left/)).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: /openai\/gpt-4o-mini/ }));
+    await waitFor(() => expect(row().enabled).toBe(true));
+  });
+});

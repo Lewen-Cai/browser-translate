@@ -3,10 +3,10 @@ import { isThinkingDialect } from '~/core/providers/thinking';
 import { normalizeCardSize } from '~/core/card/size';
 import type { GlobalSettings, ProviderConfig, ProvidersConfig } from './schema';
 import { createDefaultProviders, defaultProviderConfig } from './defaults';
-import { PROVIDER_IDS, isProviderId, type ProviderId } from '~/core/providers/registry';
+import { PROVIDERS, PROVIDER_IDS, SERVICE_IDS, isProviderId, type ProviderId } from '~/core/providers/registry';
 import { isProviderReady } from '~/core/providers/resolve';
 import { normalizeModelSet } from '~/core/providers/models';
-import { DEFAULT_PROVIDER, normalizeEngineRouting } from '~/core/engines/routing';
+import { normalizeEngineRouting } from '~/core/engines/routing';
 import { normalizeTargetLanguage } from '~/core/language/targets';
 import { normalizeSubtitlePosition, normalizeSubtitleStyle } from '~/core/subtitles/style';
 import { normalizePromptSettings } from '~/core/prompt/templates';
@@ -26,8 +26,57 @@ export function migrateAppData(input: AppData): AppData {
   let data = input;
   data = stripLegacyFields(data);
   data = adoptProviders(data);
+  data = nameLegacyRouteModels(data);
   data = fillSettingsDefaults(data);
   return data;
+}
+
+/**
+ * Give pre-v0.2.3 routes the model they were using.
+ *
+ * Before v0.2.3 a route was a bare provider id: one model per provider, so
+ * there was nothing else to say. That model is now the provider's one-item
+ * list, and here it is written into the route, so an upgraded store says
+ * "DeepSeek, deepseek-flash" outright and keeps translating exactly as before.
+ *
+ * Only routes naming no model are touched. A route that names one — including
+ * a model the user has since removed from the list — is left as it is: that
+ * one is shown as not configured until the user picks again.
+ */
+/** The provider of a `{ provider }` route that names no model, if it is one. */
+function bareRouteProvider(value: unknown): ProviderId | null {
+  if (!value || typeof value !== 'object') return null;
+  const r = value as { provider?: unknown; model?: unknown };
+  if (!isProviderId(r.provider) || (typeof r.model === 'string' && r.model.trim())) return null;
+  return r.provider;
+}
+
+function nameLegacyRouteModels(data: AppData): AppData {
+  const raw = (data.settings as unknown as { engines?: unknown }).engines;
+  const lift = (value: unknown): unknown => {
+    // A bare id is the v0.2.2 shape; `{ provider }` with no model is what a
+    // v0.2.3 development build turned that into. Both mean "this provider's
+    // one model" and get it named.
+    const bare = isProviderId(value);
+    const id = bare ? value : bareRouteProvider(value);
+    if (!id || PROVIDERS[id].kind !== 'llm') return value;
+    const model = data.providers[id]?.model;
+    return model ? { provider: id, model } : value;
+  };
+  let engines: unknown;
+  if (typeof raw === 'string') {
+    // A single engine for every surface, as v0.1.9 stored it.
+    const route = lift(raw);
+    if (route === raw) return data;
+    engines = { selection: route, fullPage: route, subtitle: route };
+  } else if (raw && typeof raw === 'object') {
+    const entries = Object.entries(raw as Record<string, unknown>);
+    if (!entries.some(([, v]) => lift(v) !== v)) return data;
+    engines = Object.fromEntries(entries.map(([k, v]) => [k, lift(v)]));
+  } else {
+    return data;
+  }
+  return { ...data, settings: { ...data.settings, engines } as GlobalSettings };
 }
 
 /** Settings keys replaced by `subtitlePosition` / `subtitleStyle` in v0.1.9. */
@@ -161,6 +210,9 @@ function providersFromLegacy(api: LegacyApi): ProvidersConfig {
     enabled: false,
   };
   out[active] = { ...live, enabled: isProviderReady(active, live) };
+  // A fresh install now starts with the free services off, but before v0.2.0
+  // they were always available — a store from then keeps them.
+  for (const id of SERVICE_IDS) out[id] = { ...out[id], enabled: true };
   return out;
 }
 
@@ -196,7 +248,8 @@ function adoptProviders(data: AppData): AppData {
       ? Object.fromEntries(
           Object.entries(settings.engines as Record<string, unknown>).map(([k, v]) => [k, remap(v)]),
         )
-      : remap(settings.engine);
+      : // Before v0.1.9 there was no choice to store: everything went to the model.
+        remap(settings.engine ?? 'llm');
 
   return { ...rest, providers, settings: { ...settings, engines } as GlobalSettings };
 }
@@ -204,9 +257,9 @@ function adoptProviders(data: AppData): AppData {
 function fillSettingsDefaults(data: AppData): AppData {
   const s = data.settings as GlobalSettings & { engine?: unknown };
   const fullPageHotkey = typeof s.fullPageHotkey === 'string' ? s.fullPageHotkey : 'Alt+A';
-  // A store with nothing configured falls to the free default; one that already
-  // named a provider for everything keeps it.
-  const seed: ProviderId = isProviderId(s.engines) ? s.engines : DEFAULT_PROVIDER;
+  // A store that named one provider for everything keeps it; one with nothing
+  // configured gets nothing — a mode without an engine is not configured.
+  const seed: ProviderId | null = isProviderId(s.engines) ? s.engines : null;
   const engines = normalizeEngineRouting(s.engines, seed);
   const prompts = normalizePromptSettings(s.prompts);
   const uiLanguage = s.uiLanguage === 'auto' || isLocale(s.uiLanguage) ? s.uiLanguage : 'auto';

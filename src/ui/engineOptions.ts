@@ -1,6 +1,6 @@
 import { PROVIDERS, PROVIDER_IDS, type Capability, type ProviderId } from '~/core/providers/registry';
 import type { ProviderOption } from '~/ui/components/ProviderSelect';
-import type { EngineRoute, ProvidersConfig } from '~/storage/schema';
+import type { ProvidersConfig } from '~/storage/schema';
 import { routeKey } from '~/core/engines/routing';
 import { modelMarkFor } from '~/core/providers/modelIcon';
 
@@ -18,20 +18,19 @@ export interface EngineOptionLabels {
  * without the picker knowing anything about services — the registry says a
  * service cannot gloss a word, so it simply is not in the list.
  *
- * A provider currently chosen is always included even if it has since been
- * switched off, so the control can show what it is set to rather than appearing
- * blank.
+ * A switched-off provider is never offered — not even as the current choice:
+ * it will not be used, so the picker shows a not-configured placeholder for a
+ * surface routed to it instead (see EngineRoutingPicker).
  */
 export function engineOptions(
   providers: ProvidersConfig,
   labels: EngineOptionLabels,
-  opts: { capability?: Capability; keep?: ProviderId; compact?: boolean } = {},
+  opts: { capability?: Capability; compact?: boolean } = {},
 ): ProviderOption[] {
   const capability = opts.capability ?? 'translate';
-  return PROVIDER_IDS.filter((id) => {
-    if (!PROVIDERS[id].capabilities.includes(capability)) return false;
-    return providers[id]?.enabled || id === opts.keep;
-  }).map((id) => ({
+  return PROVIDER_IDS.filter((id) =>
+    PROVIDERS[id].capabilities.includes(capability) && providers[id]?.enabled,
+  ).map((id) => ({
     value: id,
     label: opts.compact ? PROVIDERS[id].shortLabel ?? PROVIDERS[id].label : PROVIDERS[id].label,
     iconId: id,
@@ -47,27 +46,26 @@ export function engineOptions(
  * OpenRouter model to another is a pick, not a retyped name. Option values are
  * route keys (see `routeKey`); `detail` carries the model name for display.
  *
- * A provider with no model yet still appears once, under its own name, so a
- * chosen-but-unfinished provider does not leave the control blank.
+ * A provider with no models offers nothing to pick: choosing it could only
+ * leave the surface unconfigured. A surface that is not configured is shown
+ * by the picker as a placeholder, not as one of these options.
  */
 export function routeOptions(
   providers: ProvidersConfig,
   labels: EngineOptionLabels,
-  opts: { capability?: Capability; keep?: EngineRoute; compact?: boolean } = {},
+  opts: { capability?: Capability; compact?: boolean } = {},
 ): RouteOption[] {
   const out: RouteOption[] = [];
   for (const option of engineOptions(providers, labels, {
     capability: opts.capability,
-    keep: opts.keep?.provider,
     compact: opts.compact,
   })) {
     const id = option.value as ProviderId;
-    const models = PROVIDERS[id].kind === 'llm' ? providers[id]?.models ?? [] : [];
-    if (models.length === 0) {
+    if (PROVIDERS[id].kind === 'service') {
       out.push(option);
       continue;
     }
-    for (const model of models) {
+    for (const model of providers[id]?.models ?? []) {
       out.push({
         ...option,
         value: routeKey({ provider: id, model }),

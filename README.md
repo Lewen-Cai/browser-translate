@@ -81,8 +81,8 @@ Firefox 140 or later. Download the latest `…-firefox.xpi` — signed by Mozill
 <a id="quick-start"></a>
 ## Quick start
 
-1. A fresh install already translates with Microsoft's free service: select some text on a webpage and click the blue icon.
-2. To use your own model, click the popup's settings icon, open **Providers**, choose a provider and paste its API key. Its models are listed for you — add the ones you want and star a default. The provider switches itself on.
+1. Everything starts switched off and no engine is chosen, so no text leaves your browser until you choose one. For a quick start without a key, click the popup's settings icon, open **Providers** and switch on Microsoft or Google, then choose it for each mode under **Translation engines** in the popup; then select some text on a webpage and click the blue icon.
+2. To use your own model, click the popup's settings icon, open **Providers**, choose a provider and paste its API key. Its models are listed for you — add the ones you want. The provider switches itself on.
 3. In **Translation → Translation engines**, choose a provider and model for selection cards, full pages and subtitles.
 
 The settings are split into **General**, **Translation**, **Providers**, **Subtitles** and **Data**. The [usage guide](./readmes/develop/usage.md) covers each feature in detail.

@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
-  DEFAULT_PROVIDER,
   effectiveRouteKey,
   normalizeEngineRouting,
   parseRouteKey,
+  routeProblem,
   routeConfig,
+  routeNeedsModel,
+  releaseRoutes,
   routeKey,
   usesModel,
 } from './routing';
@@ -75,10 +77,16 @@ describe('normalizeEngineRouting', () => {
     expect(Object.keys(out).sort()).toEqual(['fullPage', 'selection', 'subtitle']);
   });
 
-  it('falls back to the default provider when the fallback itself is unusable', () => {
-    expect(normalizeEngineRouting(undefined, 'bogus' as never)).toEqual(
-      table(DEFAULT_PROVIDER, DEFAULT_PROVIDER, DEFAULT_PROVIDER),
-    );
+  it('leaves every surface unchosen when there is no seed', () => {
+    const none = { selection: null, fullPage: null, subtitle: null };
+    expect(normalizeEngineRouting(undefined)).toEqual(none);
+    expect(normalizeEngineRouting(undefined, 'bogus' as never)).toEqual(none);
+    expect(normalizeEngineRouting({ selection: { provider: 'nonsense' } })).toEqual(none);
+  });
+
+  it('keeps an unchosen surface unchosen, even with a seed', () => {
+    const input = { ...table('openai'), fullPage: null } as EngineRouting;
+    expect(normalizeEngineRouting(input, 'google')).toBe(input);
   });
 
   it('rejects a primitive standing in for the table', () => {
@@ -94,6 +102,10 @@ describe('usesModel', () => {
     expect(usesModel(table('local', 'google', 'google'))).toBe(true);
   });
 
+  it('is false for surfaces with no engine chosen', () => {
+    expect(usesModel({ selection: null, fullPage: null, subtitle: null })).toBe(false);
+  });
+
   it('is false when every surface uses a free service', () => {
     expect(usesModel(table('microsoft', 'google', 'microsoft'))).toBe(false);
   });
@@ -107,9 +119,10 @@ describe('routeConfig', () => {
     expect(routeConfig({ provider: 'openrouter', model: 'b' }, providers).model).toBe('b');
   });
 
-  it('uses the default for no model or a removed one, without copying the row', () => {
-    expect(routeConfig({ provider: 'openrouter' }, providers)).toBe(providers.openrouter);
-    expect(routeConfig({ provider: 'openrouter', model: 'gone' }, providers)).toBe(providers.openrouter);
+  it('never substitutes another model for one that is missing', () => {
+    expect(routeConfig({ provider: 'openrouter' }, providers).model).toBe('');
+    expect(routeConfig({ provider: 'openrouter', model: 'gone' }, providers).model).toBe('');
+    expect(routeConfig({ provider: 'openrouter', model: 'a' }, providers)).toBe(providers.openrouter);
   });
 
   it('returns a service row as is', () => {
@@ -132,12 +145,79 @@ describe('route keys', () => {
     expect(parseRouteKey('nope|x')).toBeNull();
   });
 
-  it('shows the model a route really uses as selected', () => {
+  it('shows the route exactly as stored', () => {
+    expect(effectiveRouteKey({ provider: 'openai', model: 'b' })).toBe('openai|b');
+    expect(effectiveRouteKey({ provider: 'openai', model: 'gone' })).toBe('openai|gone');
+    expect(effectiveRouteKey({ provider: 'microsoft' })).toBe('microsoft');
+  });
+});
+
+describe('routeProblem', () => {
+  const setup = () => {
     const providers = createDefaultProviders();
-    providers.openai = { ...providers.openai, model: 'a', models: ['a', 'b'] };
-    expect(effectiveRouteKey({ provider: 'openai' }, providers)).toBe('openai|a');
-    expect(effectiveRouteKey({ provider: 'openai', model: 'b' }, providers)).toBe('openai|b');
-    expect(effectiveRouteKey({ provider: 'openai', model: 'gone' }, providers)).toBe('openai|a');
-    expect(effectiveRouteKey({ provider: 'microsoft' }, providers)).toBe('microsoft');
+    providers.openrouter = { ...providers.openrouter, apiKey: 'k', model: 'a', models: ['a', 'b'], enabled: true };
+    providers.microsoft.enabled = true;
+    return providers;
+  };
+
+  it('reports a surface with no engine chosen', () => {
+    expect(routeProblem(null, setup())).toBe('unset');
+  });
+
+  it('finds nothing wrong with a usable route', () => {
+    expect(routeProblem({ provider: 'openrouter', model: 'b' }, setup())).toBeNull();
+    expect(routeProblem({ provider: 'microsoft' }, setup())).toBeNull();
+  });
+
+  it('reports a switched-off provider, with no fallback — Microsoft included', () => {
+    const providers = setup();
+    providers.openrouter.enabled = false;
+    expect(routeProblem({ provider: 'openrouter', model: 'b' }, providers)).toBe('provider-off');
+    providers.microsoft.enabled = false;
+    expect(routeProblem({ provider: 'microsoft' }, providers)).toBe('provider-off');
+  });
+
+  it('reports a removed model while the provider is on', () => {
+    expect(routeProblem({ provider: 'openrouter', model: 'gone' }, setup())).toBe('model-missing');
+    expect(routeNeedsModel({ provider: 'openrouter' }, setup())).toBe(true);
+    expect(routeNeedsModel({ provider: 'microsoft' }, setup())).toBe(false);
+  });
+});
+
+describe('releaseRoutes', () => {
+  const setup = () => {
+    const providers = createDefaultProviders();
+    providers.openrouter = { ...providers.openrouter, apiKey: 'k', model: 'a', models: ['a', 'b'], enabled: true };
+    providers.microsoft.enabled = true;
+    return providers;
+  };
+  const engines: EngineRouting = {
+    selection: { provider: 'openrouter', model: 'a' },
+    fullPage: { provider: 'openrouter', model: 'b' },
+    subtitle: { provider: 'microsoft' },
+  };
+
+  it('returns its input when the provider can still serve every route', () => {
+    expect(releaseRoutes(engines, setup(), 'openrouter')).toBe(engines);
+  });
+
+  it('clears the routes of a switched-off provider and leaves the rest', () => {
+    const providers = setup();
+    providers.openrouter.enabled = false;
+    expect(releaseRoutes(engines, providers, 'openrouter')).toEqual({
+      selection: null, fullPage: null, subtitle: { provider: 'microsoft' },
+    });
+  });
+
+  it('clears only the route whose model was removed', () => {
+    const providers = setup();
+    providers.openrouter.models = ['b'];
+    expect(releaseRoutes(engines, providers, 'openrouter')).toEqual({ ...engines, selection: null });
+  });
+
+  it('leaves other providers alone', () => {
+    const providers = setup();
+    providers.microsoft.enabled = false;
+    expect(releaseRoutes(engines, providers, 'openrouter')).toBe(engines);
   });
 });

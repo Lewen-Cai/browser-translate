@@ -37,6 +37,7 @@ export function ProviderDetail({ id, onBack }: Props) {
   const { probe, refresh } = useProviderProbe(id, config);
   const [showKey, setShowKey] = useState(false);
   const [autoEnabled, setAutoEnabled] = useState(false);
+  const [autoDisabled, setAutoDisabled] = useState(false);
   const t = useT();
   const def = PROVIDERS[id];
 
@@ -66,6 +67,18 @@ export function ProviderDetail({ id, onBack }: Props) {
 
   function set(patch: Partial<ProviderConfig>) {
     if ('baseUrl' in patch || 'apiKey' in patch) armed.current = true;
+    // A model provider with no models can answer nothing, so removing the last
+    // one switches it off — its surfaces then fall back as a switched-off
+    // provider's do. The switch-off was ours, not the user's, so adding a model
+    // again may switch it back on.
+    if (patch.models && patch.models.length === 0 && config.enabled && def.kind === 'llm') {
+      patch = { ...patch, enabled: false };
+      armed.current = true;
+      setAutoEnabled(false);
+      setAutoDisabled(true);
+    } else if (patch.models && patch.models.length > 0) {
+      setAutoDisabled(false);
+    }
     void updateProvider(id, patch);
   }
 
@@ -107,6 +120,7 @@ export function ProviderDetail({ id, onBack }: Props) {
               onChange={(on) => {
                 armed.current = false;
                 setAutoEnabled(false);
+                setAutoDisabled(false);
                 toggle(id, on);
               }}
               label=""
@@ -115,6 +129,9 @@ export function ProviderDetail({ id, onBack }: Props) {
         </div>
         {autoEnabled && config.enabled && (
           <p class="mt-3 rounded-md bg-ap-success/10 px-3 py-2 text-xs text-ap-success">{t('providerAutoEnabled')}</p>
+        )}
+        {autoDisabled && !config.enabled && (
+          <p class="mt-3 rounded-md bg-ap-fg/5 px-3 py-2 text-xs text-ap-muted">{t('providerAutoDisabled')}</p>
         )}
         {denied === id && (
           <p class="mt-3 text-xs leading-relaxed text-ap-danger">{t('providerPermissionDenied')}</p>

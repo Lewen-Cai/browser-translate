@@ -7,7 +7,7 @@ import {
   resolveRequestedRoute,
 } from '~/core/providers/resolve';
 import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
-import { routeConfig } from '~/core/engines/routing';
+import { routeConfig, routeProblem, type RouteProblem } from '~/core/engines/routing';
 import { TranslationProviderError } from '~/core/providers/types';
 import { computeCacheKey } from '~/core/cache/key';
 import { getMtEngine, isMtEngineId, mtTranslateAll, type MtEngineId } from '~/core/mt';
@@ -85,11 +85,22 @@ async function handleTranslate(
   try {
     // Routing decides unless the request named someone — the card can send a
     // reader's on-the-spot choice, which lasts exactly as long as that card.
+    // A route that is not configured is refused, never redirected.
     const route = resolveRequestedRoute(
       { provider: msg.provider, model: msg.model },
       data.settings.engines.selection,
       data.providers,
     );
+    const problem = routeProblem(route, data.providers);
+    if (problem || !route) {
+      send({
+        type: 'translate:error',
+        requestId: msg.requestId,
+        message: routeProblemMessage(problem ?? 'unset', data.settings.uiLanguage),
+        kind: 'config',
+      });
+      return;
+    }
     const engine: ProviderId = route.provider;
     // The row with the route's model in place, so the request, the cache key
     // and the readiness check below all agree on which model this is.
@@ -192,17 +203,39 @@ async function handleTranslate(
 
     send({ type: 'translate:done', requestId: msg.requestId, full, format, cached: false });
   } catch (e) {
-    const message = translationErrorMessage(e, data.settings.uiLanguage);
-    const kind = e instanceof InvalidModelOutputError ? 'parse' : e instanceof TranslationProviderError ? e.info.kind : 'unknown';
-    send({ type: 'translate:error', requestId: msg.requestId, message, kind });
+    send({ type: 'translate:error', requestId: msg.requestId, ...translationErrorReply(e, data.settings.uiLanguage) });
   }
 }
 
-function translationErrorMessage(error: unknown, uiLanguage: string): string {
+const ROUTE_PROBLEM_MESSAGE = {
+  unset: 'errorNoEngine',
+  'provider-off': 'errorProviderOff',
+  'model-missing': 'errorModelMissing',
+} as const;
+
+/** What to tell the reader when a surface cannot be translated as configured. */
+function routeProblemMessage(problem: RouteProblem, uiLanguage: string): string {
+  const locale = resolveLocale(uiLanguage, typeof navigator !== 'undefined' ? navigator.language : 'en');
+  return i18nT(ROUTE_PROBLEM_MESSAGE[problem], locale);
+}
+
+/**
+ * The message and kind a failed translation is reported with. A model the
+ * provider no longer offers is a configuration problem like a removed one:
+ * the mode is not configured until the user chooses another model.
+ */
+function translationErrorReply(error: unknown, uiLanguage: string): { message: string; kind: string } {
+  const locale = () => resolveLocale(uiLanguage, typeof navigator !== 'undefined' ? navigator.language : 'en');
   if (error instanceof InvalidModelOutputError) {
-    return i18nT('invalidModelOutput', resolveLocale(uiLanguage, typeof navigator !== 'undefined' ? navigator.language : 'en'));
+    return { message: i18nT('invalidModelOutput', locale()), kind: 'parse' };
   }
-  return error instanceof Error ? error.message : String(error);
+  if (error instanceof TranslationProviderError) {
+    if (error.info.kind === 'model-gone') {
+      return { message: `${i18nT('errorModelGone', locale())} (${error.message})`, kind: 'config' };
+    }
+    return { message: error.message, kind: error.info.kind };
+  }
+  return { message: error instanceof Error ? error.message : String(error), kind: 'unknown' };
 }
 
 async function handleTranslateBatch(
@@ -216,6 +249,16 @@ async function handleTranslateBatch(
 
   try {
     const route = data.settings.engines[msg.surface];
+    const problem = routeProblem(route, data.providers);
+    if (problem || !route) {
+      send({
+        type: 'translate:batch:error',
+        requestId: msg.requestId,
+        message: routeProblemMessage(problem ?? 'unset', data.settings.uiLanguage),
+        kind: 'config',
+      });
+      return;
+    }
     const engine: ProviderId = route.provider;
     const cfg = routeConfig(route, data.providers);
     // The guard, not a `kind` comparison: this one narrows `engine` to an
@@ -345,9 +388,7 @@ async function handleTranslateBatch(
 
     send({ type: 'translate:batch:done', requestId: msg.requestId, translations });
   } catch (e) {
-    const message = translationErrorMessage(e, data.settings.uiLanguage);
-    const kind = e instanceof InvalidModelOutputError ? 'parse' : e instanceof TranslationProviderError ? e.info.kind : 'unknown';
-    send({ type: 'translate:batch:error', requestId: msg.requestId, message, kind });
+    send({ type: 'translate:batch:error', requestId: msg.requestId, ...translationErrorReply(e, data.settings.uiLanguage) });
   }
 }
 

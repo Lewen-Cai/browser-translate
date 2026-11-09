@@ -43,7 +43,7 @@ export default defineContentScript({
     // The card offers a reader every provider that is switched on, so it needs
     // the rows rather than a finished credit line.
     let providersConfig: ProvidersConfig = createDefaultProviders();
-    let selectionRoute: EngineRoute = { provider: 'microsoft' };
+    let selectionRoute: EngineRoute | null = null;
     let cardSize: CardSize = DEFAULT_CARD_SIZE;
     // A pinned card survives clicks elsewhere on the page, and keeps the spot
     // the reader dragged it to when they translate something else.

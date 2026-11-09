@@ -73,8 +73,8 @@ Cần Firefox 140 trở lên. Tải `…-firefox.xpi` mới nhất — đã đư
 <a id="quick-start"></a>
 ## Bắt đầu nhanh
 
-1. Ngay sau khi cài, tiện ích đã dịch được bằng dịch vụ miễn phí của Microsoft: chọn một đoạn văn bản trên trang web và nhấp vào biểu tượng màu xanh.
-2. Để dùng mô hình của bạn, nhấp biểu tượng cài đặt trong cửa sổ bật lên, mở **Nhà cung cấp**, chọn một nhà cung cấp và dán khóa API. Danh sách mô hình sẽ hiện sẵn — thêm những mô hình bạn muốn và gắn sao cho mô hình mặc định. Nhà cung cấp sẽ tự bật.
+1. Sau khi cài, mọi thứ đều đang tắt và chưa chọn công cụ dịch nào, nên không có văn bản nào rời khỏi trình duyệt cho đến khi bạn chọn. Để bắt đầu nhanh mà không cần khóa, nhấp biểu tượng cài đặt trong cửa sổ bật lên, mở **Nhà cung cấp** và bật Microsoft hoặc Google, rồi chọn nó cho từng chế độ ở **Công cụ dịch** trong cửa sổ bật lên; sau đó chọn một đoạn văn bản trên trang web và nhấp vào biểu tượng màu xanh.
+2. Để dùng mô hình của bạn, nhấp biểu tượng cài đặt trong cửa sổ bật lên, mở **Nhà cung cấp**, chọn một nhà cung cấp và dán khóa API. Danh sách mô hình sẽ hiện sẵn — thêm những mô hình bạn muốn. Nhà cung cấp sẽ tự bật.
 3. Trong **Dịch → Công cụ dịch**, chọn nhà cung cấp và mô hình cho thẻ vùng chọn, dịch cả trang và phụ đề.
 
 Phần cài đặt chia thành các trang **Chung**, **Dịch**, **Nhà cung cấp**, **Phụ đề** và **Dữ liệu**. [Hướng dẫn sử dụng](./develop/usage.md) (tiếng Anh) trình bày chi tiết từng tính năng.

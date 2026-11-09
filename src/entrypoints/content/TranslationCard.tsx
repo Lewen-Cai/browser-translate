@@ -12,7 +12,7 @@ import { CardMenu, type CardMenuItem, type MenuAnchor } from './CardMenu';
 import { writeClipboard } from './clipboard';
 import { ProviderIcon } from '~/ui/ProviderIcon';
 import { routeOptions } from '~/ui/engineOptions';
-import { effectiveRouteKey, parseRouteKey, routeConfig } from '~/core/engines/routing';
+import { effectiveRouteKey, parseRouteKey, routeConfig, routeProblem } from '~/core/engines/routing';
 import { translationAttribution } from '~/ui/attribution';
 import { languageEndonym } from '~/core/language/targets';
 import { languageChoices } from '~/core/language/search';
@@ -30,8 +30,9 @@ interface Props {
   onClose: () => void;
   /** Every provider row, so the card can offer the ones switched on. */
   providers: ProvidersConfig;
-  /** Who routing picked for the selection surface — the card's starting point. */
-  defaultRoute: EngineRoute;
+  /** Who routing picked for the selection surface — the card's starting point;
+   *  `null` when the user has not chosen one. */
+  defaultRoute: EngineRoute | null;
   /** The configured target language — likewise a starting point, not a rule. */
   defaultTargetLang: string;
   /** How big the card is, from settings. */
@@ -102,12 +103,15 @@ export function TranslationCard({
   // opens rather than one round trip later.
   const sourceLang = useMemo(() => identifyLanguage(text), [text]);
   const route = routeOverride ?? defaultRoute;
-  const provider = route.provider;
   // Keyed as a string so the effect below re-runs on a change of model as well
   // as of provider, without re-running for a fresh but equal route object.
-  const routeId = effectiveRouteKey(route, providers);
+  const routeId = route ? effectiveRouteKey(route) : '';
   const targetLang = langOverride ?? defaultTargetLang;
-  const attribution = translationAttribution(provider, routeConfig(route, providers));
+  // A route that is not configured is credited to nobody: the background
+  // refuses it, and naming its provider would suggest otherwise.
+  const attribution = route && !routeProblem(route, providers)
+    ? translationAttribution(route.provider, routeConfig(route, providers))
+    : null;
 
   useEffect(() => {
     const animId = window.requestAnimationFrame(() => setVisible(true));
@@ -173,8 +177,8 @@ export function TranslationCard({
         type: 'translate',
         requestId: reqId,
         text,
-        provider,
-        ...(route.model && { model: route.model }),
+        ...(route && { provider: route.provider }),
+        ...(route?.model && { model: route.model }),
         targetLang,
         ...(refresh && { refresh: true }),
       })) {
@@ -341,7 +345,6 @@ export function TranslationCard({
   const providerItems: CardMenuItem[] = routeOptions(
     providers,
     { services: t('engineGroupServices', locale), models: t('engineGroupModel', locale) },
-    { keep: route },
   ).map((o) => ({
     value: o.value,
     label: o.label,
@@ -498,8 +501,10 @@ export function TranslationCard({
             aria-expanded={menu === 'provider'}
             title={t('cardProvider', locale)}
           >
-            <ProviderIcon id={attribution.iconId} size={16} />
-            <span class="bt-card-footer-label">{attribution.label || PROVIDERS[provider].label}</span>
+            {attribution && <ProviderIcon id={attribution.iconId} size={16} />}
+            <span class="bt-card-footer-label">
+              {attribution ? attribution.label || PROVIDERS[attribution.iconId].label : t('notConfigured', locale)}
+            </span>
             <ChevronDown size={12} />
           </button>
         <button

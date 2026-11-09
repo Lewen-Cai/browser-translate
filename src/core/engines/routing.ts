@@ -1,5 +1,4 @@
 import { PROVIDERS, isProviderId, type ProviderId } from '~/core/providers/registry';
-import { effectiveModel } from '~/core/providers/models';
 import {
   TRANSLATION_SURFACES,
   type EngineRoute,
@@ -9,22 +8,18 @@ import {
 } from '~/storage/schema';
 
 /**
- * What a store with nothing configured translates with: a free service, so a
- * fresh install works before the user has entered anything.
- */
-export const DEFAULT_PROVIDER: ProviderId = 'microsoft';
-
-/**
  * Repair one stored route, returning its input reference when it is sound.
  *
  * Before v0.2.3 a route was a bare provider id; that becomes a route with no
- * model, which means "the provider's default" — exactly what it meant then.
+ * model (migrations name the model the provider had). `null` is a surface
+ * nobody has chosen an engine for yet, and stays that way.
  */
-function normalizeRoute(value: unknown): EngineRoute | null {
+function normalizeRoute(value: unknown): EngineRoute | null | undefined {
+  if (value === null) return null;
   if (isProviderId(value)) return { provider: value };
-  if (value === null || typeof value !== 'object') return null;
+  if (typeof value !== 'object') return undefined;
   const r = value as { provider?: unknown; model?: unknown };
-  if (!isProviderId(r.provider)) return null;
+  if (!isProviderId(r.provider)) return undefined;
   const model = typeof r.model === 'string' ? r.model.trim() : '';
   // A service has no models, so a model on its route could only be stale.
   const keepModel = model !== '' && PROVIDERS[r.provider].kind === 'llm';
@@ -38,15 +33,16 @@ function normalizeRoute(value: unknown): EngineRoute | null {
 /**
  * Repair a stored routing table.
  *
- * `fallback` fills any surface that is missing or names a provider we no longer
- * ship. Returns its input reference when nothing needs repairing: `loadAppData`
+ * `seed` fills any surface that is missing or names a provider we no longer
+ * ship: a provider an old store named for every surface, otherwise nothing —
+ * a surface without an engine is not configured, and nothing picks one. Returns its input reference when nothing needs repairing: `loadAppData`
  * decides whether to write storage back by comparing identity, and a fresh
  * object every read would loop through storage.onChanged.
  */
-export function normalizeEngineRouting(value: unknown, fallback: ProviderId): EngineRouting {
-  const seed: ProviderId = isProviderId(fallback) ? fallback : DEFAULT_PROVIDER;
+export function normalizeEngineRouting(value: unknown, seed: ProviderId | null = null): EngineRouting {
+  const fill = (): EngineRoute | null => (seed && isProviderId(seed) ? { provider: seed } : null);
   if (value === null || typeof value !== 'object') {
-    return { selection: { provider: seed }, fullPage: { provider: seed }, subtitle: { provider: seed } };
+    return { selection: fill(), fullPage: fill(), subtitle: fill() };
   }
 
   const input = value as Partial<Record<string, unknown>>;
@@ -55,11 +51,11 @@ export function normalizeEngineRouting(value: unknown, fallback: ProviderId): En
   for (const surface of TRANSLATION_SURFACES) {
     const stored = input[surface];
     const route = normalizeRoute(stored);
-    if (route) {
+    if (route !== undefined) {
       out[surface] = route;
       if (route !== stored) clean = false;
     } else {
-      out[surface] = { provider: seed };
+      out[surface] = fill();
       clean = false;
     }
   }
@@ -71,19 +67,73 @@ export function normalizeEngineRouting(value: unknown, fallback: ProviderId): En
 
 /** True when any surface translates through a model rather than a free service. */
 export function usesModel(routing: EngineRouting): boolean {
-  return TRANSLATION_SURFACES.some((s) => PROVIDERS[routing[s].provider].kind === 'llm');
+  return TRANSLATION_SURFACES.some((s) => {
+    const route = routing[s];
+    return route !== null && PROVIDERS[route.provider].kind === 'llm';
+  });
+}
+
+/**
+ * Whether a model-backed route lacks a usable model: it names none, or names
+ * one no longer on the provider's list (the user removed it). Such a route is
+ * shown as not configured until the user picks a model again — nothing picks
+ * one for them.
+ */
+export function routeNeedsModel(route: EngineRoute, providers: ProvidersConfig): boolean {
+  if (PROVIDERS[route.provider].kind === 'service') return false;
+  const models = providers[route.provider]?.models ?? [];
+  return !route.model || !models.includes(route.model);
+}
+
+/** Why a surface cannot be translated as configured. */
+export type RouteProblem = 'unset' | 'provider-off' | 'model-missing';
+
+/**
+ * Whether a surface can be translated as the user set it up, and if not, why.
+ *
+ * There is no fallback: a surface with no engine chosen, one whose provider
+ * is switched off — by hand, or because its last model was removed — or one
+ * whose model is no longer on its provider's list is not configured, and says
+ * so until the user chooses again. Nothing is ever sent to a provider that is switched off, and nothing
+ * is sent anywhere the user did not choose.
+ */
+export function routeProblem(route: EngineRoute | null, providers: ProvidersConfig): RouteProblem | null {
+  if (!route) return 'unset';
+  if (!providers[route.provider]?.enabled) return 'provider-off';
+  if (routeNeedsModel(route, providers)) return 'model-missing';
+  return null;
+}
+
+/**
+ * Forget every surface routed to provider `id` that it can no longer serve —
+ * because it was just switched off, or the route's model was just removed.
+ * The choice is gone, not suspended: switching the provider back on or adding
+ * the model again does not bring it back; the user chooses again. Returns its
+ * input reference when nothing changes.
+ */
+export function releaseRoutes(engines: EngineRouting, providers: ProvidersConfig, id: ProviderId): EngineRouting {
+  let out: EngineRouting | null = null;
+  for (const surface of TRANSLATION_SURFACES) {
+    const route = engines[surface];
+    if (route?.provider !== id || !routeProblem(route, providers)) continue;
+    out ??= { ...engines };
+    out[surface] = null;
+  }
+  return out ?? engines;
 }
 
 /**
  * The provider row a route will actually be served with: the provider's own
- * row, with `model` replaced by the model the route uses. Everything downstream
- * — readiness, the request, the cache key, the credit line — reads `model`, so
- * resolving it once here is what keeps them agreeing with each other.
+ * row, with `model` replaced by the route's model. Everything downstream —
+ * readiness, the request, the cache key, the credit line — reads `model`, so
+ * resolving it once here keeps them agreeing. Callers check `routeProblem`
+ * first; a route without a usable model gets an empty one here, which
+ * readiness reports as not configured.
  */
 export function routeConfig(route: EngineRoute, providers: ProvidersConfig): ProviderConfig {
   const cfg = providers[route.provider];
   if (PROVIDERS[route.provider].kind === 'service') return cfg;
-  const model = effectiveModel(cfg, route.model);
+  const model = routeNeedsModel(route, providers) ? '' : route.model!;
   return model === cfg.model ? cfg : { ...cfg, model };
 }
 
@@ -104,13 +154,7 @@ export function parseRouteKey(key: string): EngineRoute | null {
   return model ? { provider, model } : { provider };
 }
 
-/**
- * The key a picker should show as selected for a route: the model it really
- * uses, so a route with no model — or a removed one — lights up the default
- * rather than nothing.
- */
-export function effectiveRouteKey(route: EngineRoute, providers: ProvidersConfig): string {
-  if (PROVIDERS[route.provider].kind === 'service') return route.provider;
-  const cfg = providers[route.provider];
-  return routeKey({ provider: route.provider, model: effectiveModel(cfg, route.model) || undefined });
+/** The key a picker shows as selected: the route exactly as stored. */
+export function effectiveRouteKey(route: EngineRoute): string {
+  return PROVIDERS[route.provider].kind === 'service' ? route.provider : routeKey(route);
 }

@@ -13,6 +13,7 @@ import { streamTranslate } from '~/messaging/client';
 import { createDefaultProviders } from '~/storage/defaults';
 import { DEFAULT_CARD_SIZE } from '~/core/card/size';
 import type { TranslateResponse } from '~/messaging/types';
+import type { EngineRoute } from '~/storage/schema';
 
 function rect(): DOMRect {
   return {
@@ -22,15 +23,16 @@ function rect(): DOMRect {
 }
 
 const providers = createDefaultProviders();
+providers.microsoft.enabled = true;
 
-function open(text: string, targetLang = 'zh-CN') {
+function open(text: string, targetLang = 'zh-CN', defaultRoute: EngineRoute | null = { provider: 'microsoft' }) {
   return render(
     <TranslationCard
       text={text}
       rect={rect()}
       locale="en"
       providers={providers}
-      defaultRoute={{ provider: "microsoft" }}
+      defaultRoute={defaultRoute}
       defaultTargetLang={targetLang}
       size={DEFAULT_CARD_SIZE}
       onClose={() => {}}
@@ -92,6 +94,12 @@ describe('TranslationCard footer', () => {
     expect(buttons).toHaveLength(2);
     expect(buttons[0]!.textContent).toContain('Microsoft Translator');
     expect(buttons[1]!.textContent).toContain('简体中文');
+  });
+
+  it('credits nobody when no engine is chosen', () => {
+    const { container } = open('The quick brown fox', 'zh-CN', null);
+    const buttons = container.querySelectorAll('.bt-card-foot-btn');
+    expect(buttons[0]!.textContent).toContain('Not configured');
   });
 
   it('keeps both controls for same-language input', () => {

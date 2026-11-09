@@ -73,8 +73,8 @@ Firefox 140 veya üzeri gerekir. Mozilla tarafından imzalanmış en son `…-fi
 <a id="quick-start"></a>
 ## Hızlı başlangıç
 
-1. Yeni bir kurulum, Microsoft'un ücretsiz hizmetiyle hemen çeviri yapar: bir web sayfasında metin seçin ve mavi simgeye tıklayın.
-2. Kendi modelinizi kullanmak için açılır penceredeki ayarlar simgesine tıklayın, **Sağlayıcılar** bölümünü açın, bir sağlayıcı seçin ve API anahtarını yapıştırın. Sağlayıcının modelleri sizin için listelenir — istediklerinizi ekleyin ve varsayılanı yıldızla işaretleyin. Sağlayıcı kendiliğinden etkinleşir.
+1. Kurulumdan sonra her şey kapalıdır ve hiçbir motor seçili değildir; siz seçene kadar hiçbir metin tarayıcınızdan çıkmaz. Anahtarsız hızlı başlangıç için açılır penceredeki ayarlar simgesine tıklayın, **Sağlayıcılar** bölümünü açıp Microsoft ya da Google'ı açın, ardından açılır penceredeki **Çeviri motorları** bölümünde her mod için onu seçin; sonra bir web sayfasında metin seçip mavi simgeye tıklayın.
+2. Kendi modelinizi kullanmak için açılır penceredeki ayarlar simgesine tıklayın, **Sağlayıcılar** bölümünü açın, bir sağlayıcı seçin ve API anahtarını yapıştırın. Sağlayıcının modelleri sizin için listelenir — istediklerinizi ekleyin. Sağlayıcı kendiliğinden etkinleşir.
 3. **Çeviri → Çeviri motorları** bölümünde seçim kartları, tam sayfalar ve altyazılar için sağlayıcı ve model seçin.
 
 Ayarlar **Genel**, **Çeviri**, **Sağlayıcılar**, **Altyazılar** ve **Veriler** sayfalarına ayrılır. Her özellik [kullanım kılavuzunda](./develop/usage.md) (İngilizce) ayrıntılı olarak anlatılır.

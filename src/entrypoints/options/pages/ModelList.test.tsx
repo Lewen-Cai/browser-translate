@@ -31,13 +31,12 @@ describe('KeptModels', () => {
     expect(screen.getByText('a/b')).toBeTruthy();
   });
 
-  it('sets another model as default and removes models', () => {
+  it('removes models, with no default to manage', () => {
     const spy = vi.fn();
     render(<Harness initial={{ model: 'a', models: ['a', 'b'] }} spy={spy} />);
-    fireEvent.click(screen.getByLabelText('Set as default b'));
-    expect(spy).toHaveBeenLastCalledWith({ model: 'b', models: ['a', 'b'] });
-    fireEvent.click(screen.getByLabelText('Remove b'));
-    expect(spy).toHaveBeenLastCalledWith({ model: 'a', models: ['a'] });
+    expect(screen.queryByLabelText(/Set as default/)).toBeNull();
+    fireEvent.click(screen.getByLabelText('Remove a'));
+    expect(spy).toHaveBeenLastCalledWith({ model: 'b', models: ['b'] });
   });
 });
 

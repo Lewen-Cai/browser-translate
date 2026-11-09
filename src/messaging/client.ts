@@ -116,6 +116,22 @@ export function pingApi(provider: ProviderId): Promise<PingResponse> {
  * Sends a batch translate request and resolves with the aligned translations.
  * Rejects on error or timeout. Caller owns a unique requestId.
  */
+/**
+ * A refused batch, carrying the background's error kind. `config` means the
+ * surface cannot be translated as set up — a provider switched off, or a model
+ * removed — and its message says what to change; retrying cannot help.
+ */
+export class TranslationRequestError extends Error {
+  constructor(message: string, readonly kind: string) {
+    super(message);
+  }
+}
+
+/** True for an error the reader can only fix in settings. */
+export function isConfigError(e: unknown): e is TranslationRequestError {
+  return e instanceof TranslationRequestError && e.kind === 'config';
+}
+
 export function translateBatch(
   req: TranslateBatchRequest,
   timeoutMs = 60000,
@@ -130,7 +146,7 @@ export function translateBatch(
         resolve(m.translations);
       } else if (m.type === 'translate:batch:error') {
         cleanup();
-        reject(new Error(m.message));
+        reject(new TranslationRequestError(m.message, m.kind));
       }
     };
     const timer = setTimeout(() => { cleanup(); reject(new Error('Batch timeout')); }, timeoutMs);

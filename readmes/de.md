@@ -75,8 +75,8 @@ Ab Firefox 140. Die neueste `…-firefox.xpi` herunterladen — sie ist von Mozi
 <a id="quick-start"></a>
 ## Schnellstart
 
-1. Direkt nach der Installation übersetzt die Erweiterung mit dem kostenlosen Dienst von Microsoft: Text auf einer Webseite markieren und auf das blaue Symbol klicken.
-2. Für dein eigenes Modell im Popup auf das Einstellungssymbol klicken, **Anbieter** öffnen, einen Anbieter wählen und dessen API-Schlüssel einfügen. Die verfügbaren Modelle werden aufgelistet — füge die gewünschten hinzu und markiere eines mit einem Stern als Standard. Der Anbieter schaltet sich selbst ein.
+1. Nach der Installation ist alles ausgeschaltet und kein Dienst gewählt, damit kein Text deinen Browser verlässt, bevor du einen wählst. Für einen schnellen Start ohne Schlüssel im Popup auf das Einstellungssymbol klicken, **Anbieter** öffnen und Microsoft oder Google einschalten, dann ihn im Popup unter **Übersetzungsdienste** für jeden Modus wählen; danach Text auf einer Webseite markieren und auf das blaue Symbol klicken.
+2. Für dein eigenes Modell im Popup auf das Einstellungssymbol klicken, **Anbieter** öffnen, einen Anbieter wählen und dessen API-Schlüssel einfügen. Die verfügbaren Modelle werden aufgelistet — füge die gewünschten hinzu. Der Anbieter schaltet sich selbst ein.
 3. Unter **Übersetzung → Übersetzungsdienste** für Auswahlkarten, ganze Seiten und Untertitel jeweils Anbieter und Modell festlegen.
 
 Die Einstellungen gliedern sich in **Allgemein**, **Übersetzung**, **Anbieter**, **Untertitel** und **Daten**. Die [Bedienungsanleitung](./develop/usage.md) beschreibt jede Funktion im Detail.

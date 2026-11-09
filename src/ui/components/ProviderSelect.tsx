@@ -31,10 +31,14 @@ interface Props {
   preferDetail?: boolean;
   /** A Lucide glyph before an inline label. */
   labelIcon?: LucideIcon;
+  /** Shown when `value` matches no option — e.g. "Not configured". */
+  placeholder?: string;
+  /** Shown in the open list when there are no options at all. */
+  emptyText?: string;
 }
 
 /** A compact accessible listbox, viewport-bounded even at the foot of a popup. */
-export function ProviderSelect({ label, value, options, onChange, disabled = false, inline, preferDetail, labelIcon: LabelIcon }: Props) {
+export function ProviderSelect({ label, value, options, onChange, disabled = false, inline, preferDetail, labelIcon: LabelIcon, placeholder, emptyText }: Props) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ left: 0, top: 0, width: 0, maxHeight: 260, transform: 'none' });
   const root = useRef<HTMLDivElement>(null);
@@ -120,7 +124,7 @@ export function ProviderSelect({ label, value, options, onChange, disabled = fal
               // least afford; the full id is in the title and the open list.
               ? <span class="truncate font-mono text-xs">{selected.detail.slice(selected.detail.lastIndexOf('/') + 1)}</span>
               : <>
-                  <span class={selected?.detail ? 'shrink-0' : 'truncate'}>{selected?.label ?? ''}</span>
+                  <span class={selected?.detail ? 'shrink-0' : 'truncate'}>{selected?.label ?? placeholder ?? ''}</span>
                   {selected?.detail && <Detail option={selected} />}
                 </>}
           </span>
@@ -129,6 +133,7 @@ export function ProviderSelect({ label, value, options, onChange, disabled = fal
         {open && <div ref={list} id={`${id}-list`} role="listbox" aria-label={label}
           onKeyDown={onKey} style={position}
           class="fixed z-50 overflow-y-auto overscroll-contain rounded-lg border border-ap-border-strong bg-ap-surface p-1 shadow-lg">
+          {options.length === 0 && emptyText && <div class="px-2 py-3 text-xs leading-relaxed text-ap-muted">{emptyText}</div>}
           {options.map((option, i) => <Fragment key={option.value}>
             {option.group && option.group !== options[i - 1]?.group &&
               <div class="px-2 py-2 text-xs font-medium text-ap-muted">{option.group}</div>}

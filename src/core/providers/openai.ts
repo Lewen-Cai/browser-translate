@@ -72,17 +72,34 @@ export class OpenAICompatibleProvider implements TranslationProvider {
   }
 }
 
+/**
+ * How the OpenAI-compatible servers we know say a model is not (or no longer)
+ * offered: OpenAI's `model_not_found`, Groq's `model_decommissioned`, and the
+ * plain wording of the rest ("Model Not Exist", "The model `x` does not
+ * exist", "model not found").
+ */
+const MODEL_GONE_CODE = /model_(not_found|decommissioned|not_exist)/i;
+const MODEL_GONE_TEXT = /\bmodel\b.*\b(not[ _]?found|not[ _]?exist|does not exist|no such|decommissioned|deprecated|retired|no longer|not available|unavailable)/i;
+
+export function isModelGoneError(status: number, code: string, message: string): boolean {
+  if (status !== 400 && status !== 404 && status !== 410) return false;
+  return MODEL_GONE_CODE.test(code) || MODEL_GONE_TEXT.test(message);
+}
+
 async function parseErrorResponse(response: Response): Promise<TranslationProviderError> {
   let message = `HTTP ${response.status}`;
+  let code = '';
   try {
-    const json = await response.json() as { error?: { message?: unknown } };
+    const json = await response.json() as { error?: { message?: unknown; code?: unknown; type?: unknown } };
     if (json?.error?.message) message = String(json.error.message).slice(0, 200);
+    code = `${String(json?.error?.code ?? '')} ${String(json?.error?.type ?? '')}`;
   } catch {
     // body not JSON
   }
   const kind = response.status === 401 || response.status === 403 ? 'auth'
     : response.status === 429 ? 'rate-limit'
     : response.status >= 500 ? 'server'
+    : isModelGoneError(response.status, code, message) ? 'model-gone'
     : 'unknown';
   const retryable = kind === 'rate-limit' || kind === 'server';
   return new TranslationProviderError({ kind, message, retryable, status: response.status });

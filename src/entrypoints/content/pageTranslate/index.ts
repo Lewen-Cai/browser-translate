@@ -1,7 +1,7 @@
 import { collectBlocks } from './collectBlocks';
 import { groupIntoBatches } from './scheduler';
 import { BilingualInjector } from './inject';
-import { translateBatch } from '~/messaging/client';
+import { translateBatch, isConfigError } from '~/messaging/client';
 
 const BATCH_LIMITS = { maxSegments: 8, maxChars: 2400 };
 const MAX_IN_FLIGHT = 3;
@@ -96,10 +96,12 @@ export function createPageTranslator(deps: PageTranslatorDeps): PageTranslator {
       });
       if (myEpoch !== epoch) return; // session was torn down (and maybe restarted) — drop stale result
       blocks.forEach((b, i) => injector.setTranslation(b, translations[i] ?? ''));
-    } catch {
+    } catch (e) {
       if (myEpoch !== epoch) return; // stale failure from a previous session — do not touch the live one
+      // A configuration problem says what to change rather than "failed".
+      const message = isConfigError(e) ? e.message : deps.strings.translateFailed;
       blocks.forEach((b) => {
-        injector.setError(b, deps.strings.translateFailed, deps.strings.retry, () => {
+        injector.setError(b, message, deps.strings.retry, () => {
           injector.resetToLoading(b);
           queued.add(b);
           scheduleFlush();

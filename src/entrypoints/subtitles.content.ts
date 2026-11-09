@@ -33,7 +33,9 @@ import type { AppData } from '~/storage/schema';
  * next is queued, so the model never idles between batches — a local MLX server
  * queues rather than splitting, so this does not slow individual batches.
  */
-function subtitleConcurrency(provider: ProviderId): number {
+function subtitleConcurrency(provider: ProviderId | undefined): number {
+  // Not configured: nothing will be sent, so the figure is never used.
+  if (!provider) return 1;
   if (PROVIDERS[provider].kind === 'service') return 6;
   return provider === 'local' ? 2 : 4;
 }
@@ -113,7 +115,7 @@ export default defineContentScript({
       subs = createVideoSubTranslator({
         site,
         getTargetLang: () => targetLanguage,
-        concurrency: subtitleConcurrency(data.settings.engines.subtitle.provider),
+        concurrency: subtitleConcurrency(data.settings.engines.subtitle?.provider),
         getPosition: () => subtitlePosition,
         setPosition: (next) => {
           subtitlePosition = next;

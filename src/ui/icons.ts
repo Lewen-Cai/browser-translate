@@ -31,7 +31,6 @@ export {
   Lock,
   FileText,
   RotateCcw,
-  Star,
   Palette,
   MousePointerClick,
   Sun,

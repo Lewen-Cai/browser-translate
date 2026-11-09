@@ -80,7 +80,7 @@ describe('importAppData', () => {
     const imported = importAppData(JSON.parse(JSON.stringify(exported)));
     expect(imported.settings.targetLanguage).toBe('en-US');
     expect(imported.settings.engines).toEqual({
-      selection: { provider: 'anthropic' },
+      selection: { provider: 'anthropic', model: 'claude-opus-5' },
       fullPage: { provider: 'google' },
       subtitle: { provider: 'microsoft' },
     });
@@ -97,7 +97,7 @@ describe('importAppData', () => {
     });
     expect(imported.settings.targetLanguage).toBe('fr');
     expect(imported.settings.theme).toBe('auto'); // default filled
-    expect(imported.providers.microsoft.enabled).toBe(true);
+    expect(imported.providers.microsoft.enabled).toBe(false);
   });
 
   it('imports a pre-v0.2.0 file, turning its single api into rows', () => {
@@ -130,7 +130,7 @@ describe('importAppData', () => {
     // The remembered second vendor becomes a row of its own rather than being lost.
     expect(imported.providers.openai.model).toBe('gpt-4o');
     // "the model" resolves to the one it was actually using.
-    expect(imported.settings.engines.selection).toEqual({ provider: 'deepseek' });
+    expect(imported.settings.engines.selection).toEqual({ provider: 'deepseek', model: 'deepseek-chat' });
     expect('api' in imported).toBe(false);
     expect('promptTemplates' in imported).toBe(false);
   });

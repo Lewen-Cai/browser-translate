@@ -45,10 +45,9 @@ describe('engineOptions', () => {
     expect(out.map((o) => o.value)).toEqual(['deepseek']);
   });
 
-  it('still shows the current choice after it has been switched off', () => {
-    // Otherwise the control it is bound to would render blank and look broken.
-    const out = engineOptions(withEnabled('microsoft'), LABELS, { keep: 'openai' });
-    expect(out.map((o) => o.value)).toEqual(['microsoft', 'openai']);
+  it('never offers a switched-off provider', () => {
+    const out = engineOptions(withEnabled('microsoft'), LABELS);
+    expect(out.map((o) => o.value)).toEqual(['microsoft']);
   });
 
   it('is empty when nothing is enabled', () => {
@@ -68,15 +67,9 @@ describe('routeOptions', () => {
     ]);
   });
 
-  it('shows a model provider with no models yet under its own name', () => {
-    const out = routeOptions(withEnabled('openai'), LABELS);
-    expect(out.map((o) => o.value)).toEqual(['openai']);
+  it('offers nothing for a model provider with no models yet', () => {
+    expect(routeOptions(withEnabled('openai'), LABELS)).toEqual([]);
   });
 
-  it('keeps the current route visible after its provider was switched off', () => {
-    const providers = withEnabled('microsoft');
-    providers.openai = { ...providers.openai, model: 'm', models: ['m'] };
-    const out = routeOptions(providers, LABELS, { keep: { provider: 'openai', model: 'm' } });
-    expect(out.map((o) => o.value)).toEqual(['microsoft', 'openai|m']);
-  });
+
 });

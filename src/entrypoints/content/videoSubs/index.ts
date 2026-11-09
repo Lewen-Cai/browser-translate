@@ -140,6 +140,7 @@ export function createVideoSubTranslator(deps: VideoSubTranslatorDeps): VideoSub
       getCurrentTimeMs: currentTimeMs,
       getPlaybackRate: () => site.findVideo()?.playbackRate ?? 1,
       onUpdate: () => ui?.refresh(),
+      onConfigError: (message) => { deps.notify(message); disable(); },
       concurrency: deps.concurrency,
     });
     translator.start(cues);

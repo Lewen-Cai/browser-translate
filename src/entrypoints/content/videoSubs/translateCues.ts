@@ -1,3 +1,4 @@
+import { isConfigError } from '~/messaging/client';
 import type { Cue } from '~/core/subtitles/types';
 
 // While the on-screen line is still untranslated, use a SMALL batch so it appears
@@ -31,6 +32,12 @@ export interface CueTranslatorDeps {
   /** Playback rate, used to widen the look-ahead when the video runs fast. */
   getPlaybackRate: () => number;
   onUpdate: () => void;
+  /**
+   * The surface cannot be translated as configured (a provider switched off, a
+   * model removed). Retrying cannot help, so the translator stops and hands
+   * the message over to be shown.
+   */
+  onConfigError?: (message: string) => void;
   /** Number of concurrent in-flight batches; the caller picks the value per engine
    *  (a free service fans out widest, cloud LLMs less, local least). */
   concurrency: number;
@@ -127,8 +134,13 @@ export function createCueTranslator(deps: CueTranslatorDeps): CueTranslator {
             if (t) map.set(c.id, t);
           });
           deps.onUpdate();
-        } catch {
+        } catch (e) {
           if (myEpoch !== epoch) return;
+          if (isConfigError(e)) {
+            epoch++;
+            deps.onConfigError?.(e.message);
+            return;
+          }
           // A dropped request used to lose its cues for good, leaving those
           // lines stuck on the "translating…" placeholder for the rest of the
           // video. Give each one a second chance, then record it as failed so

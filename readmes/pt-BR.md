@@ -75,8 +75,8 @@ Firefox 140 ou posterior. Baixe o `…-firefox.xpi` mais recente — assinado pe
 <a id="quick-start"></a>
 ## Primeiros passos
 
-1. Logo após a instalação, a extensão já traduz com o serviço gratuito da Microsoft: selecione um texto numa página e clique no ícone azul.
-2. Para usar seu próprio modelo, clique no ícone de configurações do popup, abra **Provedores**, escolha um provedor e cole a chave de API. Os modelos dele aparecem listados — adicione os que quiser e marque um padrão com a estrela. O provedor se ativa sozinho.
+1. Tudo começa desativado e sem mecanismo escolhido, então nenhum texto sai do navegador até você escolher um. Para começar sem chave, clique no ícone de configurações do popup, abra **Provedores** e ative a Microsoft ou o Google; depois escolha-o para cada modo em **Mecanismos de tradução** no popup. Então selecione um texto numa página e clique no ícone azul.
+2. Para usar seu próprio modelo, clique no ícone de configurações do popup, abra **Provedores**, escolha um provedor e cole a chave de API. Os modelos dele aparecem listados — adicione os que quiser. O provedor se ativa sozinho.
 3. Em **Tradução → Mecanismos de tradução**, escolha provedor e modelo para os cartões de seleção, as páginas inteiras e as legendas.
 
 As configurações se dividem em **Geral**, **Tradução**, **Provedores**, **Legendas** e **Dados**. O [guia de uso](./develop/usage.md) explica cada recurso em detalhe.

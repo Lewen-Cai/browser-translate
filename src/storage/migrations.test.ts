@@ -192,9 +192,9 @@ describe('routing migration', () => {
       ),
     );
     expect(out.settings.engines).toEqual({
-      selection: { provider: 'zhipu' },
+      selection: { provider: 'zhipu', model: 'm' },
       fullPage: { provider: 'google' },
-      subtitle: { provider: 'zhipu' },
+      subtitle: { provider: 'zhipu', model: 'm' },
     });
   });
 
@@ -212,10 +212,10 @@ describe('routing migration', () => {
     expect('engine' in out.settings).toBe(false);
   });
 
-  it('replaces a provider we no longer ship', () => {
+  it('leaves a provider we no longer ship unchosen, never substituting one', () => {
     const data = createDefaultAppData();
     data.settings.engines = { selection: 'yandex', fullPage: 'google', subtitle: 'google' } as never;
-    expect(migrateAppData(data).settings.engines.selection).toEqual({ provider: 'microsoft' });
+    expect(migrateAppData(data).settings.engines.selection).toBeNull();
   });
 
   it('preserves a valid routing table without rewriting storage', () => {
@@ -314,11 +314,82 @@ describe('model lists (v0.2.3)', () => {
 
   it('keeps a sound row with several models without rewriting it', () => {
     const data = createDefaultAppData();
+    const row = {
+      baseUrl: 'https://openrouter.ai/api/v1', apiKey: 'k', model: 'a', models: ['a', 'b'], enabled: true,
+    };
+    data.providers.openrouter = row;
+    expect(migrateAppData(data).providers.openrouter).toBe(row);
+  });
+
+  it('moves a default chosen in a development build to the front, then stays stable', () => {
+    const data = createDefaultAppData();
     data.providers.openrouter = {
       baseUrl: 'https://openrouter.ai/api/v1', apiKey: 'k', model: 'b', models: ['a', 'b'], enabled: true,
     };
     const once = migrateAppData(data);
+    expect(once.providers.openrouter).toMatchObject({ model: 'b', models: ['b', 'a'] });
     expect(migrateAppData(once)).toBe(once);
-    expect(once.providers.openrouter.models).toEqual(['a', 'b']);
+  });
+});
+
+describe('routes name their model (v0.2.3)', () => {
+  it('upgrades a v0.2.2 store to routes that name the model it was using', () => {
+    const data = createDefaultAppData();
+    (data.providers as Record<string, unknown>).deepseek = {
+      baseUrl: 'https://api.deepseek.com/v1', apiKey: 'k', model: 'deepseek-flash', enabled: true,
+    };
+    (data.settings as unknown as Record<string, unknown>).engines = {
+      selection: 'deepseek', fullPage: 'google', subtitle: 'deepseek',
+    };
+    const once = migrateAppData(data);
+    expect(once.providers.deepseek.models).toEqual(['deepseek-flash']);
+    expect(once.settings.engines).toEqual({
+      selection: { provider: 'deepseek', model: 'deepseek-flash' },
+      fullPage: { provider: 'google' },
+      subtitle: { provider: 'deepseek', model: 'deepseek-flash' },
+    });
+    expect(migrateAppData(once)).toBe(once);
+  });
+
+  it('lifts a v0.1.9 single engine the same way', () => {
+    const data = createDefaultAppData();
+    (data.providers as Record<string, unknown>).deepseek = {
+      baseUrl: 'https://api.deepseek.com/v1', apiKey: 'k', model: 'deepseek-flash', enabled: true,
+    };
+    (data.settings as unknown as Record<string, unknown>).engines = 'deepseek';
+    expect(migrateAppData(data).settings.engines.subtitle).toEqual({ provider: 'deepseek', model: 'deepseek-flash' });
+  });
+
+  it('names the model on a provider-only route a development build left behind', () => {
+    const data = createDefaultAppData();
+    data.providers.deepseek = { ...data.providers.deepseek, apiKey: 'k', model: 'deepseek-flash', models: ['deepseek-flash'], enabled: true };
+    data.settings.engines.selection = { provider: 'deepseek' };
+    expect(migrateAppData(data).settings.engines.selection).toEqual({ provider: 'deepseek', model: 'deepseek-flash' });
+  });
+
+  it('never picks a model for a route whose model was removed', () => {
+    const data = createDefaultAppData();
+    data.providers.openrouter = {
+      baseUrl: 'https://openrouter.ai/api/v1', apiKey: 'k', model: 'a', models: ['a', 'c'], enabled: true,
+    };
+    const route = { provider: 'openrouter' as const, model: 'b' };
+    data.settings.engines.fullPage = route;
+    const once = migrateAppData(data);
+    expect(once.settings.engines.fullPage).toBe(route);
+    expect(migrateAppData(once)).toBe(once);
+  });
+});
+
+describe('free services on upgrade (v0.2.3)', () => {
+  it('keeps the free services on for a pre-v0.2.0 store, where they were always available', () => {
+    const out = migrateAppData(legacyStore({ cloudProvider: 'deepseek', baseUrl: 'b', apiKey: 'k', model: 'm' }));
+    expect(out.providers.microsoft.enabled).toBe(true);
+    expect(out.providers.google.enabled).toBe(true);
+  });
+
+  it('keeps whatever a v0.2.x store already says', () => {
+    const data = createDefaultAppData();
+    data.providers.microsoft.enabled = true;
+    expect(migrateAppData(data).providers.microsoft.enabled).toBe(true);
   });
 });

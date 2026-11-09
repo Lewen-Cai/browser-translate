@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { addModel, effectiveModel, normalizeModelSet, removeModel, setDefaultModel } from './models';
+import { addModel, normalizeModelSet, removeModel } from './models';
 
 describe('normalizeModelSet', () => {
-  it('returns null for a sound pair', () => {
+  it('returns null for a sound pair, where model is the first on the list', () => {
     expect(normalizeModelSet('a', ['a', 'b'])).toBeNull();
     expect(normalizeModelSet('', [])).toBeNull();
   });
@@ -11,11 +11,15 @@ describe('normalizeModelSet', () => {
     expect(normalizeModelSet('gpt-4o', undefined)).toEqual({ model: 'gpt-4o', models: ['gpt-4o'] });
   });
 
-  it('puts a default that is missing from the list at the front', () => {
+  it('moves a model marked as default by a development build to the front', () => {
+    expect(normalizeModelSet('b', ['a', 'b', 'c'])).toEqual({ model: 'b', models: ['b', 'a', 'c'] });
+  });
+
+  it('puts a model missing from the list at the front', () => {
     expect(normalizeModelSet('c', ['a', 'b'])).toEqual({ model: 'c', models: ['c', 'a', 'b'] });
   });
 
-  it('picks the first model when there is no default', () => {
+  it('takes the first model when none is named', () => {
     expect(normalizeModelSet('', ['a', 'b'])).toEqual({ model: 'a', models: ['a', 'b'] });
   });
 
@@ -31,11 +35,11 @@ describe('normalizeModelSet', () => {
 describe('model list edits', () => {
   const set = { model: 'a', models: ['a', 'b', 'c'] };
 
-  it('adds to the end and keeps the default', () => {
+  it('adds to the end', () => {
     expect(addModel(set, ' d ')).toEqual({ model: 'a', models: ['a', 'b', 'c', 'd'] });
   });
 
-  it('makes the first added model the default', () => {
+  it('makes the first added model the fallback', () => {
     expect(addModel({ model: '', models: [] }, 'x')).toEqual({ model: 'x', models: ['x'] });
   });
 
@@ -44,30 +48,12 @@ describe('model list edits', () => {
     expect(addModel(set, 'b')).toBe(set);
   });
 
-  it('hands the default to the first model left when it is removed', () => {
+  it('hands the fallback to the first model left when the first is removed', () => {
     expect(removeModel(set, 'a')).toEqual({ model: 'b', models: ['b', 'c'] });
     expect(removeModel({ model: 'a', models: ['a'] }, 'a')).toEqual({ model: '', models: [] });
   });
 
-  it('keeps the default when another model is removed', () => {
+  it('keeps the fallback when another model is removed', () => {
     expect(removeModel(set, 'c')).toEqual({ model: 'a', models: ['a', 'b'] });
-  });
-
-  it('sets only a listed model as default', () => {
-    expect(setDefaultModel(set, 'c')).toEqual({ model: 'c', models: ['a', 'b', 'c'] });
-    expect(setDefaultModel(set, 'z')).toBe(set);
-  });
-});
-
-describe('effectiveModel', () => {
-  const set = { model: 'a', models: ['a', 'b'] };
-
-  it('uses the named model while it is listed', () => {
-    expect(effectiveModel(set, 'b')).toBe('b');
-  });
-
-  it('falls back to the default when none is named or it was removed', () => {
-    expect(effectiveModel(set, undefined)).toBe('a');
-    expect(effectiveModel(set, 'gone')).toBe('a');
   });
 });

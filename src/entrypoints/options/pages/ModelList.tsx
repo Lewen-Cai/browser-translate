@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'preact/hooks';
 import { Button } from '~/ui/components/Button';
 import { ModelIcon } from '~/ui/ModelIcon';
-import { Check, Loader2, Plus, RefreshCw, Star, X } from '~/ui/icons';
+import { Check, Loader2, Plus, RefreshCw, X } from '~/ui/icons';
 import { SearchField } from '~/ui/components/SearchField';
 import { useT } from '~/i18n';
-import { addModel, removeModel, setDefaultModel, type ModelSet } from '~/core/providers/models';
+import { addModel, removeModel, type ModelSet } from '~/core/providers/models';
 import { cn } from '~/lib/cn';
 import type { Probe } from './useProviderProbe';
 
@@ -27,10 +27,13 @@ function Column({ title, aside, children }: { title: string; aside?: preact.Comp
 }
 
 /**
- * The models kept for one provider, and which of them is the default.
+ * The models kept for one provider.
  *
  * Kept as a list so switching between them — on a surface, or on the card — is
- * a pick rather than a retyped name.
+ * a pick rather than a retyped name. There is no default to manage: every model
+ * is offered by name wherever one is chosen, and the only fallback (a surface
+ * whose model was removed, or settings from before v0.2.3) is simply the first
+ * model on the list.
  */
 export function KeptModels({ value, onChange }: KeptProps) {
   const t = useT();
@@ -48,29 +51,10 @@ export function KeptModels({ value, onChange }: KeptProps) {
       ) : (
         <ul class="overflow-hidden rounded-lg border border-ap-border">
           {value.models.map((m) => {
-            const isDefault = m === value.model;
             return (
-              <li key={m} class="group flex items-center gap-2.5 border-b border-ap-border px-3 py-2 last:border-b-0">
+              <li key={m} class="flex items-center gap-2.5 border-b border-ap-border px-3 py-2 last:border-b-0">
                 <ModelIcon model={m} size={16} />
                 <span class="min-w-0 flex-1 truncate font-mono text-xs text-ap-fg" title={m}>{m}</span>
-                {isDefault ? (
-                  <span class="flex shrink-0 items-center gap-1 rounded-full bg-ap-brand/10 px-2 py-0.5 text-2xs text-ap-brand">
-                    <Star size={10} fill="currentColor" />
-                    {t('modelDefault')}
-                  </span>
-                ) : (
-                  // A star rather than words: it costs the id no width, and it
-                  // is the same mark the default carries once chosen.
-                  <button
-                    type="button"
-                    onClick={() => onChange(setDefaultModel(value, m))}
-                    aria-label={`${t('modelSetDefault')} ${m}`}
-                    title={t('modelSetDefault')}
-                    class="flex h-6 w-6 shrink-0 items-center justify-center rounded text-ap-subtle opacity-40 transition hover:text-ap-brand hover:opacity-100 focus:opacity-100 group-hover:opacity-100"
-                  >
-                    <Star size={13} />
-                  </button>
-                )}
                 <button
                   type="button"
                   onClick={() => onChange(removeModel(value, m))}

@@ -73,8 +73,8 @@ Firefox 140 ou version ultérieure. Téléchargez le dernier `…-firefox.xpi` �
 <a id="quick-start"></a>
 ## Démarrage rapide
 
-1. Dès l’installation, l’extension traduit avec le service gratuit de Microsoft : sélectionnez du texte sur une page web et cliquez sur l’icône bleue.
-2. Pour utiliser votre propre modèle, cliquez sur l’icône des paramètres dans la fenêtre contextuelle, ouvrez **Fournisseurs**, choisissez un fournisseur et collez sa clé API. Ses modèles s’affichent : ajoutez ceux que vous voulez et marquez votre modèle par défaut d’une étoile. Le fournisseur s’active de lui-même.
+1. Tout est désactivé au départ et aucun moteur n’est choisi : aucun texte ne quitte le navigateur avant que vous n’en choisissiez un. Pour démarrer sans clé, cliquez sur l’icône des paramètres dans la fenêtre contextuelle, ouvrez **Fournisseurs** et activez Microsoft ou Google, puis choisissez-le pour chaque mode sous **Moteurs de traduction** dans la fenêtre contextuelle ; sélectionnez ensuite du texte sur une page web et cliquez sur l’icône bleue.
+2. Pour utiliser votre propre modèle, cliquez sur l’icône des paramètres dans la fenêtre contextuelle, ouvrez **Fournisseurs**, choisissez un fournisseur et collez sa clé API. Ses modèles s’affichent : ajoutez ceux que vous voulez. Le fournisseur s’active de lui-même.
 3. Dans **Traduction → Moteurs de traduction**, choisissez un fournisseur et un modèle pour les cartes de sélection, les pages entières et les sous-titres.
 
 Les paramètres sont répartis entre **Général**, **Traduction**, **Fournisseurs**, **Sous-titres** et **Données**. Le [guide d’utilisation](./develop/usage.md) (en anglais) détaille chaque fonctionnalité.
