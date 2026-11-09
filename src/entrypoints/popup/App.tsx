@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useAppStore } from '~/storage/store';
-import { SectionHeader } from '~/ui/components/SectionHeader';
 import { Switch } from '~/ui/components/Switch';
-import { Settings, Languages } from '~/ui/icons';
+import { Shortcut } from '~/ui/components/Keycap';
+import { Globe, Route, Settings } from '~/ui/icons';
+import { cn } from '~/lib/cn';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
 import { useApplyLocale } from '~/ui/useApplyLocale';
@@ -25,6 +26,7 @@ export function App() {
   const [availability, setAvailability] = useState<Availability>('loading');
   const [tabId, setTabId] = useState<number>();
   const [busy, setBusy] = useState(false);
+  const [site, setSite] = useState<{ host: string; icon?: string } | null>(null);
 
   useEffect(() => { void load(); }, [load]);
   useEffect(() => {
@@ -38,6 +40,15 @@ export function App() {
           return;
         }
         setTabId(tab.id);
+        if (tab.url) {
+          try {
+            const host = new URL(tab.url).hostname;
+            // Only a web favicon: a data: or chrome: one is not worth the risk
+            // of a broken image, and the globe is a fine stand-in.
+            const icon = tab.favIconUrl && /^https?:/i.test(tab.favIconUrl) ? tab.favIconUrl : undefined;
+            if (host) setSite({ host, icon });
+          } catch { /* a URL we cannot parse just goes unnamed */ }
+        }
         const reply = await chrome.tabs.sendMessage(tab.id, { type: 'page:query' }) as PageStateResponse | undefined;
         if (!live) return;
         if (typeof reply?.translated !== 'boolean') { setAvailability('refresh'); return; }
@@ -67,31 +78,75 @@ export function App() {
     : availability === 'unsupported' ? t('pageUnsupported')
     : availability === 'refresh' ? t('pageRefresh') : undefined;
 
+  const hotkeyMode = settings.triggerMode === 'hotkey';
+
   return (
     <div class="bg-ap-bg text-ap-fg">
-      <header class="flex items-center gap-2.5 border-b border-ap-border px-5 py-4">
-        <span class="grid h-8 w-8 place-items-center rounded-lg bg-ap-brand/10 text-ap-brand"><Languages size={18} /></span>
+      <header class="flex items-center gap-2.5 px-4 pb-1 pt-4">
+        {/* The extension's own icon file, so it matches the toolbar exactly. */}
+        <img src="/icon/source.svg" alt="" width={30} height={30} class="shrink-0" />
         <span class="text-sm font-semibold">BrowserTranslate</span>
-        <button type="button" class="ml-auto rounded-md p-1.5 text-ap-muted hover:bg-ap-fg/5 hover:text-ap-fg"
+        <button type="button" class="ml-auto rounded-lg p-1.5 text-ap-muted transition-colors hover:bg-ap-fg/5 hover:text-ap-fg"
           aria-label={t('openFullSettings')} title={t('openFullSettings')}
           onClick={() => { void chrome.runtime.openOptionsPage(); window.close(); }}>
           <Settings size={17} />
         </button>
       </header>
-      <div class="space-y-5 px-5 py-4">
-        <LanguageSelect value={settings.targetLanguage} onChange={(value) => updateSettings({ targetLanguage: value })} />
-        <section class="rounded-xl border border-ap-border bg-ap-surface px-3.5 py-2.5">
-          <p class="mb-1 text-xs text-ap-muted">{t('currentPage')}</p>
-          <Switch checked={pageOn} onChange={() => void togglePage()} label={t('pageBilingual')}
-            disabled={availability !== 'ready' || busy} />
-          {pageHint && <p role="status" class="mt-1 text-xs leading-relaxed text-ap-muted">{pageHint}</p>}
+
+      <div class="space-y-3 px-4 py-3">
+        {/* The one thing most visits are for: this page, in two languages. */}
+        <section class={cn('rounded-[10px] border p-4 transition-colors',
+          pageOn ? 'border-ap-brand/40 bg-ap-brand/[0.06]' : 'border-ap-border bg-ap-surface')}>
+          <div class="flex items-center gap-3">
+            <span class="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-ap-border bg-ap-bg text-ap-muted">
+              {site?.icon
+                ? <img src={site.icon} alt="" width={20} height={20} onError={() => setSite((s) => s && { host: s.host })} />
+                : <Globe size={18} />}
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-xs text-ap-muted">{site?.host ?? t('currentPage')}</div>
+              <div class="text-sm font-medium">{t('pageTranslateFull')}</div>
+            </div>
+            <div class="shrink-0 scale-125">
+              <Switch checked={pageOn} onChange={() => void togglePage()} label={t('pageTranslateFull')} hideLabel
+                disabled={availability !== 'ready' || busy} />
+            </div>
+          </div>
+          <div class="mt-3 flex items-center gap-2 border-t border-ap-border/70 pt-2.5 text-xs">
+            {pageHint ? (
+              <p role="status" class="leading-relaxed text-ap-muted">{pageHint}</p>
+            ) : (
+              <span class={cn('flex items-center gap-1.5', pageOn ? 'text-ap-brand' : 'text-ap-muted')}>
+                <span class={cn('h-1.5 w-1.5 rounded-full', pageOn ? 'bg-ap-brand' : 'bg-ap-subtle')} />
+                {pageOn ? t('pageStateOn') : t('pageStateOff')}
+              </span>
+            )}
+            {hotkeyMode && <span class="ml-auto shrink-0"><Shortcut combo={settings.fullPageHotkey} /></span>}
+          </div>
         </section>
-        <section>
-          <SectionHeader label={t('sectionRouting')} />
+
+        <LanguageSelect value={settings.targetLanguage} onChange={(value) => updateSettings({ targetLanguage: value })} />
+
+        <section class="rounded-[10px] border border-ap-border bg-ap-surface px-4 pb-3 pt-3.5">
+          <div class="mb-3 flex items-center gap-2 text-xs font-medium text-ap-muted">
+            <Route size={14} />
+            {t('sectionRouting')}
+          </div>
           <EngineRoutingPicker engines={settings.engines} providers={providers}
             onChange={(next) => updateSettings({ engines: next })} compact />
         </section>
       </div>
+
+      {/* In hotkey mode nothing appears on the page by itself, so say which keys to press. */}
+      {hotkeyMode && (
+        <footer class="flex items-center gap-2 border-t border-ap-border px-4 py-3 text-2xs text-ap-muted">
+          <Shortcut combo={settings.hotkey} />
+          <span>{t('surfaceSelection')}</span>
+          <span class="text-ap-subtle">·</span>
+          <Shortcut combo={settings.fullPageHotkey} />
+          <span>{t('surfaceFullPage')}</span>
+        </footer>
+      )}
     </div>
   );
 }

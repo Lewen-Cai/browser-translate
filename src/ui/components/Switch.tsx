@@ -6,13 +6,15 @@ interface Props {
   label?: string;
   description?: string;
   disabled?: boolean;
+  /** Keep `label` as the accessible name but do not draw it — the caller shows its own. */
+  hideLabel?: boolean;
 }
 
-export function Switch({ checked, onChange, label, description, disabled }: Props) {
+export function Switch({ checked, onChange, label, description, disabled, hideLabel }: Props) {
   return (
     <label class={cn('flex items-center justify-between gap-3 py-1.5', disabled && 'opacity-50')}>
       <div class="flex-1 min-w-0">
-        {label && <div class="text-sm text-ap-fg">{label}</div>}
+        {label && !hideLabel && <div class="text-sm text-ap-fg">{label}</div>}
         {description && <div class="text-2xs text-ap-muted mt-0.5">{description}</div>}
       </div>
       <button

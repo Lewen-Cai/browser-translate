@@ -1,4 +1,5 @@
 import { Fragment } from 'preact';
+import type { LucideIcon } from 'lucide-preact';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { ChevronDown, Check } from '~/ui/icons';
 import { ProviderIcon, type ProviderIconId } from '~/ui/ProviderIcon';
@@ -28,10 +29,12 @@ interface Props {
    * cut to a few characters says nothing. The open list still shows both.
    */
   preferDetail?: boolean;
+  /** A Lucide glyph before an inline label. */
+  labelIcon?: LucideIcon;
 }
 
 /** A compact accessible listbox, viewport-bounded even at the foot of a popup. */
-export function ProviderSelect({ label, value, options, onChange, disabled = false, inline, preferDetail }: Props) {
+export function ProviderSelect({ label, value, options, onChange, disabled = false, inline, preferDetail, labelIcon: LabelIcon }: Props) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ left: 0, top: 0, width: 0, maxHeight: 260, transform: 'none' });
   const root = useRef<HTMLDivElement>(null);
@@ -95,7 +98,10 @@ export function ProviderSelect({ label, value, options, onChange, disabled = fal
     <div class={inline ? 'ap-route-row' : 'block'} ref={root} onBlur={(e) => {
       if (e.relatedTarget && !root.current?.contains(e.relatedTarget as Node)) close();
     }}>
-      {label && <span id={`${id}-label`} class={inline ? 'text-sm text-ap-muted' : 'mb-1.5 block text-xs font-medium text-ap-muted'}>{label}</span>}
+      {label && <span id={`${id}-label`} class={inline ? 'flex min-w-0 items-center gap-2 text-sm text-ap-muted' : 'mb-1.5 block text-xs font-medium text-ap-muted'}>
+        {LabelIcon && <LabelIcon size={15} class="shrink-0 text-ap-subtle" />}
+        <span class="truncate">{label}</span>
+      </span>}
       <div class="relative min-w-0">
         <button ref={trigger} type="button" aria-haspopup="listbox" aria-expanded={open}
           aria-labelledby={label ? `${id}-label ${id}-value` : `${id}-value`}

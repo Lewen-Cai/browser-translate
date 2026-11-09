@@ -2,6 +2,7 @@ import { ProviderSelect } from '~/ui/components/ProviderSelect';
 import { routeOptions } from '~/ui/engineOptions';
 import { effectiveRouteKey, parseRouteKey } from '~/core/engines/routing';
 import { useT } from '~/i18n';
+import { AppWindow, Captions, FileText } from '~/ui/icons';
 import { PROVIDERS } from '~/core/providers/registry';
 import { TRANSLATION_SURFACES, type TranslationSurface } from '~/storage/schema';
 import type { EngineRouting, ProvidersConfig } from '~/storage/schema';
@@ -14,6 +15,8 @@ interface Props {
   /** Drop the explanatory notes, for the popup's tighter layout. */
   compact?: boolean;
 }
+
+const SURFACE_ICON = { selection: AppWindow, fullPage: FileText, subtitle: Captions } as const;
 
 const SURFACE_LABEL: Record<TranslationSurface, StringKey> = {
   selection: 'surfaceSelection',
@@ -32,7 +35,6 @@ const SURFACE_LABEL: Record<TranslationSurface, StringKey> = {
 export function EngineRoutingPicker({ engines, providers, onChange, compact = false }: Props) {
   const t = useT();
   const labels = { services: t('engineGroupServices'), models: t('engineGroupModel') };
-  const usesService = TRANSLATION_SURFACES.some((s) => PROVIDERS[engines[s].provider].kind === 'service');
 
   return (
     <div class={compact ? 'ap-route-compact space-y-3' : 'space-y-3'}>
@@ -41,6 +43,7 @@ export function EngineRoutingPicker({ engines, providers, onChange, compact = fa
           key={surface}
           inline
           label={t(SURFACE_LABEL[surface])}
+          labelIcon={SURFACE_ICON[surface]}
           value={effectiveRouteKey(engines[surface], providers)}
           options={routeOptions(providers, labels, { keep: engines[surface], compact })}
           preferDetail={compact}
@@ -57,12 +60,6 @@ export function EngineRoutingPicker({ engines, providers, onChange, compact = fa
         <p class="text-2xs leading-relaxed text-ap-subtle">{t('dictionaryNeedsModel')}</p>
       )}
 
-      {usesService && (
-        <details class="pt-1 text-xs text-ap-muted">
-          <summary class="cursor-pointer hover:text-ap-fg">{t('engineServiceNote')}</summary>
-          <p class="mt-2 rounded-lg bg-ap-fg/[0.03] p-3 leading-relaxed">{t('engineFreeDisclaimer')}</p>
-        </details>
-      )}
     </div>
   );
 }

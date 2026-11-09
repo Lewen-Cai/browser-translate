@@ -5,7 +5,7 @@ import { Select } from '~/ui/components/Select';
 import { Switch } from '~/ui/components/Switch';
 import { SectionHeader } from '~/ui/components/SectionHeader';
 import { ProviderIcon } from '~/ui/ProviderIcon';
-import { ChevronRight, Eye, EyeOff } from '~/ui/icons';
+import { ChevronRight, Eye, EyeOff, KeyRound, SlidersHorizontal, Sparkles } from '~/ui/icons';
 import { dialectOptions, thinkingOptions } from '~/ui/thinkingOptions';
 import { useT } from '~/i18n';
 import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
@@ -122,7 +122,7 @@ export function ProviderDetail({ id, onBack }: Props) {
       </section>
 
       <section class="ap-settings-panel">
-        <SectionHeader label={t('sectionConnection')} />
+        <SectionHeader icon={KeyRound} label={t('sectionConnection')} />
         <div class="space-y-4">
           {def.endpoints.length > 1 && (
             <Select
@@ -186,7 +186,7 @@ export function ProviderDetail({ id, onBack }: Props) {
       </section>
 
       <section class="ap-settings-panel">
-        <SectionHeader label={t('modelsLabel')} description={t('modelsHint')} />
+        <SectionHeader icon={Sparkles} label={t('modelsLabel')} description={t('modelsHint')} />
         <div class="grid gap-6 lg:grid-cols-2">
           <KeptModels value={config} onChange={(next) => set(next)} />
           <AvailableModels probe={probe} onRefresh={refresh} value={config} onChange={(next) => set(next)} />
@@ -194,7 +194,7 @@ export function ProviderDetail({ id, onBack }: Props) {
       </section>
 
       <section class="ap-settings-panel">
-        <SectionHeader label={t('sectionReasoning')} />
+        <SectionHeader icon={SlidersHorizontal} label={t('sectionReasoning')} />
         <div class={cn('grid gap-4', dialectIsChosen(id) && 'lg:grid-cols-2')}>
           {/* Where the registry knows the vendor it also knows the parameter,
               and offering a choice there could only let someone be wrong about

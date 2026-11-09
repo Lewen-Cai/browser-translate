@@ -7,7 +7,7 @@ import { NumberControl } from '~/ui/components/NumberControl';
 import { ColorControl } from '~/ui/components/ColorControl';
 import { SegmentedControl } from '~/ui/components/SegmentedControl';
 import { useLocale, useT } from '~/i18n';
-import { RotateCcw } from '~/ui/icons';
+import { Captions, RotateCcw } from '~/ui/icons';
 import {
   DEFAULT_SUBTITLE_STYLE, SUBTITLE_FONT_FAMILY_IDS, SUBTITLE_FONT_FAMILIES,
   MIN_SUBTITLE_FONT_SCALE, MAX_SUBTITLE_FONT_SCALE,
@@ -73,7 +73,7 @@ export function VideoPage() {
   return (
     <div class="space-y-5">
       <div class="flex items-baseline justify-between gap-3">
-        <SectionHeader label={t('sectionSubtitles')} />
+        <SectionHeader icon={Captions} label={t('sectionSubtitles')} />
         <Button variant="secondary" size="sm" onClick={() => apply(DEFAULT_SUBTITLE_STYLE)}><RotateCcw size={13} />{t('subtitleReset')}</Button>
       </div>
       <figure class="ap-subtitle-preview" aria-label={t('subtitlePreview')} style={{ '--bt-cjk-serif': cjkSerif }}>

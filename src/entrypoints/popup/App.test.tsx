@@ -21,7 +21,7 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe('popup current-page control', () => {
   it('keeps trigger mode out of the popup and toggles the current page through its status row', async () => {
     render(<App />);
-    const toggle = screen.getByRole('switch', { name: 'Bilingual translation' }) as HTMLButtonElement;
+    const toggle = screen.getByRole('switch', { name: 'Translate full page' }) as HTMLButtonElement;
     await waitFor(() => expect(toggle.disabled).toBe(false));
     expect(screen.queryByText('Trigger mode')).toBeNull();
     expect(screen.queryByText('vtest')).toBeNull();
@@ -43,5 +43,37 @@ describe('popup current-page control', () => {
     render(<App />);
     await screen.findByText(/Refresh this webpage/);
     expect((screen.getByRole('switch') as HTMLButtonElement).disabled).toBe(true);
+  });
+});
+
+describe('popup layout (v0.2.3)', () => {
+  it('names the site and says which state the page is in', async () => {
+    query.mockResolvedValue([{ id: 1, url: 'https://news.example.org/a', favIconUrl: 'https://news.example.org/f.ico' }]);
+    render(<App />);
+    await screen.findByText('news.example.org');
+    await screen.findByText('Showing the original page');
+    send.mockResolvedValueOnce({ translated: true });
+    fireEvent.click(screen.getByRole('switch', { name: 'Translate full page' }));
+    await screen.findByText('Showing both languages');
+  });
+
+  it('shows the shortcuts in hotkey mode only, and no free-service statement', async () => {
+    const first = render(<App />);
+    await screen.findByText('Showing the original page');
+    expect(first.container.querySelector('footer')).toBeNull();
+    expect(screen.queryByText('About free translation services')).toBeNull();
+    cleanup();
+    useAppStore.setState({ data: { ...useAppStore.getState().data, settings: {
+      ...useAppStore.getState().data.settings, triggerMode: 'hotkey', hotkey: 'Alt+T', fullPageHotkey: 'Alt+A',
+    } } });
+    const { container } = render(<App />);
+    const keys = Array.from(container.querySelectorAll('footer kbd')).map((k) => k.textContent);
+    expect(keys).toEqual(['Alt', 'T', 'Alt', 'A']);
+  });
+
+  it('still shows no version number', async () => {
+    render(<App />);
+    await screen.findByText('Showing the original page');
+    expect(screen.queryByText(/vtest|test$/)).toBeNull();
   });
 });

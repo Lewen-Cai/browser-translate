@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'preact/hooks';
 import { Button } from '~/ui/components/Button';
 import { ModelIcon } from '~/ui/ModelIcon';
-import { Check, Loader2, Plus, RefreshCw, Search, Star, X } from '~/ui/icons';
+import { Check, Loader2, Plus, RefreshCw, Star, X } from '~/ui/icons';
+import { SearchField } from '~/ui/components/SearchField';
 import { useT } from '~/i18n';
 import { addModel, removeModel, setDefaultModel, type ModelSet } from '~/core/providers/models';
 import { cn } from '~/lib/cn';
@@ -154,20 +155,15 @@ export function AvailableModels({ probe, onRefresh, value, onChange }: Available
   } else {
     body = (
       <div class="overflow-hidden rounded-lg border border-ap-border">
-        <div class="flex items-center gap-2 border-b border-ap-border px-3">
-          <Search size={13} class="shrink-0 text-ap-subtle" />
-          <input
-            type="search"
-            value={query}
-            onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
-            placeholder={t('modelsSearch')}
-            aria-label={t('modelsSearch')}
-            class="h-9 min-w-0 flex-1 bg-transparent text-sm text-ap-fg placeholder:text-ap-subtle focus:outline-none"
-          />
-          <span class="shrink-0 text-2xs text-ap-subtle">
+        <SearchField
+          value={query}
+          onInput={setQuery}
+          placeholder={t('modelsSearch')}
+          clearLabel={t('searchClear')}
+          trailing={<span class="shrink-0 text-2xs text-ap-subtle">
             {t('modelsFetchedCount').replace('{count}', String(matches.length))}
-          </span>
-        </div>
+          </span>}
+        />
         <ul class="h-72 overflow-y-auto overscroll-contain py-1">
           {matches.slice(0, SHOWN).map((m) => {
             const kept = value.models.includes(m);

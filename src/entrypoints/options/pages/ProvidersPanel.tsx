@@ -3,7 +3,9 @@ import { useAppStore } from '~/storage/store';
 import { Switch } from '~/ui/components/Switch';
 import { ApiStatusIndicator } from '~/ui/components/ApiStatusIndicator';
 import { ProviderIcon } from '~/ui/ProviderIcon';
-import { ChevronRight, Search } from '~/ui/icons';
+import { ChevronRight, Info, Server } from '~/ui/icons';
+import { SearchField } from '~/ui/components/SearchField';
+import type { StringKey } from '~/i18n/strings';
 import { SectionHeader } from '~/ui/components/SectionHeader';
 import { useProviderToggle } from './useProviderToggle';
 import { useT } from '~/i18n';
@@ -20,6 +22,7 @@ export function ProvidersPanel() {
   const providers = useAppStore((s) => s.data.providers);
   const [selected, setSelected] = useState<ProviderId | null>(null);
   const [query, setQuery] = useState('');
+  const [noteOpen, setNoteOpen] = useState(false);
   const { toggle, denied } = useProviderToggle();
   const t = useT();
 
@@ -31,32 +34,40 @@ export function ProvidersPanel() {
   }
 
   const q = query.trim().toLowerCase();
-  const shown = PROVIDER_IDS.filter(
-    (id) => !q || PROVIDERS[id].label.toLowerCase().includes(q) || id.includes(q),
-  );
+  const matches = (id: ProviderId) => !q || PROVIDERS[id].label.toLowerCase().includes(q) || id.includes(q);
+  const groups = PROVIDER_GROUPS.map((g) => ({ ...g, ids: PROVIDER_IDS.filter((id) => groupOf(id) === g.id && matches(id)) }))
+    .filter((g) => g.ids.length > 0);
 
   return (
     <section class="ap-settings-panel">
-    <SectionHeader label={t('sectionProviders')} description={t('openaiCompatible')} />
+    <SectionHeader icon={Server} label={t('sectionProviders')} description={t('openaiCompatible')} />
     {/* A box of its own with its own scrollbar, as in v0.2.2: fifteen
         providers laid out in full make a long, uniform wall of rows. */}
     <div class="flex h-[26rem] flex-col overflow-hidden rounded-md border border-ap-border bg-ap-surface">
-      <div class="relative shrink-0 border-b border-ap-border">
-        <Search
-          size={13}
-          class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ap-subtle"
-        />
-        <input
-          type="search"
-          value={query}
-          placeholder={t('searchProviders')}
-          onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
-          class="h-9 w-full bg-transparent pl-8 pr-3 text-sm text-ap-fg placeholder:text-ap-subtle focus:outline-none"
-        />
-      </div>
+      <SearchField value={query} onInput={setQuery} placeholder={t('searchProviders')} clearLabel={t('searchClear')} />
 
       <ul class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        {shown.map((id) => {
+        {groups.map((group) => [
+          <li key={`g:${group.id}`} class="sticky top-0 z-10 border-b border-ap-border bg-ap-bg/95 backdrop-blur-sm">
+            <div class="flex items-center gap-2 px-3 py-1.5">
+              <span class="text-2xs font-medium text-ap-muted">{t(group.label)}</span>
+              {/* The statement about the free services belongs with them, and
+                  only for whoever asks: a click, not a paragraph in the way. */}
+              {group.id === 'free' && (
+                <button type="button" onClick={() => setNoteOpen((v) => !v)} aria-expanded={noteOpen}
+                  class="ml-auto flex items-center gap-1 text-2xs text-ap-subtle transition-colors hover:text-ap-fg">
+                  <Info size={12} />
+                  {t('engineServiceNote')}
+                </button>
+              )}
+            </div>
+            {group.id === 'free' && noteOpen && (
+              <p class="border-t border-ap-border bg-ap-surface px-3 py-2.5 text-2xs leading-relaxed text-ap-muted">
+                {t('engineFreeDisclaimer')}
+              </p>
+            )}
+          </li>,
+          ...group.ids.map((id) => {
           const def = PROVIDERS[id];
           const cfg = providers[id];
           const isService = def.kind === 'service';
@@ -100,13 +111,31 @@ export function ProvidersPanel() {
               )}
             </li>
           );
-        })}
+        })])}
 
-        {shown.length === 0 && (
+        {groups.length === 0 && (
           <li class="px-3 py-6 text-center text-2xs text-ap-subtle">{t('noMatches')}</li>
         )}
       </ul>
     </div>
     </section>
   );
+}
+
+type GroupId = 'free' | 'cloud' | 'selfHosted';
+
+/**
+ * The three kinds of provider, which differ in what they ask of the user: the
+ * free services ask nothing, the cloud APIs a key of your own, and a local
+ * runtime or custom endpoint an address you run or choose yourself.
+ */
+const PROVIDER_GROUPS: { id: GroupId; label: StringKey }[] = [
+  { id: 'free', label: 'providerGroupFree' },
+  { id: 'cloud', label: 'providerGroupCloud' },
+  { id: 'selfHosted', label: 'providerGroupSelfHosted' },
+];
+
+function groupOf(id: ProviderId): GroupId {
+  if (PROVIDERS[id].kind === 'service') return 'free';
+  return id === 'local' || id === 'custom' ? 'selfHosted' : 'cloud';
 }

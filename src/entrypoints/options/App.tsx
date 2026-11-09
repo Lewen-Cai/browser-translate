@@ -39,7 +39,7 @@ export function App() {
     <div class="min-h-screen bg-ap-bg text-ap-fg">
       <header class="border-b border-ap-border bg-ap-surface">
         <div class="mx-auto flex max-w-[1040px] items-center gap-3 px-6 py-5">
-          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-ap-brand/10 text-ap-brand"><Languages size={21} /></span>
+          <img src="/icon/source.svg" alt="" width={36} height={36} class="shrink-0" />
           <div class="min-w-0">
             <div class="text-base font-semibold">BrowserTranslate</div>
             <h1 class="mt-0.5 text-sm text-ap-muted">{t('settings')}</h1>
