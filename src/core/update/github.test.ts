@@ -97,3 +97,28 @@ describe('fetchLatestRelease', () => {
     expect(fetchImpl.mock.calls[0]?.[1]).toMatchObject({ signal: controller.signal });
   });
 });
+
+describe('fetchLatestRelease package per browser (v0.2.3)', () => {
+  const assets = [
+    { name: 'browser-translate-0.2.3-sources.zip', browser_download_url: 'https://x/sources.zip' },
+    { name: 'browser-translate-0.2.3-firefox.zip', browser_download_url: 'https://x/firefox.zip' },
+    { name: 'browser-translate-0.2.3-firefox.xpi', browser_download_url: 'https://x/firefox.xpi' },
+    { name: 'browser-translate-0.2.3-chrome.zip', browser_download_url: 'https://x/chrome.zip' },
+  ];
+  const fetchImpl = () => vi.fn<FetchLike>().mockResolvedValue(answer({ tag_name: 'v0.2.3', assets }));
+
+  it('gives Chromium the chrome zip, never the sources or a Firefox zip', async () => {
+    await expect(fetchLatestRelease(fetchImpl(), undefined, 'chromium')).resolves
+      .toMatchObject({ downloadUrl: 'https://x/chrome.zip' });
+  });
+
+  it('gives Firefox the signed xpi', async () => {
+    await expect(fetchLatestRelease(fetchImpl(), undefined, 'firefox')).resolves
+      .toMatchObject({ downloadUrl: 'https://x/firefox.xpi' });
+  });
+
+  it('gives Firefox nothing rather than a zip it cannot install', async () => {
+    const onlyZip = vi.fn<FetchLike>().mockResolvedValue(answer({ tag_name: 'v0.2.3', assets: [assets[3]] }));
+    await expect(fetchLatestRelease(onlyZip, undefined, 'firefox')).resolves.toMatchObject({ downloadUrl: null });
+  });
+});

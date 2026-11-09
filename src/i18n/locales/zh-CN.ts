@@ -84,6 +84,7 @@ export const zhCN: Record<StringKey, string> = {
   downloadUpdate: '下载',
   openReleasePage: '打开发布页',
   updateManualNote: 'Chrome 无法代你安装。解压后覆盖原来的目录，再到 chrome://extensions 点「重新加载」。',
+  updateManualNoteFirefox: '在 Firefox 中打开下载的 .xpi 并确认，新版本会直接覆盖安装，设置保持不变。',
   sectionData: '数据',
   openaiCompatible: '兼容 OpenAI 协议',
   // Options nav

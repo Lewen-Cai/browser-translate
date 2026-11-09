@@ -81,6 +81,7 @@ export const ru: Record<StringKey, string> = {
   downloadUpdate: 'Скачать',
   openReleasePage: 'Открыть страницу выпуска',
   updateManualNote: 'Chrome не может установить обновление за вас. Распакуйте архив поверх существующей папки и нажмите «Обновить» на chrome://extensions.',
+  updateManualNoteFirefox: 'Откройте загруженный файл .xpi в Firefox и подтвердите: он установится поверх этой версии, настройки сохранятся.',
   sectionData: 'Данные',
   openaiCompatible: 'Совместимость с OpenAI',
   navTranslation: 'ПЕРЕВОД',

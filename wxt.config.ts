@@ -1,12 +1,30 @@
 import { defineConfig } from 'wxt';
 import preact from '@preact/preset-vite';
 
+/**
+ * Firefox's permanent id for this add-on. AMO ties every signed version to it,
+ * and an installed copy only updates to a file carrying the same one — so it
+ * must never change once the first version has been signed.
+ */
+const GECKO_ID = '{13a30e30-c1c2-45ad-9bd6-9734872155d5}';
+
 export default defineConfig({
   srcDir: 'src',
+  // WXT builds Firefox as MV2 unless told otherwise. One manifest version for
+  // every browser keeps the code paths the same: MV3 everywhere.
+  manifestVersion: 3,
   vite: () => ({
     plugins: [preact()],
   }),
-  manifest: {
+  hooks: {
+    // `pnpm dev` grants <all_urls> for its reloader, which already covers every
+    // optional host. Chrome then flags each optional one as redundant on every
+    // reload. Dev only: a production build keeps them optional.
+    'build:manifestGenerated': (wxt, manifest) => {
+      if (wxt.config.command === 'serve') delete manifest.optional_host_permissions;
+    },
+  },
+  manifest: ({ browser }) => ({
     name: '__MSG_extName__',
     description: '__MSG_extDescription__',
     default_locale: 'en',
@@ -51,5 +69,21 @@ export default defineConfig({
         matches: ['<all_urls>'],
       },
     ],
-  },
+    ...(browser === 'firefox' && {
+      browser_specific_settings: {
+        gecko: {
+          id: GECKO_ID,
+          // 128 brought MAIN-world content scripts (the YouTube bridge); 140
+          // brought the data-collection declaration below, which AMO now
+          // requires of every new add-on.
+          strict_min_version: '140.0',
+          // Firefox shows this at install and asks for consent. The page text a
+          // reader selects or translates leaves the browser for the service
+          // they chose — a model endpoint of their own, or Microsoft's or
+          // Google's free translator. Nothing goes to us; there is no server.
+          data_collection_permissions: { required: ['websiteContent'] },
+        },
+      },
+    }),
+  }),
 });

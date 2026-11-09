@@ -84,6 +84,7 @@ export const es: Record<StringKey, string> = {
   downloadUpdate: 'Descargar',
   openReleasePage: 'Abrir la página de la versión',
   updateManualNote: 'Chrome no puede instalarlo por ti. Descomprímelo sobre tu carpeta actual y pulsa Actualizar en chrome://extensions.',
+  updateManualNoteFirefox: 'Abre el .xpi descargado en Firefox y confirma: se instala sobre esta versión y conserva tus ajustes.',
   sectionData: 'Datos',
   openaiCompatible: 'Compatible con OpenAI',
   // Options nav

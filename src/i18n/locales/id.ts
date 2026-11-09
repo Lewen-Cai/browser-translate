@@ -81,6 +81,7 @@ export const id: Record<StringKey, string> = {
   downloadUpdate: 'Unduh',
   openReleasePage: 'Buka halaman rilis',
   updateManualNote: 'Chrome tidak dapat memasangnya untuk Anda. Ekstrak arsip ke folder yang sudah ada, lalu tekan Muat ulang di chrome://extensions.',
+  updateManualNoteFirefox: 'Buka file .xpi yang diunduh di Firefox lalu konfirmasi; versi baru terpasang di atas versi ini dan pengaturan tetap tersimpan.',
   sectionData: 'Data',
   openaiCompatible: 'Kompatibel dengan OpenAI',
   navTranslation: 'TERJEMAHAN',

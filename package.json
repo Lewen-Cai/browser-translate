@@ -6,9 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
     "build": "wxt build",
     "build:firefox": "wxt build -b firefox",
     "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
     "test": "vitest",
     "test:run": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage",

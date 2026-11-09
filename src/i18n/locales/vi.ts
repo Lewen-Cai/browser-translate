@@ -81,6 +81,7 @@ export const vi: Record<StringKey, string> = {
   downloadUpdate: 'Tải xuống',
   openReleasePage: 'Mở trang phát hành',
   updateManualNote: 'Chrome không thể tự cài đặt. Giải nén đè lên thư mục hiện có, rồi nhấn Tải lại tại chrome://extensions.',
+  updateManualNoteFirefox: 'Mở tệp .xpi đã tải về bằng Firefox và xác nhận; bản mới sẽ cài đè lên phiên bản này và giữ nguyên cài đặt.',
   sectionData: 'Dữ liệu',
   openaiCompatible: 'Tương thích OpenAI',
   navTranslation: 'DỊCH',

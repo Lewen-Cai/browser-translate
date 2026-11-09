@@ -81,6 +81,7 @@ export const tr: Record<StringKey, string> = {
   downloadUpdate: 'İndir',
   openReleasePage: 'Sürüm sayfasını aç',
   updateManualNote: 'Chrome bunu sizin yerinize yükleyemez. Arşivi mevcut klasörün üzerine açın, ardından chrome://extensions sayfasında Yeniden yükle düğmesine basın.',
+  updateManualNoteFirefox: 'İndirilen .xpi dosyasını Firefox’ta açıp onaylayın; bu sürümün üzerine kurulur ve ayarlarınız korunur.',
   sectionData: 'Veriler',
   openaiCompatible: 'OpenAI uyumlu',
   navTranslation: 'ÇEVİRİ',

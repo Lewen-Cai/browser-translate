@@ -540,7 +540,9 @@ async function handleUpdateCheck(requestId: string, client: StorageClient): Prom
     chrome.runtime.sendMessage(payload).catch(() => {});
   };
   try {
-    const release = await fetchLatestRelease();
+    // Build-time constant: a Firefox build looks for the .xpi, every other
+    // build — Chrome's zip also installs in Edge — for the Chromium zip.
+    const release = await fetchLatestRelease(fetch, undefined, import.meta.env.BROWSER === 'firefox' ? 'firefox' : 'chromium');
     const available = isUpdateAvailable(release.tag, chrome.runtime.getManifest().version);
     await client.saveUpdateState({
       lastCheckedAt: Date.now(),

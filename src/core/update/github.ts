@@ -39,6 +39,12 @@ export interface ReleaseInfo {
   downloadUrl: string | null;
 }
 
+/**
+ * Which build the asker can install. Chrome and Edge share one Chromium zip;
+ * Firefox installs only a signed .xpi.
+ */
+export type PackageTarget = 'chromium' | 'firefox';
+
 /** Anything that answers like `fetch`, so a test does not need the network. */
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -53,6 +59,7 @@ export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>
 export async function fetchLatestRelease(
   fetchImpl: FetchLike = fetch,
   signal?: AbortSignal,
+  target: PackageTarget = 'chromium',
 ): Promise<ReleaseInfo> {
   const response = await fetchImpl(LATEST_RELEASE_ENDPOINT, {
     headers: { Accept: 'application/vnd.github+json' },
@@ -81,22 +88,28 @@ export async function fetchLatestRelease(
   return {
     tag,
     url: typeof body.html_url === 'string' && body.html_url ? body.html_url : RELEASES_PAGE,
-    downloadUrl: findPackage(body.assets),
+    downloadUrl: findPackage(body.assets, target),
   };
 }
 
 /**
- * The packaged extension among a release's attachments.
+ * The package for this browser among a release's attachments.
  *
- * By extension rather than by name, because the name carries the version and
- * would have to be kept in step with whatever the build happens to be called.
+ * By extension rather than by full name, because the name carries the version
+ * and would have to be kept in step with whatever the build happens to be
+ * called. A release carries a zip for Chromium and a signed .xpi for Firefox,
+ * so each browser takes its own; a zip named for Firefox, or the sources
+ * archive AMO asks for, is never handed to Chrome.
  */
-function findPackage(assets: unknown): string | null {
+function findPackage(assets: unknown, target: PackageTarget): string | null {
   if (!Array.isArray(assets)) return null;
-  for (const asset of assets as Array<{ name?: unknown; browser_download_url?: unknown }>) {
-    const name = typeof asset?.name === 'string' ? asset.name : '';
-    const url = typeof asset?.browser_download_url === 'string' ? asset.browser_download_url : '';
-    if (url && name.toLowerCase().endsWith('.zip')) return url;
-  }
-  return null;
+  const files = (assets as Array<{ name?: unknown; browser_download_url?: unknown }>)
+    .map((a) => ({
+      name: typeof a?.name === 'string' ? a.name.toLowerCase() : '',
+      url: typeof a?.browser_download_url === 'string' ? a.browser_download_url : '',
+    }))
+    .filter((f) => f.url);
+  if (target === 'firefox') return files.find((f) => f.name.endsWith('.xpi'))?.url ?? null;
+  const zips = files.filter((f) => f.name.endsWith('.zip') && !/firefox|sources/.test(f.name));
+  return (zips.find((f) => f.name.endsWith('-chrome.zip')) ?? zips[0])?.url ?? null;
 }

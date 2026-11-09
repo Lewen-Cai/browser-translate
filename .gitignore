@@ -4,6 +4,8 @@ node_modules/
 # Build output (WXT)
 .output/
 .wxt/
+# Personal `pnpm dev` runner settings (WXT's convention: never shared)
+web-ext.config.ts
 *.zip
 *.crx
 *.xpi

@@ -85,6 +85,7 @@ export const en = {
   downloadUpdate: 'Download',
   openReleasePage: 'Open the release page',
   updateManualNote: 'Chrome cannot install this for you. Unzip it over your existing folder, then press Reload on chrome://extensions.',
+  updateManualNoteFirefox: 'Open the downloaded .xpi in Firefox and confirm; it installs over this version and keeps your settings.',
   sectionData: 'Data',
   openaiCompatible: 'OpenAI-compatible',
   // Options nav

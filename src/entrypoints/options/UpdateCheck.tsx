@@ -158,7 +158,7 @@ export function UpdateNotice({ outcome }: { outcome: UpdateOutcome | null }) {
             {/* Downloading is the easy half. Saying what to do with the file is
                 the half Chrome will not do for us. On its own line, because it
                 is an instruction rather than part of the offer. */}
-            <p class="basis-full text-2xs leading-relaxed text-ap-muted">{t('updateManualNote')}</p>
+            <p class="basis-full text-2xs leading-relaxed text-ap-muted">{t(import.meta.env.BROWSER === 'firefox' ? 'updateManualNoteFirefox' : 'updateManualNote')}</p>
           </>
         )}
         {outcome.kind === 'current' && (

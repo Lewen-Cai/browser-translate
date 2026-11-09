@@ -84,6 +84,7 @@ export const zhTW: Record<StringKey, string> = {
   downloadUpdate: '下載',
   openReleasePage: '開啟發布頁',
   updateManualNote: 'Chrome 無法代你安裝。解壓後覆蓋原本的目錄，再到 chrome://extensions 點「重新載入」。',
+  updateManualNoteFirefox: '在 Firefox 中開啟下載的 .xpi 並確認，新版本會直接覆蓋安裝，設定保持不變。',
   sectionData: '資料',
   openaiCompatible: '相容 OpenAI 協定',
   // Options nav

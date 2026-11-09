@@ -84,6 +84,7 @@ export const ko: Record<StringKey, string> = {
   downloadUpdate: '다운로드',
   openReleasePage: '릴리스 페이지 열기',
   updateManualNote: 'Chrome가 대신 설치할 수는 없습니다. 압축을 풀어 기존 폴더에 덮어쓴 뒤 chrome://extensions에서 새로고침을 누르세요.',
+  updateManualNoteFirefox: '다운로드한 .xpi를 Firefox에서 열고 확인하면 현재 버전 위에 설치되며 설정은 그대로 유지됩니다.',
   sectionData: '데이터',
   openaiCompatible: 'OpenAI 호환',
   // Options nav

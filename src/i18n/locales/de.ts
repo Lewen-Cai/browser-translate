@@ -84,6 +84,7 @@ export const de: Record<StringKey, string> = {
   downloadUpdate: 'Herunterladen',
   openReleasePage: 'Zur Release-Seite',
   updateManualNote: 'Chrome kann das nicht für Sie installieren. Entpacken Sie es über Ihren vorhandenen Ordner und klicken Sie auf chrome://extensions auf Aktualisieren.',
+  updateManualNoteFirefox: 'Öffnen Sie die heruntergeladene .xpi-Datei in Firefox und bestätigen Sie; sie wird über diese Version installiert, die Einstellungen bleiben erhalten.',
   sectionData: 'Daten',
   openaiCompatible: 'OpenAI-kompatibel',
   // Options nav

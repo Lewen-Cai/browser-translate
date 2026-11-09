@@ -84,6 +84,7 @@ export const ja: Record<StringKey, string> = {
   downloadUpdate: 'ダウンロード',
   openReleasePage: 'リリースページを開く',
   updateManualNote: 'Chrome が代わりにインストールすることはできません。解凍して既存のフォルダーに上書きし、chrome://extensions で「更新」を押してください。',
+  updateManualNoteFirefox: 'ダウンロードした .xpi を Firefox で開いて確認すると、このバージョンに上書きでインストールされ、設定はそのまま残ります。',
   sectionData: 'データ',
   openaiCompatible: 'OpenAI 互換',
   // Options nav

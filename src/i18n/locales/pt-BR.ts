@@ -81,6 +81,7 @@ export const ptBR: Record<StringKey, string> = {
   downloadUpdate: 'Baixar',
   openReleasePage: 'Abrir página da versão',
   updateManualNote: 'O Chrome não pode instalar por você. Extraia os arquivos sobre a pasta existente e clique em Recarregar em chrome://extensions.',
+  updateManualNoteFirefox: 'Abra o .xpi baixado no Firefox e confirme; ele é instalado sobre esta versão e mantém suas configurações.',
   sectionData: 'Dados',
   openaiCompatible: 'Compatível com OpenAI',
   navTranslation: 'TRADUÇÃO',
