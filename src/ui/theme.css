@@ -680,6 +680,7 @@ html, body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.bt-menu-hint-icon { margin-right: 4px; vertical-align: -1px; }
 .bt-menu-check { color: rgb(var(--ap-brand)); flex: none; }
 .bt-menu-empty {
   padding: 18px 8px;

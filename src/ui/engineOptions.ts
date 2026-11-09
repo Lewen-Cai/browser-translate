@@ -2,6 +2,7 @@ import { PROVIDERS, PROVIDER_IDS, type Capability, type ProviderId } from '~/cor
 import type { ProviderOption } from '~/ui/components/ProviderSelect';
 import type { EngineRoute, ProvidersConfig } from '~/storage/schema';
 import { routeKey } from '~/core/engines/routing';
+import { modelMarkFor } from '~/core/providers/modelIcon';
 
 export interface EngineOptionLabels {
   /** Heading over the free, key-less services. */
@@ -67,7 +68,12 @@ export function routeOptions(
       continue;
     }
     for (const model of models) {
-      out.push({ ...option, value: routeKey({ provider: id, model }), detail: model });
+      out.push({
+        ...option,
+        value: routeKey({ provider: id, model }),
+        detail: model,
+        detailIcon: modelMarkFor(id, model),
+      });
     }
   }
   return out;

@@ -5,7 +5,8 @@ import type { ProviderId } from '~/core/providers/registry';
 // Vendor marks from Lobe Icons (https://github.com/lobehub/lobe-icons), MIT.
 // The files are vendored into src/ui/brandIcons rather than pulled from the
 // package at runtime: an extension can't fetch anything at display time, and we
-// only need ten of the nine hundred icons the set ships.
+// only need a dozen of the nine hundred icons the set ships. Model icons are a
+// separate, much larger set served as files — see ModelIcon.tsx.
 //
 // Each is a 1em-square SVG, so the wrapper's font-size is what sets the drawn
 // size. The monochrome ones (OpenAI, OpenRouter, Z.ai) paint with currentColor
@@ -27,7 +28,6 @@ import googleSvg from './brandIcons/google-color.svg?raw';
 import claudeSvg from './brandIcons/claude-color.svg?raw';
 import geminiSvg from './brandIcons/gemini-color.svg?raw';
 import opencodeSvg from './brandIcons/opencode.svg?raw';
-
 export type ProviderIconId = ProviderId;
 
 const BRAND_SVGS: Partial<Record<ProviderIconId, string>> = {

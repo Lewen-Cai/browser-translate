@@ -1,115 +1,74 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
 import { Button } from '~/ui/components/Button';
+import { ModelIcon } from '~/ui/ModelIcon';
 import { Check, Loader2, Plus, RefreshCw, Search, Star, X } from '~/ui/icons';
 import { useT } from '~/i18n';
-import { pingApi } from '~/messaging/client';
 import { addModel, removeModel, setDefaultModel, type ModelSet } from '~/core/providers/models';
-import type { ProviderId } from '~/core/providers/registry';
 import { cn } from '~/lib/cn';
+import type { Probe } from './useProviderProbe';
 
-interface Props {
-  id: ProviderId;
+interface KeptProps {
   value: ModelSet;
   onChange: (next: ModelSet) => void;
 }
 
-/** How many fetched models to draw at once. OpenRouter alone lists hundreds. */
-const FETCH_SHOWN = 100;
-
-type Fetched =
-  | { state: 'idle' }
-  | { state: 'loading' }
-  | { state: 'error'; message: string }
-  | { state: 'done'; models: string[] };
+/** Shared frame for both columns: a title row and a bordered body. */
+function Column({ title, aside, children }: { title: string; aside?: preact.ComponentChildren; children: preact.ComponentChildren }) {
+  return (
+    <div class="flex min-w-0 flex-col">
+      <div class="mb-2 flex h-7 items-center justify-between gap-2">
+        <span class="text-sm font-medium text-ap-fg">{title}</span>
+        {aside}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 /**
  * The models kept for one provider, and which of them is the default.
  *
  * Kept as a list so switching between them — on a surface, or on the card — is
- * a pick rather than a retyped name. Names can be typed, or picked from what the
- * endpoint's own `/models` lists, which is the same request the status check
- * already makes.
+ * a pick rather than a retyped name.
  */
-export function ModelList({ id, value, onChange }: Props) {
+export function KeptModels({ value, onChange }: KeptProps) {
   const t = useT();
   const [draft, setDraft] = useState('');
-  const [fetched, setFetched] = useState<Fetched>({ state: 'idle' });
-  const [query, setQuery] = useState('');
-  const panel = useRef<HTMLDivElement>(null);
-
-  // The detail page is a fixed-height box, and the result lands at its foot —
-  // below the fold, where a click that seemed to do nothing would leave it.
-  useEffect(() => {
-    if (fetched.state === 'done' || fetched.state === 'error') {
-      panel.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
-    }
-  }, [fetched.state]);
-
-  function add(name: string) {
-    onChange(addModel(value, name));
-  }
-
-  async function fetchList() {
-    setFetched({ state: 'loading' });
-    const res = await pingApi(id);
-    if (res.type === 'ping:error') {
-      setFetched({ state: 'error', message: res.message });
-      return;
-    }
-    const models = [...new Set(res.availableModels)].sort((a, b) => a.localeCompare(b));
-    setFetched({ state: 'done', models });
-  }
-
-  const matches = useMemo(() => {
-    if (fetched.state !== 'done') return [];
-    const q = query.trim().toLowerCase();
-    return q ? fetched.models.filter((m) => m.toLowerCase().includes(q)) : fetched.models;
-  }, [fetched, query]);
 
   return (
-    <div>
-      <div class="mb-1.5 flex items-center justify-between">
-        <span class="text-xs font-medium text-ap-muted">{t('modelsLabel')}</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          type="button"
-          onClick={() => void fetchList()}
-          disabled={fetched.state === 'loading'}
-        >
-          {fetched.state === 'loading' ? <Loader2 size={12} class="animate-spin" /> : <RefreshCw size={12} />}
-          {t('modelsFetch')}
-        </Button>
-      </div>
-
+    <Column
+      title={t('modelsYours')}
+      aside={value.models.length > 0 && <span class="text-2xs text-ap-subtle">{value.models.length}</span>}
+    >
       {value.models.length === 0 ? (
-        <p class="rounded-md border border-dashed border-ap-border px-3 py-2.5 text-xs text-ap-subtle">
+        <p class="rounded-lg border border-dashed border-ap-border px-3 py-4 text-xs leading-relaxed text-ap-subtle">
           {t('modelsEmpty')}
         </p>
       ) : (
-        <ul class="overflow-hidden rounded-md border border-ap-border">
+        <ul class="overflow-hidden rounded-lg border border-ap-border">
           {value.models.map((m) => {
             const isDefault = m === value.model;
             return (
-              <li key={m} class="flex items-center gap-2 border-b border-ap-border px-2.5 py-1.5 last:border-b-0">
-                <button
-                  type="button"
-                  onClick={() => onChange(setDefaultModel(value, m))}
-                  disabled={isDefault}
-                  title={isDefault ? t('modelDefault') : t('modelSetDefault')}
-                  aria-label={isDefault ? t('modelDefault') : t('modelSetDefault')}
-                  class={cn(
-                    'flex h-6 w-6 shrink-0 items-center justify-center rounded transition-colors',
-                    isDefault ? 'text-ap-brand' : 'text-ap-subtle hover:text-ap-fg',
-                  )}
-                >
-                  <Star size={13} fill={isDefault ? 'currentColor' : 'none'} />
-                </button>
+              <li key={m} class="group flex items-center gap-2.5 border-b border-ap-border px-3 py-2 last:border-b-0">
+                <ModelIcon model={m} size={16} />
                 <span class="min-w-0 flex-1 truncate font-mono text-xs text-ap-fg" title={m}>{m}</span>
-                {isDefault && (
-                  <span class="shrink-0 rounded bg-ap-brand/10 px-1.5 py-0.5 text-2xs text-ap-brand">
+                {isDefault ? (
+                  <span class="flex shrink-0 items-center gap-1 rounded-full bg-ap-brand/10 px-2 py-0.5 text-2xs text-ap-brand">
+                    <Star size={10} fill="currentColor" />
                     {t('modelDefault')}
                   </span>
+                ) : (
+                  // A star rather than words: it costs the id no width, and it
+                  // is the same mark the default carries once chosen.
+                  <button
+                    type="button"
+                    onClick={() => onChange(setDefaultModel(value, m))}
+                    aria-label={`${t('modelSetDefault')} ${m}`}
+                    title={t('modelSetDefault')}
+                    class="flex h-6 w-6 shrink-0 items-center justify-center rounded text-ap-subtle opacity-40 transition hover:text-ap-brand hover:opacity-100 focus:opacity-100 group-hover:opacity-100"
+                  >
+                    <Star size={13} />
+                  </button>
                 )}
                 <button
                   type="button"
@@ -118,7 +77,7 @@ export function ModelList({ id, value, onChange }: Props) {
                   title={t('modelRemove')}
                   class="flex h-6 w-6 shrink-0 items-center justify-center rounded text-ap-subtle transition-colors hover:text-ap-danger"
                 >
-                  <X size={12} />
+                  <X size={13} />
                 </button>
               </li>
             );
@@ -127,10 +86,10 @@ export function ModelList({ id, value, onChange }: Props) {
       )}
 
       <form
-        class="mt-2 flex items-center gap-2"
+        class="mt-3 flex items-center gap-2"
         onSubmit={(e) => {
           e.preventDefault();
-          add(draft);
+          onChange(addModel(value, draft));
           setDraft('');
         }}
       >
@@ -139,69 +98,118 @@ export function ModelList({ id, value, onChange }: Props) {
           onInput={(e) => setDraft((e.target as HTMLInputElement).value)}
           placeholder={t('modelAddPlaceholder')}
           aria-label={t('modelAddPlaceholder')}
-          class="h-8 min-w-0 flex-1 rounded-md border border-ap-border bg-ap-surface px-2.5 font-mono text-sm text-ap-fg placeholder:font-sans placeholder:text-ap-subtle focus:border-ap-brand focus:outline-none"
+          class="h-8 min-w-0 flex-1 rounded-md border border-ap-border bg-ap-surface px-2.5 font-mono text-xs text-ap-fg placeholder:font-sans placeholder:text-ap-subtle focus:border-ap-brand focus:outline-none"
         />
         <Button variant="secondary" type="submit" disabled={!draft.trim()}>
           <Plus size={12} />
           {t('modelAdd')}
         </Button>
       </form>
-      <p class="mt-1 text-2xs text-ap-muted">{t('modelsHint')}</p>
+    </Column>
+  );
+}
 
-      <div ref={panel}>
-      {fetched.state === 'error' && (
-        <p class="mt-2 text-2xs text-ap-danger">{fetched.message}</p>
-      )}
-      {fetched.state === 'done' && (
-        <div class="mt-2 rounded-md border border-ap-border">
-          {fetched.models.length === 0 ? (
-            <p class="px-3 py-2.5 text-xs text-ap-subtle">{t('modelsNoneFetched')}</p>
-          ) : (
-            <>
-              <div class="flex items-center gap-2 border-b border-ap-border px-2.5">
-                <Search size={12} class="shrink-0 text-ap-subtle" />
-                <input
-                  value={query}
-                  onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
-                  placeholder={t('modelsSearch')}
-                  aria-label={t('modelsSearch')}
-                  class="h-8 min-w-0 flex-1 bg-transparent text-sm text-ap-fg placeholder:text-ap-subtle focus:outline-none"
-                />
-                <span class="shrink-0 text-2xs text-ap-subtle">
-                  {t('modelsFetchedCount').replace('{count}', String(matches.length))}
-                </span>
-              </div>
-              <ul class="max-h-44 overflow-y-auto py-1">
-                {matches.slice(0, FETCH_SHOWN).map((m) => {
-                  const kept = value.models.includes(m);
-                  return (
-                    <li key={m}>
-                      <button
-                        type="button"
-                        onClick={() => onChange(kept ? removeModel(value, m) : addModel(value, m))}
-                        aria-pressed={kept}
-                        class={cn(
-                          'flex w-full items-center gap-2 px-2.5 py-1 text-left font-mono text-xs transition-colors hover:bg-ap-fg/5',
-                          kept ? 'text-ap-brand' : 'text-ap-fg',
-                        )}
-                      >
-                        <span class="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
-                          {kept ? <Check size={12} /> : <Plus size={12} class="text-ap-subtle" />}
-                        </span>
-                        <span class="min-w-0 flex-1 truncate" title={m}>{m}</span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-              {matches.length > FETCH_SHOWN && (
-                <p class="border-t border-ap-border px-2.5 py-1.5 text-2xs text-ap-subtle">{t('modelsRefine')}</p>
-              )}
-            </>
-          )}
+/** How many listed models to draw at once. OpenRouter alone lists hundreds. */
+const SHOWN = 100;
+
+interface AvailableProps {
+  probe: Probe;
+  onRefresh: () => void;
+  value: ModelSet;
+  onChange: (next: ModelSet) => void;
+}
+
+/**
+ * What the endpoint itself says it serves, from the same `/models` request that
+ * tells whether the connection works — so the list is simply there once the
+ * key is, with nothing to press. Clicking one keeps it; clicking a kept one
+ * lets it go.
+ */
+export function AvailableModels({ probe, onRefresh, value, onChange }: AvailableProps) {
+  const t = useT();
+  const [query, setQuery] = useState('');
+
+  const all = probe.state === 'ok' ? probe.models : [];
+  const matches = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? all.filter((m) => m.toLowerCase().includes(q)) : all;
+  }, [all, query]);
+
+  const refresh = (
+    <Button variant="ghost" size="sm" type="button" onClick={onRefresh} disabled={probe.state === 'pending' || probe.state === 'idle'}>
+      {probe.state === 'pending' ? <Loader2 size={12} class="animate-spin" /> : <RefreshCw size={12} />}
+      {t('modelsFetch')}
+    </Button>
+  );
+
+  let body: preact.ComponentChildren;
+  if (probe.state === 'idle') {
+    body = <Placeholder>{t('modelsNeedConnection')}</Placeholder>;
+  } else if (probe.state === 'pending' && all.length === 0) {
+    body = <Placeholder><Loader2 size={14} class="mx-auto animate-spin" /></Placeholder>;
+  } else if (probe.state === 'error') {
+    body = <Placeholder danger>{probe.status ? `HTTP ${probe.status} · ${probe.message}` : probe.message}</Placeholder>;
+  } else if (all.length === 0) {
+    body = <Placeholder>{t('modelsNoneFetched')}</Placeholder>;
+  } else {
+    body = (
+      <div class="overflow-hidden rounded-lg border border-ap-border">
+        <div class="flex items-center gap-2 border-b border-ap-border px-3">
+          <Search size={13} class="shrink-0 text-ap-subtle" />
+          <input
+            type="search"
+            value={query}
+            onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
+            placeholder={t('modelsSearch')}
+            aria-label={t('modelsSearch')}
+            class="h-9 min-w-0 flex-1 bg-transparent text-sm text-ap-fg placeholder:text-ap-subtle focus:outline-none"
+          />
+          <span class="shrink-0 text-2xs text-ap-subtle">
+            {t('modelsFetchedCount').replace('{count}', String(matches.length))}
+          </span>
         </div>
-      )}
+        <ul class="h-72 overflow-y-auto overscroll-contain py-1">
+          {matches.slice(0, SHOWN).map((m) => {
+            const kept = value.models.includes(m);
+            return (
+              <li key={m}>
+                <button
+                  type="button"
+                  onClick={() => onChange(kept ? removeModel(value, m) : addModel(value, m))}
+                  aria-pressed={kept}
+                  class={cn(
+                    'flex w-full items-center gap-2.5 px-3 py-1.5 text-left transition-colors hover:bg-ap-fg/5',
+                    kept && 'bg-ap-brand/5',
+                  )}
+                >
+                  <ModelIcon model={m} size={14} />
+                  <span class={cn('min-w-0 flex-1 truncate font-mono text-xs', kept ? 'text-ap-brand' : 'text-ap-fg')} title={m}>{m}</span>
+                  {kept
+                    ? <Check size={13} class="shrink-0 text-ap-brand" />
+                    : <Plus size={13} class="shrink-0 text-ap-subtle" />}
+                </button>
+              </li>
+            );
+          })}
+          {matches.length === 0 && <li class="px-3 py-6 text-center text-2xs text-ap-subtle">{t('noMatches')}</li>}
+        </ul>
+        {matches.length > SHOWN && (
+          <p class="border-t border-ap-border px-3 py-1.5 text-2xs text-ap-subtle">{t('modelsRefine')}</p>
+        )}
       </div>
+    );
+  }
+
+  return <Column title={t('modelsAvailable')} aside={refresh}>{body}</Column>;
+}
+
+function Placeholder({ children, danger }: { children: preact.ComponentChildren; danger?: boolean }) {
+  return (
+    <div class={cn(
+      'flex min-h-[7rem] items-center justify-center rounded-lg border border-dashed border-ap-border px-4 py-6 text-center text-xs leading-relaxed',
+      danger ? 'text-ap-danger' : 'text-ap-subtle',
+    )}>
+      <div class="w-full">{children}</div>
     </div>
   );
 }

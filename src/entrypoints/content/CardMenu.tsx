@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Check, Search } from '~/ui/icons';
-import { ProviderIcon } from '~/ui/ProviderIcon';
-import type { ProviderId } from '~/core/providers/registry';
+import { ProviderIcon, type ProviderIconId } from '~/ui/ProviderIcon';
+import { LobeIcon } from '~/ui/ModelIcon';
 import { foldSearch } from '~/core/language/search';
 
 export interface CardMenuItem {
@@ -12,7 +12,9 @@ export interface CardMenuItem {
   /** Optional localized names and regional aliases, pre-folded for search. */
   searchText?: string;
   /** Draw this vendor's mark beside the label. */
-  iconId?: ProviderId;
+  iconId?: ProviderIconId;
+  /** A small LobeHub icon before the hint — the vendor behind a gateway's model. */
+  hintIcon?: string;
   /** Heading the item sits under. Consecutive items sharing one share a heading. */
   group?: string;
 }
@@ -174,7 +176,14 @@ export function CardMenu({
                 {item.iconId && <ProviderIcon id={item.iconId} size={17} />}
                 <span class="bt-menu-item-text">
                   <span class="bt-menu-item-label"><bdi>{item.label}</bdi></span>
-                  {item.hint && <span class="bt-menu-item-hint"><bdi>{item.hint}</bdi></span>}
+                  {item.hint && (
+                    <span class="bt-menu-item-hint">
+                      {item.hintIcon && (
+                        <span class="bt-menu-hint-icon"><LobeIcon icon={item.hintIcon} size={11} /></span>
+                      )}
+                      <bdi>{item.hint}</bdi>
+                    </span>
+                  )}
                 </span>
                 {item.value === value && <Check size={14} class="bt-menu-check" />}
               </button>,

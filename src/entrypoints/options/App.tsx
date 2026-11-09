@@ -7,7 +7,6 @@ import { DataPage } from './pages/DataPage';
 import { ProvidersPanel } from './pages/ProvidersPanel';
 import { Captions, Download, Languages, Settings, Server } from '~/ui/icons';
 import { cn } from '~/lib/cn';
-import { SectionHeader } from '~/ui/components/SectionHeader';
 import { useT } from '~/i18n';
 import { useApplyTheme } from '~/ui/useApplyTheme';
 import { useApplyLocale } from '~/ui/useApplyLocale';
@@ -64,10 +63,7 @@ export function App() {
         <main class="min-w-0 flex-1">
           {tab === 'general' && <GeneralPage />}
           {tab === 'translation' && <TranslationPage />}
-          {tab === 'providers' && <section class="ap-settings-panel">
-            <SectionHeader label={t('sectionProviders')} description={t('openaiCompatible')} />
-            <ProvidersPanel />
-          </section>}
+          {tab === 'providers' && <ProvidersPanel />}
           {tab === 'video' && <VideoPage />}
           {tab === 'data' && <DataPage />}
         </main>

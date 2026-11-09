@@ -3,6 +3,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'preact/hook
 import { ChevronDown, Check } from '~/ui/icons';
 import { ProviderIcon, type ProviderIconId } from '~/ui/ProviderIcon';
 import { cn } from '~/lib/cn';
+import { LobeIcon } from '~/ui/ModelIcon';
 
 export interface ProviderOption {
   value: string;
@@ -11,6 +12,8 @@ export interface ProviderOption {
   group?: string;
   /** Secondary text after the label — the model, for a model-backed route. */
   detail?: string;
+  /** A small LobeHub icon before the detail — the vendor behind a gateway's model. */
+  detailIcon?: string;
 }
 interface Props {
   label?: string;
@@ -104,15 +107,15 @@ export function ProviderSelect({ label, value, options, onChange, disabled = fal
           class={cn('flex h-9 w-full items-center gap-2 rounded-lg border bg-ap-surface px-2.5 text-sm text-ap-fg transition-colors',
             disabled && 'opacity-50', open ? 'border-ap-brand' : 'border-ap-border hover:border-ap-border-strong')}>
           {selected && <ProviderIcon id={selected.iconId} size={16} />}
-          <span id={`${id}-value`} class="min-w-0 flex-1 truncate text-left"
+          <span id={`${id}-value`} class="flex min-w-0 flex-1 items-center text-left"
             title={selected?.detail ? `${selected.label} · ${selected.detail}` : undefined}>
             {preferDetail && selected?.detail
               // A gateway id's vendor prefix is the part a narrow control can
               // least afford; the full id is in the title and the open list.
-              ? <span class="font-mono text-xs">{selected.detail.slice(selected.detail.lastIndexOf('/') + 1)}</span>
+              ? <span class="truncate font-mono text-xs">{selected.detail.slice(selected.detail.lastIndexOf('/') + 1)}</span>
               : <>
-                  {selected?.label ?? ''}
-                  {selected?.detail && <span class="ml-1.5 font-mono text-xs text-ap-muted">{selected.detail}</span>}
+                  <span class={selected?.detail ? 'shrink-0' : 'truncate'}>{selected?.label ?? ''}</span>
+                  {selected?.detail && <Detail option={selected} />}
                 </>}
           </span>
           <ChevronDown size={13} class="shrink-0 text-ap-muted" />
@@ -128,9 +131,9 @@ export function ProviderSelect({ label, value, options, onChange, disabled = fal
               class={cn('flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-ap-fg/5 focus:bg-ap-fg/5',
                 option.value === value ? 'bg-ap-brand/10 text-ap-brand' : 'text-ap-fg')}>
               <ProviderIcon id={option.iconId} size={16} />
-              <span class="min-w-0 flex-1 truncate">
-                {option.label}
-                {option.detail && <span class="ml-1.5 font-mono text-xs text-ap-muted">{option.detail}</span>}
+              <span class="flex min-w-0 flex-1 items-center">
+                <span class={option.detail ? 'shrink-0' : 'truncate'}>{option.label}</span>
+                {option.detail && <Detail option={option} />}
               </span>
               {option.value === value && <Check size={13} />}
             </button>
@@ -138,5 +141,17 @@ export function ProviderSelect({ label, value, options, onChange, disabled = fal
         </div>}
       </div>
     </div>
+  );
+}
+
+/** The model after a provider's name, with its vendor's mark where it differs. */
+function Detail({ option }: { option: ProviderOption }) {
+  return (
+    // The model is the part that gives way: the provider's name stays whole and
+    // the id is cut at the end, never the other way round.
+    <span class="ml-1.5 flex min-w-0 items-center gap-1 font-mono text-xs text-ap-muted">
+      {option.detailIcon && <LobeIcon icon={option.detailIcon} size={12} />}
+      <span class="truncate">{option.detail}</span>
+    </span>
   );
 }

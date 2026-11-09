@@ -4,44 +4,24 @@ import { Switch } from '~/ui/components/Switch';
 import { ApiStatusIndicator } from '~/ui/components/ApiStatusIndicator';
 import { ProviderIcon } from '~/ui/ProviderIcon';
 import { ChevronRight, Search } from '~/ui/icons';
-import { ensureHostPermission } from '~/ui/hostPermission';
+import { SectionHeader } from '~/ui/components/SectionHeader';
+import { useProviderToggle } from './useProviderToggle';
 import { useT } from '~/i18n';
 import { ProviderDetail } from './ProviderDetail';
 import { PROVIDERS, PROVIDER_IDS, type ProviderId } from '~/core/providers/registry';
 
 /**
- * The provider list, in a box of its own.
+ * The Providers page: the list, or one provider's own page.
  *
- * Fixed height with its own scrollbar, rather than a section that grows with
- * the registry: fifteen providers already push everything under them off the
- * screen, and opening one to configure it pushed them further. Choosing one
- * replaces the panel instead of expanding inside it, so the page below never
- * moves and the settings are always in the same place.
+ * Choosing one replaces the list rather than expanding inside it, so the list
+ * never jumps and a provider's settings get the whole column.
  */
 export function ProvidersPanel() {
   const providers = useAppStore((s) => s.data.providers);
-  const updateProvider = useAppStore((s) => s.updateProvider);
   const [selected, setSelected] = useState<ProviderId | null>(null);
   const [query, setQuery] = useState('');
-  const [denied, setDenied] = useState<ProviderId | null>(null);
+  const { toggle, denied } = useProviderToggle();
   const t = useT();
-
-  /**
-   * Switching a provider on can need a host grant first, and the request has to
-   * leave from inside this click — Chrome only prompts during a user gesture,
-   * and awaiting anything beforehand loses it.
-   */
-  function toggle(id: ProviderId, enabled: boolean) {
-    if (!enabled) {
-      setDenied((d) => (d === id ? null : d));
-      void updateProvider(id, { enabled: false });
-      return;
-    }
-    void ensureHostPermission(id).then((granted) => {
-      setDenied(granted ? null : id);
-      if (granted) void updateProvider(id, { enabled: true });
-    });
-  }
 
   if (selected) {
     // Keyed so that opening a different provider builds a fresh form rather
@@ -56,6 +36,10 @@ export function ProvidersPanel() {
   );
 
   return (
+    <section class="ap-settings-panel">
+    <SectionHeader label={t('sectionProviders')} description={t('openaiCompatible')} />
+    {/* A box of its own with its own scrollbar, as in v0.2.2: fifteen
+        providers laid out in full make a long, uniform wall of rows. */}
     <div class="flex h-[26rem] flex-col overflow-hidden rounded-md border border-ap-border bg-ap-surface">
       <div class="relative shrink-0 border-b border-ap-border">
         <Search
@@ -71,7 +55,7 @@ export function ProvidersPanel() {
         />
       </div>
 
-      <ul class="min-h-0 flex-1 overflow-y-auto">
+      <ul class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {shown.map((id) => {
           const def = PROVIDERS[id];
           const cfg = providers[id];
@@ -123,5 +107,6 @@ export function ProvidersPanel() {
         )}
       </ul>
     </div>
+    </section>
   );
 }

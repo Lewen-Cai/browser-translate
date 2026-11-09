@@ -46,7 +46,8 @@ export default defineConfig({
     },
     web_accessible_resources: [
       {
-        resources: ['fonts/*'],
+        // model-icons: the vendor marks the selection card's model menu draws.
+        resources: ['fonts/*', 'model-icons/*'],
         matches: ['<all_urls>'],
       },
     ],

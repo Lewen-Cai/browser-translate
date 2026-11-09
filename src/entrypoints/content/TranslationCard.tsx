@@ -348,6 +348,7 @@ export function TranslationCard({
     iconId: o.iconId,
     group: o.group,
     hint: o.detail,
+    hintIcon: o.detailIcon,
   }));
 
   const langItems: CardMenuItem[] = useMemo(() => languageChoices(locale).map((l) => ({
