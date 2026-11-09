@@ -9,6 +9,8 @@ export interface ProviderOption {
   label: string;
   iconId: ProviderIconId;
   group?: string;
+  /** Secondary text after the label — the model, for a model-backed route. */
+  detail?: string;
 }
 interface Props {
   label?: string;
@@ -17,10 +19,16 @@ interface Props {
   onChange: (value: string) => void;
   disabled?: boolean;
   inline?: boolean;
+  /**
+   * Show only the detail (the model) on the closed control when there is one.
+   * For narrow layouts: the icon already says which provider, and a model id
+   * cut to a few characters says nothing. The open list still shows both.
+   */
+  preferDetail?: boolean;
 }
 
 /** A compact accessible listbox, viewport-bounded even at the foot of a popup. */
-export function ProviderSelect({ label, value, options, onChange, disabled = false, inline }: Props) {
+export function ProviderSelect({ label, value, options, onChange, disabled = false, inline, preferDetail }: Props) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ left: 0, top: 0, width: 0, maxHeight: 260, transform: 'none' });
   const root = useRef<HTMLDivElement>(null);
@@ -96,7 +104,17 @@ export function ProviderSelect({ label, value, options, onChange, disabled = fal
           class={cn('flex h-9 w-full items-center gap-2 rounded-lg border bg-ap-surface px-2.5 text-sm text-ap-fg transition-colors',
             disabled && 'opacity-50', open ? 'border-ap-brand' : 'border-ap-border hover:border-ap-border-strong')}>
           {selected && <ProviderIcon id={selected.iconId} size={16} />}
-          <span id={`${id}-value`} class="min-w-0 flex-1 truncate text-left">{selected?.label ?? ''}</span>
+          <span id={`${id}-value`} class="min-w-0 flex-1 truncate text-left"
+            title={selected?.detail ? `${selected.label} · ${selected.detail}` : undefined}>
+            {preferDetail && selected?.detail
+              // A gateway id's vendor prefix is the part a narrow control can
+              // least afford; the full id is in the title and the open list.
+              ? <span class="font-mono text-xs">{selected.detail.slice(selected.detail.lastIndexOf('/') + 1)}</span>
+              : <>
+                  {selected?.label ?? ''}
+                  {selected?.detail && <span class="ml-1.5 font-mono text-xs text-ap-muted">{selected.detail}</span>}
+                </>}
+          </span>
           <ChevronDown size={13} class="shrink-0 text-ap-muted" />
         </button>
         {open && <div ref={list} id={`${id}-list`} role="listbox" aria-label={label}
@@ -110,7 +128,10 @@ export function ProviderSelect({ label, value, options, onChange, disabled = fal
               class={cn('flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-ap-fg/5 focus:bg-ap-fg/5',
                 option.value === value ? 'bg-ap-brand/10 text-ap-brand' : 'text-ap-fg')}>
               <ProviderIcon id={option.iconId} size={16} />
-              <span class="min-w-0 flex-1 truncate">{option.label}</span>
+              <span class="min-w-0 flex-1 truncate">
+                {option.label}
+                {option.detail && <span class="ml-1.5 font-mono text-xs text-ap-muted">{option.detail}</span>}
+              </span>
               {option.value === value && <Check size={13} />}
             </button>
           </Fragment>)}

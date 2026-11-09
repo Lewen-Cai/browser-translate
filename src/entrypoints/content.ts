@@ -10,8 +10,7 @@ import { resolveEffectiveTheme } from '~/ui/themeResolver';
 import { createDefaultProviders } from '~/storage/defaults';
 import { resolveLocale, t } from '~/i18n';
 import type { Locale } from '~/i18n/strings';
-import type { ProviderId } from '~/core/providers/registry';
-import type { AppData, GlobalSettings, ProvidersConfig } from '~/storage/schema';
+import type { AppData, EngineRoute, GlobalSettings, ProvidersConfig } from '~/storage/schema';
 import type { PageStateResponse } from '~/messaging/types';
 import { DEFAULT_CARD_SIZE, type CardSize } from '~/core/card/size';
 
@@ -44,7 +43,7 @@ export default defineContentScript({
     // The card offers a reader every provider that is switched on, so it needs
     // the rows rather than a finished credit line.
     let providersConfig: ProvidersConfig = createDefaultProviders();
-    let selectionProvider: ProviderId = 'microsoft';
+    let selectionRoute: EngineRoute = { provider: 'microsoft' };
     let cardSize: CardSize = DEFAULT_CARD_SIZE;
     // A pinned card survives clicks elsewhere on the page, and keeps the spot
     // the reader dragged it to when they translate something else.
@@ -89,7 +88,7 @@ export default defineContentScript({
         rect,
         locale,
         providers: providersConfig,
-        defaultProvider: selectionProvider,
+        defaultRoute: selectionRoute,
         defaultTargetLang: targetLanguage,
         size: cardSize,
         onPinChange: (next: boolean) => {
@@ -125,7 +124,7 @@ export default defineContentScript({
       mount.setLang(locale);
       targetLanguage = data.settings.targetLanguage;
       providersConfig = data.providers;
-      selectionProvider = data.settings.engines.selection;
+      selectionRoute = data.settings.engines.selection;
       cardSize = data.settings.cardSize;
       applyTheme();
 

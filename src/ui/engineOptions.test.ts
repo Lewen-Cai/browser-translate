@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { engineOptions } from './engineOptions';
+import { engineOptions, routeOptions } from './engineOptions';
 import { createDefaultProviders } from '~/storage/defaults';
 import type { ProvidersConfig } from '~/storage/schema';
 
@@ -53,5 +53,30 @@ describe('engineOptions', () => {
 
   it('is empty when nothing is enabled', () => {
     expect(engineOptions(withEnabled(), LABELS)).toEqual([]);
+  });
+});
+
+describe('routeOptions', () => {
+  it('offers each kept model of a model provider, and a service once', () => {
+    const providers = withEnabled('microsoft', 'openrouter');
+    providers.openrouter = { ...providers.openrouter, model: 'a/x', models: ['a/x', 'b/y'] };
+    const out = routeOptions(providers, LABELS);
+    expect(out.map((o) => [o.value, o.detail])).toEqual([
+      ['microsoft', undefined],
+      ['openrouter|a/x', 'a/x'],
+      ['openrouter|b/y', 'b/y'],
+    ]);
+  });
+
+  it('shows a model provider with no models yet under its own name', () => {
+    const out = routeOptions(withEnabled('openai'), LABELS);
+    expect(out.map((o) => o.value)).toEqual(['openai']);
+  });
+
+  it('keeps the current route visible after its provider was switched off', () => {
+    const providers = withEnabled('microsoft');
+    providers.openai = { ...providers.openai, model: 'm', models: ['m'] };
+    const out = routeOptions(providers, LABELS, { keep: { provider: 'openai', model: 'm' } });
+    expect(out.map((o) => o.value)).toEqual(['microsoft', 'openai|m']);
   });
 });

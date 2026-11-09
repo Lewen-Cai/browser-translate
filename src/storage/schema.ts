@@ -23,7 +23,19 @@ export interface AppData {
 export interface ProviderConfig {
   baseUrl: string;
   apiKey: string;
+  /**
+   * The default model: what this provider answers with wherever nothing more
+   * specific was chosen — the card's provider menu, the connection check, and
+   * any surface whose route names no model. Always one of `models` when that
+   * list is non-empty.
+   */
   model: string;
+  /**
+   * Every model the user keeps for this provider. A gateway like OpenRouter
+   * serves hundreds; keeping a short list is what lets a surface switch between
+   * them without the name being retyped each time.
+   */
+  models: string[];
   /**
    * Reasoning control. undefined ≡ 'off' — translation does not need billed
    * reasoning tokens. Mapped per provider to its own parameter.
@@ -59,8 +71,18 @@ export function isThinkingSetting(value: unknown): value is ThinkingSetting {
 export const TRANSLATION_SURFACES = ['selection', 'fullPage', 'subtitle'] as const;
 export type TranslationSurface = (typeof TRANSLATION_SURFACES)[number];
 
-/** Which provider serves each surface, by registry id. */
-export type EngineRouting = Record<TranslationSurface, ProviderId>;
+/**
+ * Who answers one surface: a provider, and for a model-backed one optionally
+ * which of its models. No model — or one since removed from the provider's
+ * list — means the provider's default.
+ */
+export interface EngineRoute {
+  provider: ProviderId;
+  model?: string;
+}
+
+/** Which provider (and model) serves each surface. */
+export type EngineRouting = Record<TranslationSurface, EngineRoute>;
 
 export interface GlobalSettings {
   engines: EngineRouting;

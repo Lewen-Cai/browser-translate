@@ -5,6 +5,7 @@ import type { GlobalSettings, ProviderConfig, ProvidersConfig } from './schema';
 import { createDefaultProviders, defaultProviderConfig } from './defaults';
 import { PROVIDER_IDS, isProviderId, type ProviderId } from '~/core/providers/registry';
 import { isProviderReady } from '~/core/providers/resolve';
+import { normalizeModelSet } from '~/core/providers/models';
 import { DEFAULT_PROVIDER, normalizeEngineRouting } from '~/core/engines/routing';
 import { normalizeTargetLanguage } from '~/core/language/targets';
 import { normalizeSubtitlePosition, normalizeSubtitleStyle } from '~/core/subtitles/style';
@@ -82,10 +83,17 @@ function legacyActiveProvider(api: LegacyApi): ProviderId {
 function normalizeRow(id: ProviderId, value: unknown): ProviderConfig {
   const fallback = defaultProviderConfig(id);
   if (value === null || typeof value !== 'object') return fallback;
-  const row = value as Partial<ProviderConfig> & { thinking?: unknown; thinkingDialect?: unknown };
+  const row = value as Partial<ProviderConfig> & {
+    thinking?: unknown;
+    thinkingDialect?: unknown;
+    models?: unknown;
+  };
   const thinkingOk = row.thinking === undefined || isThinkingSetting(row.thinking);
   const dialectOk = row.thinkingDialect === undefined || isThinkingDialect(row.thinkingDialect);
-  // Counted rather than fixed at four: the optional fields are the ones a row
+  // A row from before v0.2.3 has a single `model` and no list; this turns it
+  // into a one-item list and keeps the default on the list from then on.
+  const modelSet = normalizeModelSet(row.model, row.models);
+  // Counted rather than fixed at five: the optional fields are the ones a row
   // may legitimately lack, and a row carrying one must still be recognised as
   // sound. Rebuilding a sound row returns a new reference, which the client
   // reads as "migrated" and writes back — every load, forever.
@@ -93,20 +101,28 @@ function normalizeRow(id: ProviderId, value: unknown): ProviderConfig {
   const clean =
     typeof row.baseUrl === 'string' &&
     typeof row.apiKey === 'string' &&
-    typeof row.model === 'string' &&
+    modelSet === null &&
     typeof row.enabled === 'boolean' &&
     thinkingOk &&
     dialectOk &&
-    Object.keys(row).length === 4 + optional;
+    Object.keys(row).length === 5 + optional;
   if (clean) return value as ProviderConfig;
+  const models = modelSet ?? { model: row.model as string, models: row.models as string[] };
   return {
     baseUrl: str(row.baseUrl, fallback.baseUrl),
     apiKey: str(row.apiKey, ''),
-    model: str(row.model, ''),
+    model: models.model,
+    models: models.models,
     ...(isThinkingSetting(row.thinking) && { thinking: row.thinking }),
     ...(isThinkingDialect(row.thinkingDialect) && { thinkingDialect: row.thinkingDialect }),
     enabled: typeof row.enabled === 'boolean' ? row.enabled : fallback.enabled,
   };
+}
+
+/** A legacy config's single model, as a one-item list. */
+function legacyModels(value: unknown, fallback: string): Pick<ProviderConfig, 'model' | 'models'> {
+  const model = str(value, fallback);
+  return normalizeModelSet(model, undefined) ?? { model, models: [] };
 }
 
 /**
@@ -129,7 +145,7 @@ function providersFromLegacy(api: LegacyApi): ProvidersConfig {
       out[slot] = {
         baseUrl: str(c.baseUrl, out[slot].baseUrl),
         apiKey: str(c.apiKey, ''),
-        model: str(c.model, ''),
+        ...legacyModels(c.model, ''),
         ...(isThinkingSetting(c.thinking) && { thinking: c.thinking }),
         enabled: false,
       };
@@ -140,7 +156,7 @@ function providersFromLegacy(api: LegacyApi): ProvidersConfig {
   const live: ProviderConfig = {
     baseUrl: str(api.baseUrl, out[active].baseUrl),
     apiKey: str(api.apiKey, out[active].apiKey),
-    model: str(api.model, out[active].model),
+    ...legacyModels(api.model, out[active].model),
     ...(isThinkingSetting(api.thinking) && { thinking: api.thinking }),
     enabled: false,
   };

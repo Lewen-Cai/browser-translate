@@ -31,4 +31,5 @@ export {
   Lock,
   FileText,
   RotateCcw,
+  Star,
 } from 'lucide-preact';

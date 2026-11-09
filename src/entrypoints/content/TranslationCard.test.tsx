@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, cleanup, waitFor } from '@testing-library/preact';
+import { render, cleanup, waitFor, fireEvent } from '@testing-library/preact';
 
 // The card talks to the background over chrome.runtime. None of that is under
 // test here; what matters is what the card puts on screen for a given state.
@@ -30,7 +30,7 @@ function open(text: string, targetLang = 'zh-CN') {
       rect={rect()}
       locale="en"
       providers={providers}
-      defaultProvider="microsoft"
+      defaultRoute={{ provider: "microsoft" }}
       defaultTargetLang={targetLang}
       size={DEFAULT_CARD_SIZE}
       onClose={() => {}}
@@ -149,5 +149,43 @@ describe('validated result rendering', () => {
     const { container } = open('A synthetic passage.');
     await waitFor(() => expect(container.querySelector('.bt-card-text')?.textContent).toBe('OK'));
     expect(container.textContent).not.toContain('Discard');
+  });
+});
+
+describe('TranslationCard models (v0.2.3)', () => {
+  function withModels() {
+    const p = createDefaultProviders();
+    p.openrouter = { ...p.openrouter, enabled: true, apiKey: 'k', model: 'a/one', models: ['a/one', 'b/two'] };
+    return p;
+  }
+
+  it("credits the route's model, lists each kept model, and sends the picked one", async () => {
+    const p = withModels();
+    const { container } = render(
+      <TranslationCard
+        text="The quick brown fox"
+        rect={rect()}
+        locale="en"
+        providers={p}
+        defaultRoute={{ provider: 'openrouter', model: 'b/two' }}
+        defaultTargetLang="zh-CN"
+        size={DEFAULT_CARD_SIZE}
+        onClose={() => {}}
+      />,
+    );
+    const providerButton = container.querySelector('.bt-card-foot-btn')!;
+    expect(providerButton.textContent).toContain('b/two');
+    await waitFor(() => expect(streamTranslate).toHaveBeenCalledWith(
+      expect.objectContaining({ provider: 'openrouter', model: 'b/two' }),
+    ));
+
+    fireEvent.click(providerButton);
+    const options = Array.from(container.querySelectorAll('[role="option"]'));
+    expect(options.filter((o) => o.textContent?.includes('OpenRouter'))).toHaveLength(2);
+    fireEvent.click(options.find((o) => o.textContent?.includes('a/one'))!);
+    await waitFor(() => expect(streamTranslate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ provider: 'openrouter', model: 'a/one' }),
+    ));
+    expect(container.querySelector('.bt-card-foot-btn')!.textContent).toContain('a/one');
   });
 });

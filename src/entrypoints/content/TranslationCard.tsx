@@ -11,14 +11,15 @@ import { DictionaryView } from './DictionaryView';
 import { CardMenu, type CardMenuItem, type MenuAnchor } from './CardMenu';
 import { writeClipboard } from './clipboard';
 import { ProviderIcon } from '~/ui/ProviderIcon';
-import { engineOptions } from '~/ui/engineOptions';
+import { routeOptions } from '~/ui/engineOptions';
+import { effectiveRouteKey, parseRouteKey, routeConfig } from '~/core/engines/routing';
 import { translationAttribution } from '~/ui/attribution';
 import { languageEndonym } from '~/core/language/targets';
 import { languageChoices } from '~/core/language/search';
 import { identifyLanguage, sourceLanguageEndonym } from '~/core/language/identify';
-import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
+import { PROVIDERS } from '~/core/providers/registry';
 import { t } from '~/i18n';
-import type { ProvidersConfig } from '~/storage/schema';
+import type { EngineRoute, ProvidersConfig } from '~/storage/schema';
 import type { CardSize } from '~/core/card/size';
 import type { Locale } from '~/i18n/strings';
 
@@ -30,7 +31,7 @@ interface Props {
   /** Every provider row, so the card can offer the ones switched on. */
   providers: ProvidersConfig;
   /** Who routing picked for the selection surface — the card's starting point. */
-  defaultProvider: ProviderId;
+  defaultRoute: EngineRoute;
   /** The configured target language — likewise a starting point, not a rule. */
   defaultTargetLang: string;
   /** How big the card is, from settings. */
@@ -51,7 +52,7 @@ function friendlyError(raw: string, locale: Locale): string {
 
 export function TranslationCard({
   text, rect, locale, onClose,
-  providers, defaultProvider, defaultTargetLang, size, onPinChange,
+  providers, defaultRoute, defaultTargetLang, size, onPinChange,
 }: Props) {
   const [pinned, setPinned] = useState(false);
   /**
@@ -60,7 +61,7 @@ export function TranslationCard({
    * answering a question about that paragraph — not changing their mind about
    * how the extension should work — so neither is written back to settings.
    */
-  const [providerOverride, setProviderOverride] = useState<ProviderId | null>(null);
+  const [routeOverride, setRouteOverride] = useState<EngineRoute | null>(null);
   const [langOverride, setLangOverride] = useState<string | null>(null);
   const [menu, setMenu] = useState<'provider' | 'lang' | null>(null);
   const [anchor, setAnchor] = useState<MenuAnchor | null>(null);
@@ -100,9 +101,13 @@ export function TranslationCard({
   // Detected from the selection alone, so it is on the card the moment it
   // opens rather than one round trip later.
   const sourceLang = useMemo(() => identifyLanguage(text), [text]);
-  const provider = providerOverride ?? defaultProvider;
+  const route = routeOverride ?? defaultRoute;
+  const provider = route.provider;
+  // Keyed as a string so the effect below re-runs on a change of model as well
+  // as of provider, without re-running for a fresh but equal route object.
+  const routeId = effectiveRouteKey(route, providers);
   const targetLang = langOverride ?? defaultTargetLang;
-  const attribution = translationAttribution(provider, providers[provider]);
+  const attribution = translationAttribution(provider, routeConfig(route, providers));
 
   useEffect(() => {
     const animId = window.requestAnimationFrame(() => setVisible(true));
@@ -141,7 +146,7 @@ export function TranslationCard({
       window.cancelAnimationFrame(raf);
       if (currentReqId.current) abortTranslate(currentReqId.current);
     };
-  }, [text, provider, targetLang, attempt]);
+  }, [text, routeId, targetLang, attempt]);
 
   function resetAnswer() {
     setReceived('');
@@ -169,6 +174,7 @@ export function TranslationCard({
         requestId: reqId,
         text,
         provider,
+        ...(route.model && { model: route.model }),
         targetLang,
         ...(refresh && { refresh: true }),
       })) {
@@ -329,20 +335,19 @@ export function TranslationCard({
       ? dictEntry.translation || dictEntry.senses.join('; ')
       : isDict ? '' : received;
 
-  const providerItems: CardMenuItem[] = engineOptions(
+  // One row per model the user keeps, so trying another OpenRouter model on
+  // this paragraph is a pick. The model is what distinguishes two rows of the
+  // same vendor, and it is what the credit line will show once chosen.
+  const providerItems: CardMenuItem[] = routeOptions(
     providers,
     { services: t('engineGroupServices', locale), models: t('engineGroupModel', locale) },
-    { keep: provider },
+    { keep: route },
   ).map((o) => ({
     value: o.value,
     label: o.label,
     iconId: o.iconId,
     group: o.group,
-    // The model is what distinguishes two rows of the same vendor, and it is
-    // what the credit line will show once the choice is made.
-    hint: PROVIDERS[o.value as ProviderId].kind === 'llm'
-      ? providers[o.value as ProviderId]?.model
-      : undefined,
+    hint: o.detail,
   }));
 
   const langItems: CardMenuItem[] = useMemo(() => languageChoices(locale).map((l) => ({
@@ -514,7 +519,7 @@ export function TranslationCard({
         anchor={anchor}
         fixed={held}
         items={menu === 'lang' ? langItems : providerItems}
-        value={menu === 'lang' ? targetLang : provider}
+        value={menu === 'lang' ? targetLang : routeId}
         align={menu === 'lang' ? 'right' : 'left'}
         // Downward, out past the foot of the card: opening upward would lay the
         // list over the translation the reader is choosing a provider for. It
@@ -529,7 +534,10 @@ export function TranslationCard({
         onSelect={(v) => {
           setMenu(null);
           if (menu === 'lang') setLangOverride(v);
-          else setProviderOverride(v as ProviderId);
+          else {
+            const next = parseRouteKey(v);
+            if (next) setRouteOverride(next);
+          }
         }}
         onClose={() => setMenu(null)}
       />

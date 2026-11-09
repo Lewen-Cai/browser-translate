@@ -89,7 +89,11 @@ export function ProvidersPanel() {
                 >
                   <span class="w-full truncate text-sm text-ap-fg">{def.label}</span>
                   <span class="w-full truncate font-mono text-2xs text-ap-subtle">
-                    {isService ? t('providerNoKey') : cfg.model || t('notConfigured')}
+                    {isService
+                      ? t('providerNoKey')
+                      : cfg.model
+                        ? cfg.models.length > 1 ? `${cfg.model} +${cfg.models.length - 1}` : cfg.model
+                        : t('notConfigured')}
                   </span>
                 </button>
 

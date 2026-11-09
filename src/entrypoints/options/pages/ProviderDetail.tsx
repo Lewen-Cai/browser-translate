@@ -3,6 +3,7 @@ import { useAppStore } from '~/storage/store';
 import { Input } from '~/ui/components/Input';
 import { Select } from '~/ui/components/Select';
 import { ApiStatusIndicator } from '~/ui/components/ApiStatusIndicator';
+import { ModelList } from './ModelList';
 import { ProviderIcon } from '~/ui/ProviderIcon';
 import { ChevronRight, Eye, EyeOff } from '~/ui/icons';
 import { dialectOptions, thinkingOptions } from '~/ui/thinkingOptions';
@@ -132,12 +133,7 @@ export function ProviderDetail({ id, onBack }: Props) {
           </div>
         )}
 
-        <Input
-          label={t('model')}
-          value={config.model}
-          mono
-          onInput={(e) => set({ model: (e.target as HTMLInputElement).value })}
-        />
+        <ModelList id={id} value={config} onChange={(next) => set(next)} />
 
         {/* Where the registry knows the vendor it also knows the parameter,
             and offering a choice there could only let someone be wrong about

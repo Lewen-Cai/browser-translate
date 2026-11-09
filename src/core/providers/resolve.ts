@@ -1,7 +1,7 @@
 import { PROVIDERS, knownDialect, type ProviderId } from './registry';
 import { dialectPatch, type ThinkingDialect } from './thinking';
 import type { OpenAIProviderConfig } from './openai';
-import type { ProviderConfig, ProvidersConfig } from '~/storage/schema';
+import type { EngineRoute, ProviderConfig, ProvidersConfig } from '~/storage/schema';
 
 /**
  * Which dialect this row will actually be asked in.
@@ -81,6 +81,24 @@ export function resolveRequestedProvider(
   const id = requested as ProviderId;
   if (id === routed) return routed;
   return providers[id]?.enabled ? id : routed;
+}
+
+/**
+ * The same decision for a whole route. A request that names a provider may also
+ * name one of its models; that model stands only while the provider does —
+ * falling back to routing means routing's model too, not a model the routed
+ * provider may not even have.
+ */
+export function resolveRequestedRoute(
+  requested: { provider?: string; model?: string },
+  routed: EngineRoute,
+  providers: ProvidersConfig,
+): EngineRoute {
+  if (!requested.provider) return routed;
+  const provider = resolveRequestedProvider(requested.provider, routed.provider, providers);
+  if (provider !== requested.provider) return routed;
+  const model = PROVIDERS[provider].kind === 'llm' ? requested.model : undefined;
+  return model ? { provider, model } : { provider };
 }
 
 /** Providers the user has switched on, in registry order. */

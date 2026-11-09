@@ -4,9 +4,10 @@ import { OpenAICompatibleProvider } from '~/core/providers/openai';
 import {
   llmRequestConfig,
   isProviderReady,
-  resolveRequestedProvider,
+  resolveRequestedRoute,
 } from '~/core/providers/resolve';
 import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
+import { routeConfig } from '~/core/engines/routing';
 import { TranslationProviderError } from '~/core/providers/types';
 import { computeCacheKey } from '~/core/cache/key';
 import { getMtEngine, isMtEngineId, mtTranslateAll, type MtEngineId } from '~/core/mt';
@@ -84,12 +85,15 @@ async function handleTranslate(
   try {
     // Routing decides unless the request named someone — the card can send a
     // reader's on-the-spot choice, which lasts exactly as long as that card.
-    const engine: ProviderId = resolveRequestedProvider(
-      msg.provider,
+    const route = resolveRequestedRoute(
+      { provider: msg.provider, model: msg.model },
       data.settings.engines.selection,
       data.providers,
     );
-    const cfg = data.providers[engine];
+    const engine: ProviderId = route.provider;
+    // The row with the route's model in place, so the request, the cache key
+    // and the readiness check below all agree on which model this is.
+    const cfg = routeConfig(route, data.providers);
     // The guard, not a `kind` comparison: this one narrows `engine` to an
     // MtEngineId for the getMtEngine calls below. The registry lists exactly
     // the free engines as services, and a test holds the two lists together.
@@ -211,8 +215,9 @@ async function handleTranslateBatch(
   const send = replyTo(sender);
 
   try {
-    const engine: ProviderId = data.settings.engines[msg.surface];
-    const cfg = data.providers[engine];
+    const route = data.settings.engines[msg.surface];
+    const engine: ProviderId = route.provider;
+    const cfg = routeConfig(route, data.providers);
     // The guard, not a `kind` comparison: this one narrows `engine` to an
     // MtEngineId for the getMtEngine calls below. The registry lists exactly
     // the free engines as services, and a test holds the two lists together.

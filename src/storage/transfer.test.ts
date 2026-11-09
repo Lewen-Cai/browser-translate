@@ -9,16 +9,22 @@ function sample(): AppData {
     baseUrl: 'https://api.openai.com/v1',
     apiKey: 'sk-openai',
     model: 'gpt-4o',
+    models: ['gpt-4o'],
     enabled: true,
   };
   d.providers.anthropic = {
     baseUrl: 'https://api.anthropic.com/v1',
     apiKey: 'sk-ant',
     model: 'claude-opus-5',
+    models: ['claude-opus-5'],
     enabled: true,
   };
   d.settings.targetLanguage = 'en';
-  d.settings.engines = { selection: 'anthropic', fullPage: 'google', subtitle: 'microsoft' };
+  d.settings.engines = {
+    selection: { provider: 'anthropic' },
+    fullPage: { provider: 'google' },
+    subtitle: { provider: 'microsoft' },
+  };
   return d;
 }
 
@@ -74,9 +80,9 @@ describe('importAppData', () => {
     const imported = importAppData(JSON.parse(JSON.stringify(exported)));
     expect(imported.settings.targetLanguage).toBe('en-US');
     expect(imported.settings.engines).toEqual({
-      selection: 'anthropic',
-      fullPage: 'google',
-      subtitle: 'microsoft',
+      selection: { provider: 'anthropic' },
+      fullPage: { provider: 'google' },
+      subtitle: { provider: 'microsoft' },
     });
     expect(imported.providers.anthropic.model).toBe('claude-opus-5');
     expect(imported.providers.anthropic.apiKey).toBe('sk-ant');
@@ -124,7 +130,7 @@ describe('importAppData', () => {
     // The remembered second vendor becomes a row of its own rather than being lost.
     expect(imported.providers.openai.model).toBe('gpt-4o');
     // "the model" resolves to the one it was actually using.
-    expect(imported.settings.engines.selection).toBe('deepseek');
+    expect(imported.settings.engines.selection).toEqual({ provider: 'deepseek' });
     expect('api' in imported).toBe(false);
     expect('promptTemplates' in imported).toBe(false);
   });

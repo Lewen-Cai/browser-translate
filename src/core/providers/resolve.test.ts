@@ -6,6 +6,7 @@ import {
   isProviderReady,
   llmRequestConfig,
   resolveRequestedProvider,
+  resolveRequestedRoute,
   supportsThinking,
 } from './resolve';
 import { createDefaultProviders } from '~/storage/defaults';
@@ -15,6 +16,7 @@ const row = (patch: Partial<ProviderConfig> = {}): ProviderConfig => ({
   baseUrl: 'https://api.example.com/v1',
   apiKey: 'sk-x',
   model: 'm',
+  models: ['m'],
   enabled: true,
   ...patch,
 });
@@ -177,5 +179,40 @@ describe('resolveRequestedProvider', () => {
     const off = createDefaultProviders();
     off.microsoft.enabled = false;
     expect(resolveRequestedProvider('microsoft', 'microsoft', off)).toBe('microsoft');
+  });
+});
+
+describe('resolveRequestedRoute', () => {
+  const providers = createDefaultProviders();
+  providers.anthropic.enabled = true;
+  const routed = { provider: 'openrouter' as const, model: 'a' };
+
+  it('uses the routed route when the request named nobody', () => {
+    expect(resolveRequestedRoute({}, routed, providers)).toBe(routed);
+  });
+
+  it("honours a named provider and model", () => {
+    expect(resolveRequestedRoute({ provider: 'anthropic', model: 'x' }, routed, providers)).toEqual({
+      provider: 'anthropic',
+      model: 'x',
+    });
+  });
+
+  it('can pick another model of the routed provider', () => {
+    expect(resolveRequestedRoute({ provider: 'openrouter', model: 'b' }, routed, providers)).toEqual({
+      provider: 'openrouter',
+      model: 'b',
+    });
+  });
+
+  it("falls back to routing's provider and model when the named one is off", () => {
+    expect(resolveRequestedRoute({ provider: 'deepseek', model: 'x' }, routed, providers)).toBe(routed);
+  });
+
+  it('drops a model named for a service', () => {
+    providers.google.enabled = true;
+    expect(resolveRequestedRoute({ provider: 'google', model: 'x' }, routed, providers)).toEqual({
+      provider: 'google',
+    });
   });
 });

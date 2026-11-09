@@ -154,7 +154,8 @@ html, body {
 }
 .ap-route-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 220px);
+  /* Wide enough for a provider and a gateway-style model id side by side. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
   align-items: center;
   gap: 12px;
 }

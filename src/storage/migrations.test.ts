@@ -83,6 +83,7 @@ describe('adopting the provider table', () => {
       baseUrl: 'https://api.deepseek.com/v1',
       apiKey: 'sk-x',
       model: 'deepseek-chat',
+      models: ['deepseek-chat'],
       thinking: 'xhigh',
       enabled: true,
     });
@@ -160,16 +161,17 @@ describe('adopting the provider table', () => {
 
   it('repairs a malformed row without touching its neighbours', () => {
     const data = createDefaultAppData();
-    data.providers.openai = { baseUrl: 'b', apiKey: 'k', model: 'm', enabled: true };
+    data.providers.openai = { baseUrl: 'b', apiKey: 'k', model: 'm', models: ['m'], enabled: true };
     (data.providers as Record<string, unknown>).deepseek = { baseUrl: 123 };
     const out = migrateAppData(data);
     expect(out.providers.deepseek).toEqual({
       baseUrl: 'https://api.deepseek.com/v1',
       apiKey: '',
       model: '',
+      models: [],
       enabled: false,
     });
-    expect(out.providers.openai).toEqual({ baseUrl: 'b', apiKey: 'k', model: 'm', enabled: true });
+    expect(out.providers.openai).toEqual({ baseUrl: 'b', apiKey: 'k', model: 'm', models: ['m'], enabled: true });
   });
 
   it('fills a row that is missing entirely', () => {
@@ -190,18 +192,18 @@ describe('routing migration', () => {
       ),
     );
     expect(out.settings.engines).toEqual({
-      selection: 'zhipu',
-      fullPage: 'google',
-      subtitle: 'zhipu',
+      selection: { provider: 'zhipu' },
+      fullPage: { provider: 'google' },
+      subtitle: { provider: 'zhipu' },
     });
   });
 
   it('carries a v0.1.9 single engine over to every surface', () => {
     const out = migrateAppData(legacyStore({}, { engine: 'google' }));
     expect(out.settings.engines).toEqual({
-      selection: 'google',
-      fullPage: 'google',
-      subtitle: 'google',
+      selection: { provider: 'google' },
+      fullPage: { provider: 'google' },
+      subtitle: { provider: 'google' },
     });
   });
 
@@ -213,16 +215,20 @@ describe('routing migration', () => {
   it('replaces a provider we no longer ship', () => {
     const data = createDefaultAppData();
     data.settings.engines = { selection: 'yandex', fullPage: 'google', subtitle: 'google' } as never;
-    expect(migrateAppData(data).settings.engines.selection).toBe('microsoft');
+    expect(migrateAppData(data).settings.engines.selection).toEqual({ provider: 'microsoft' });
   });
 
   it('preserves a valid routing table without rewriting storage', () => {
     const seed = createDefaultAppData();
-    seed.settings.engines = { selection: 'anthropic', fullPage: 'gemini', subtitle: 'microsoft' };
+    seed.settings.engines = {
+      selection: { provider: 'anthropic', model: 'claude' },
+      fullPage: { provider: 'gemini' },
+      subtitle: { provider: 'microsoft' },
+    };
     const normalized = migrateAppData(seed);
     // Identity is what stops a load/write loop through storage.onChanged.
     expect(migrateAppData(normalized)).toBe(normalized);
-    expect(normalized.settings.engines.selection).toBe('anthropic');
+    expect(normalized.settings.engines.selection).toEqual({ provider: 'anthropic', model: 'claude' });
   });
 });
 
@@ -282,5 +288,37 @@ describe('settings integrity repair', () => {
   it('accepts a version below the current one', () => {
     const data = { ...createDefaultAppData(), version: APP_DATA_VERSION } as AppData;
     expect(() => migrateAppData(data)).not.toThrow();
+  });
+});
+
+describe('model lists (v0.2.3)', () => {
+  it('turns a pre-v0.2.3 single model into a one-item list', () => {
+    const data = createDefaultAppData();
+    (data.providers as Record<string, unknown>).openrouter = {
+      baseUrl: 'https://openrouter.ai/api/v1', apiKey: 'k', model: 'a/b', enabled: true,
+    };
+    expect(migrateAppData(data).providers.openrouter).toEqual({
+      baseUrl: 'https://openrouter.ai/api/v1', apiKey: 'k', model: 'a/b', models: ['a/b'], enabled: true,
+    });
+  });
+
+  it('lifts pre-v0.2.3 provider-id routes into routes, then stays stable', () => {
+    const data = createDefaultAppData();
+    (data.settings as unknown as Record<string, unknown>).engines = {
+      selection: 'openrouter', fullPage: 'google', subtitle: 'microsoft',
+    };
+    const once = migrateAppData(data);
+    expect(once.settings.engines.selection).toEqual({ provider: 'openrouter' });
+    expect(migrateAppData(once)).toBe(once);
+  });
+
+  it('keeps a sound row with several models without rewriting it', () => {
+    const data = createDefaultAppData();
+    data.providers.openrouter = {
+      baseUrl: 'https://openrouter.ai/api/v1', apiKey: 'k', model: 'b', models: ['a', 'b'], enabled: true,
+    };
+    const once = migrateAppData(data);
+    expect(migrateAppData(once)).toBe(once);
+    expect(once.providers.openrouter.models).toEqual(['a', 'b']);
   });
 });

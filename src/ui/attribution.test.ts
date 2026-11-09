@@ -6,6 +6,7 @@ const cfg = (patch: Partial<ProviderConfig> = {}): ProviderConfig => ({
   baseUrl: 'https://api.deepseek.com/v1',
   apiKey: 'k',
   model: 'deepseek-chat',
+  models: ['deepseek-chat'],
   enabled: true,
   ...patch,
 });

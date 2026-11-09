@@ -14,6 +14,8 @@ export interface TranslateRequest {
    * following them to the next page.
    */
   provider?: ProviderId;
+  /** And, for a model provider, which of its models. Omitted means its default. */
+  model?: string;
   /**
    * Ignore any cached answer. Asking again is only worth a button if it can
    * actually produce a different answer, and a cache hit would return the same

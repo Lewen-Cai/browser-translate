@@ -1,7 +1,8 @@
 import { ProviderSelect } from '~/ui/components/ProviderSelect';
-import { engineOptions } from '~/ui/engineOptions';
+import { routeOptions } from '~/ui/engineOptions';
+import { effectiveRouteKey, parseRouteKey } from '~/core/engines/routing';
 import { useT } from '~/i18n';
-import { PROVIDERS, type ProviderId } from '~/core/providers/registry';
+import { PROVIDERS } from '~/core/providers/registry';
 import { TRANSLATION_SURFACES, type TranslationSurface } from '~/storage/schema';
 import type { EngineRouting, ProvidersConfig } from '~/storage/schema';
 import type { StringKey } from '~/i18n/strings';
@@ -21,7 +22,7 @@ const SURFACE_LABEL: Record<TranslationSurface, StringKey> = {
 };
 
 /**
- * One provider per surface.
+ * One provider — and for a model provider, one of its models — per surface.
  *
  * A single control for all three read as though the three jobs were the same
  * one. They are not: a free service is instant and free, which is what a whole
@@ -31,7 +32,7 @@ const SURFACE_LABEL: Record<TranslationSurface, StringKey> = {
 export function EngineRoutingPicker({ engines, providers, onChange, compact = false }: Props) {
   const t = useT();
   const labels = { services: t('engineGroupServices'), models: t('engineGroupModel') };
-  const usesService = TRANSLATION_SURFACES.some((s) => PROVIDERS[engines[s]].kind === 'service');
+  const usesService = TRANSLATION_SURFACES.some((s) => PROVIDERS[engines[s].provider].kind === 'service');
 
   return (
     <div class={compact ? 'ap-route-compact space-y-3' : 'space-y-3'}>
@@ -40,15 +41,19 @@ export function EngineRoutingPicker({ engines, providers, onChange, compact = fa
           key={surface}
           inline
           label={t(SURFACE_LABEL[surface])}
-          value={engines[surface]}
-          options={engineOptions(providers, labels, { keep: engines[surface], compact })}
-          onChange={(next) => onChange({ ...engines, [surface]: next as ProviderId })}
+          value={effectiveRouteKey(engines[surface], providers)}
+          options={routeOptions(providers, labels, { keep: engines[surface], compact })}
+          preferDetail={compact}
+          onChange={(next) => {
+            const route = parseRouteKey(next);
+            if (route) onChange({ ...engines, [surface]: route });
+          }}
         />
       ))}
 
       {/* Only worth saying where the choice was just made, and only when it
           costs the reader something they might not expect. */}
-      {!compact && PROVIDERS[engines.selection].kind === 'service' && (
+      {!compact && PROVIDERS[engines.selection.provider].kind === 'service' && (
         <p class="text-2xs leading-relaxed text-ap-subtle">{t('dictionaryNeedsModel')}</p>
       )}
 

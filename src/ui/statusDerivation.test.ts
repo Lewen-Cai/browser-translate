@@ -7,6 +7,7 @@ const row = (patch: Partial<ProviderConfig> = {}): ProviderConfig => ({
   baseUrl: 'https://x/v1',
   apiKey: 'k',
   model: 'm',
+  models: ['m'],
   enabled: true,
   ...patch,
 });

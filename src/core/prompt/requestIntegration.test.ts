@@ -24,8 +24,8 @@ function streamResponse(text: string): Response {
 beforeEach(async () => {
   vi.resetModules();
   const initial = createDefaultAppData();
-  initial.providers.local = { baseUrl: 'https://test.invalid/v1', apiKey: '', model: 'fixture', enabled: true };
-  initial.settings.engines = { selection: 'local', fullPage: 'local', subtitle: 'local' };
+  initial.providers.local = { baseUrl: 'https://test.invalid/v1', apiKey: '', model: 'fixture', models: ['fixture'], enabled: true };
+  initial.settings.engines = { selection: { provider: 'local' }, fullPage: { provider: 'local' }, subtitle: { provider: 'local' } };
   initial.settings.targetLanguage = 'en-AU';
   initial.settings.prompts = { activeId: 'mine', templates: [{ id: 'mine', name: 'Mine', body: 'Use precise fixture terminology.' }] };
   stored = { 'app:data': initial };
@@ -200,7 +200,7 @@ describe('background prompt integration', () => {
   });
 
   it('does not let the base prompt alter MT requests or invalidate their cache', async () => {
-    data().settings.engines.selection = 'microsoft';
+    data().settings.engines.selection = { provider: 'microsoft' };
     fetchMock.mockImplementation(async () => Response.json([{ translations: [{ text: 'MT fixture', to: 'en' }] }]));
     const request = { type: 'translate' as const, text: '中文 with English' };
     await ask(request);
@@ -209,5 +209,41 @@ describe('background prompt integration', () => {
     data().settings.prompts.templates[0]!.body = 'Different instructions for LLM only.';
     expect((await ask(request)).cached).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('per-route models (v0.2.3)', () => {
+  const sentModel = (i: number) => (bodies[i] as unknown as { model: string }).model;
+
+  beforeEach(() => {
+    data().providers.local = { ...data().providers.local, model: 'fixture', models: ['fixture', 'other'] };
+  });
+
+  it("sends the route's model, and caches each model's answer apart", async () => {
+    const request = { type: 'translate' as const, text: 'A sentence for routing.' };
+    await ask(request);
+    expect(sentModel(0)).toBe('fixture');
+    data().settings.engines.selection = { provider: 'local', model: 'other' };
+    expect((await ask(request)).cached).toBe(false);
+    expect(sentModel(1)).toBe('other');
+    expect((await ask(request)).cached).toBe(true);
+  });
+
+  it('routes each surface to its own model', async () => {
+    data().settings.engines.fullPage = { provider: 'local', model: 'other' };
+    await ask({ type: 'translate:batch', surface: 'fullPage', segments: ['One segment here'] });
+    await ask({ type: 'translate:batch', surface: 'subtitle', segments: ['One segment here'] });
+    expect([sentModel(0), sentModel(1)]).toEqual(['other', 'fixture']);
+  });
+
+  it('falls back to the default for a model since removed from the list', async () => {
+    data().settings.engines.selection = { provider: 'local', model: 'gone' };
+    await ask({ type: 'translate', text: 'Another sentence here.' });
+    expect(sentModel(0)).toBe('fixture');
+  });
+
+  it("honours the card's on-the-spot model", async () => {
+    await ask({ type: 'translate', text: 'Card override sentence.', provider: 'local', model: 'other' });
+    expect(sentModel(0)).toBe('other');
   });
 });

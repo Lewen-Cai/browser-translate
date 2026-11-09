@@ -20,6 +20,7 @@ export function defaultProviderConfig(id: ProviderId): ProviderConfig {
     baseUrl: def.endpoints[0]?.baseUrl ?? '',
     apiKey: '',
     model: '',
+    models: [],
     enabled: def.kind === 'service',
   };
 }
@@ -36,9 +37,9 @@ export function createDefaultAppData(): AppData {
     providers: createDefaultProviders(),
     settings: {
       engines: {
-        selection: DEFAULT_PROVIDER,
-        fullPage: DEFAULT_PROVIDER,
-        subtitle: DEFAULT_PROVIDER,
+        selection: { provider: DEFAULT_PROVIDER },
+        fullPage: { provider: DEFAULT_PROVIDER },
+        subtitle: { provider: DEFAULT_PROVIDER },
       },
       targetLanguage: DEFAULT_TARGET_LANGUAGE,
       prompts: defaultPromptSettings(),

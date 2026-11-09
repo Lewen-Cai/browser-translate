@@ -113,7 +113,7 @@ export default defineContentScript({
       subs = createVideoSubTranslator({
         site,
         getTargetLang: () => targetLanguage,
-        concurrency: subtitleConcurrency(data.settings.engines.subtitle),
+        concurrency: subtitleConcurrency(data.settings.engines.subtitle.provider),
         getPosition: () => subtitlePosition,
         setPosition: (next) => {
           subtitlePosition = next;
